@@ -2,6 +2,7 @@ Compiler
 ========
 
 ## directory structure
+```
 ├── bin
 ├── src
 │   ├── main     - contains main function
@@ -10,3 +11,6 @@ Compiler
 │   └── parser   / compiler pipeline stages
 │   
 └── test
+```
+
+
