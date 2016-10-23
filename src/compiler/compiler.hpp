@@ -2,16 +2,16 @@
 
 
 #include <iostream>
+#include <fstream>
 
 
 namespace COMPILER
 {
 
-  class compiler
+  class Compiler
   {
     public:
-      compiler();
-      int echo();
+      int echo(std::ifstream &file);
   };
 
 }

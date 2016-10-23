@@ -1,14 +1,21 @@
 #include "compiler.hpp"
 
 
+#include <iostream>
+#include <fstream>
+
+
 namespace COMPILER
 {
-
-  compiler::compiler() {}
-
-  int compiler::echo()
+  
+  int Compiler::echo(std::ifstream &file)
   {
-    std::cout << "Hello Compiler. " << std::endl;
+    std::string line;
+    
+    while(std::getline(file, line))
+    {
+      std::cout << line << "\n";
+    }
     
     return 0;
   }
