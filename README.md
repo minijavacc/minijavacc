@@ -1,6 +1,8 @@
 Compiler
 ========
 
+[![Build Status](https://travis-ci.org/minijavacc/minijavacc.svg?branch=develop)](https://travis-ci.org/minijavacc/minijavacc)
+
 of group 5 at Compilerpraktikum WS 2016/2017
 
 ## Directory structure
