@@ -1,4 +1,3 @@
-language: cpp
 script: ./build
 
 # Force use modern cpp environment, see http://stackoverflow.com/questions/35110123/travis-ci-with-c14-and-linux
