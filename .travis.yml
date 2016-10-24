@@ -1,16 +1,27 @@
 language: cpp
 script: ./build
 
-# Force use modern cpp environment, see http://genbattle.bitbucket.org/blog/2016/01/17/c++-travis-ci/
+# Force use modern cpp environment, see http://stackoverflow.com/questions/35110123/travis-ci-with-c14-and-linux
 
+language: generic
+os: osx
 matrix:
   include:
-    - compiler: clang
+    - os: linux
+      env: COMPILER_NAME=gcc CXX=g++-5 CC=gcc-5
       addons:
         apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.7
           packages:
-            - clang-3.7
-      env: COMPILER=clang++-3.7
+            - g++-5
+          sources:
+            - llvm-toolchain-precise-3.8
+            - ubuntu-toolchain-r-test
+    - os: linux
+      env: COMPILER_NAME=clang CXX=clang++-3.8 CC=clang-3.8
+      addons:
+        apt:
+          packages:
+            - clang-3.8
+          sources:
+            - llvm-toolchain-precise-3.8
+            - ubuntu-toolchain-r-test
