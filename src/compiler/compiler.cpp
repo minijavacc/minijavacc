@@ -2,10 +2,11 @@
 
 #include <iostream>
 #include <fstream>
+#include <string>
 
 using namespace cmpl;
 
-int echo(std::ifstream &file)
+int Compiler::echo(std::ifstream &file)
 {
   std::string line;
   
@@ -17,3 +18,12 @@ int echo(std::ifstream &file)
   return 0;
 }
 
+void Compiler::output(std::string &msg)
+{
+  std::cout << msg << "\n";
+}
+
+void Compiler::error(std::string &msg)
+{
+  std::cerr << msg << "\n";
+}
