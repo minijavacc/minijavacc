@@ -1,13 +1,10 @@
-#include "compiler.hpp"
-#include "inputparser.hpp"
-
+#include "compiler.h"
+#include "inputparser.h"
 
 #include <iostream>
 #include <fstream>
 
-
-using namespace COMPILER;
-
+using namespace cmpl;
 
 int main(int argc, char* argv[])
 {

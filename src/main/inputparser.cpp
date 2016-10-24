@@ -1,9 +1,10 @@
-#include "inputparser.hpp"
-
+#include "inputparser.h"
 
 #include <vector>
 #include <string>
 #include <algorithm>
+
+using namespace cmpl;
 
 InputParser::InputParser (int &argc, char **argv){
   for (int i=1; i < argc; ++i)
