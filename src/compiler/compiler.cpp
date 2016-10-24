@@ -1,14 +1,10 @@
-#include "compiler.hpp"
-
+#include "compiler.h"
 
 #include <iostream>
 #include <fstream>
 
-
-namespace COMPILER
-{
-  
-  int Compiler::echo(std::ifstream &file)
+using namespace cmpl;
+  int echo(std::ifstream &file)
   {
     std::string line;
     
@@ -20,4 +16,3 @@ namespace COMPILER
     return 0;
   }
 
-}
