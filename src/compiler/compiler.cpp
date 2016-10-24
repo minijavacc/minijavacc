@@ -4,15 +4,16 @@
 #include <fstream>
 
 using namespace cmpl;
-  int echo(std::ifstream &file)
+
+int echo(std::ifstream &file)
+{
+  std::string line;
+  
+  while(std::getline(file, line))
   {
-    std::string line;
-    
-    while(std::getline(file, line))
-    {
-      std::cout << line << "\n";
-    }
-    
-    return 0;
+    std::cout << line << "\n";
   }
+  
+  return 0;
+}
 
