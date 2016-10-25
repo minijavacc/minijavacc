@@ -18,12 +18,12 @@ int Compiler::echo(std::ifstream &file)
   return 0;
 }
 
-void Compiler::output(std::string &msg)
+void Compiler::output(std::string msg)
 {
   std::cout << msg << "\n";
 }
 
-void Compiler::error(std::string &msg)
+void Compiler::error(std::string msg)
 {
   std::cerr << msg << "\n";
 }

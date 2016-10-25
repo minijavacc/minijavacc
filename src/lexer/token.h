@@ -79,6 +79,7 @@ namespace cmpl
 
   class Token
   {
+    // TODO: add information about token position in source code
   };
   
   class OperatorSeperatorKeywordToken : public Token

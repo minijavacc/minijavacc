@@ -11,6 +11,7 @@ include_directories(
   src/compiler
   src/parser
   src/lexer
+  src/stringtable
 )
 
 # source files

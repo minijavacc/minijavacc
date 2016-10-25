@@ -1,6 +1,7 @@
 #pragma once
 
 #include "token.h"
+#include "stringtable.h"
 
 #include <vector>
 #include <iostream>
@@ -13,16 +14,15 @@ namespace cmpl
   {
     public:
       Lexer();
-      void run();
+      void run(std::ifstream inputFile);
       Token getNextToken();
       
     private:
-      std::ifstream &inputFile;
-      
-      // TODO: stringtable
-      // - maps std::string to IdentifierTokenId
+      StringTable &stringTable;
       
       std::vector<Token> tokenArray;
   };
+  
+  class SyntaxError : public std::exception {};
 
 }
