@@ -20,7 +20,7 @@ file(GLOB_RECURSE compiler_SRCS
   "src/*.cpp"
 )
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED on)
 
 add_executable (compiler ${compiler_SRCS})
