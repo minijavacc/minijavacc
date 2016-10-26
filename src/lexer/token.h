@@ -85,12 +85,14 @@ namespace cmpl
   class OperatorSeperatorKeywordToken : public Token
   {
     public:
+      OperatorSeperatorKeywordToken(TokenType type) : type(type) {};
       TokenType type;
   };
   
   class IdentifierToken : public Token
   {
     public:
+      IdentifierToken(IdentifierTokenId id) : id(id) {};
       IdentifierTokenId id;
   };
   
@@ -98,6 +100,7 @@ namespace cmpl
   class IntegerLiteralToken : public Token
   {
     public:
+      IntegerLiteralToken(uint32_t value) : value(value) {};
       uint32_t value;
   };
 

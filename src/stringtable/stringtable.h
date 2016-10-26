@@ -3,28 +3,33 @@
 #include "token.h"
 
 #include <unordered_map>
+#include <memory>
 
 namespace cmpl
 {
   
   typedef struct
   { 
-    IdentifierTokenId id;
     bool isKeyword;
+    
+    // entry is either string or keyword, so the IDs can share their memory
+    union
+    {
+      IdentifierTokenId identifierTokenId; // if entry is a string
+      TokenType tokenType;                 // if entry is a keyword
+    };
   }
   StringTableContainer;
   
   class StringTable
   {
     public:
-      IdentifierTokenId insertString(std::string string); // throws Exception if string is keyword
-      void insertKeyword(std::string string);
+      std::unique_ptr<Token> insertString(std::string string);
+      void insertKeyword(std::string string, TokenType type);
       
     private:
       std::unordered_map<std::string, StringTableContainer> map;
       IdentifierTokenId nextIdentifierTokenId = 0;
   };
-  
-  class StringIsKeywordException : public std::exception {};
 
 }

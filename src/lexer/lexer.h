@@ -6,6 +6,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 namespace cmpl
 {
@@ -13,14 +14,15 @@ namespace cmpl
   class Lexer
   {
     public:
-      Lexer();
-      void run(std::ifstream inputFile);
+      Lexer(StringTable &stringTable) : stringTable(stringTable) {};
+      void run(std::ifstream &inputFile);
       Token getNextToken();
       
     private:
-      StringTable &stringTable;
+      void insertToken(std::unique_ptr<Token> token);
       
-      std::vector<Token> tokenArray;
+      StringTable &stringTable;
+      std::vector<std::unique_ptr<Token>> tokenArray;
   };
   
   class SyntaxError : public std::exception {};
