@@ -14,48 +14,48 @@ using namespace cmpl;
   !  (done)
   (  (done)
   )  (done)
-  *=
-  *
-  ++
-  +=
-  +
-  ,
-  -=
-  --
-  -
-  .
-  /=,
-  /
-  :
-  ;
-  <<=
-  <<
-  <=
-  <
-  ==
-  =
-  >=
-  >>=
-  >>>=
-  >>>
-  >>
-  >
-  ?
-  %=
-  %
-  &=
-  &&
-  &
-  [
-  ],
-  ^=
-  ^
-  {
-  }
-  ~
-  |=
-  ||
-  |
+  *= (done)
+  *  (done)
+  ++ (done)
+  += (done)
+  +  (done)
+  ,  (done)
+  -= (done)
+  -- (done)
+  -  (done)
+  .  (done)
+  /= (done)
+  /  (done)
+  :  (done)
+  ;  (done)
+  <<=(done)
+  << (done)
+  <= (done)
+  <  (done)
+  == (done)
+  =  (done)
+  >= (done)
+  >>=(done)
+  >>>=(done)
+  >>>(done)
+  >> (done)
+  >  (done)
+  ?  (done)
+  %= (done)
+  %  (done)
+  &= (done)
+  && (done)
+  &  (done)
+  [  (done)
+  ]  (done)
+  ^= (done)
+  ^  (done)
+  {  (done)
+  }  (done)
+  ~  (done)
+  |= (done)
+  || (done)
+  |  (done)
  */
 
 /*
@@ -76,8 +76,6 @@ void Lexer::run(std::ifstream &inputFile)
   while(inputFile.get(currentChar))
   {
     // states of the state machine have labels starting with 's_'
-    
-    // TODO: handle EOF
     
     s_0:
     switch (currentChar)
@@ -126,11 +124,172 @@ void Lexer::run(std::ifstream &inputFile)
           goto s_eof;
         goto s_0;
       
+      case '/':
+        // continue in state machine
+        currentTokenString += currentChar;        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_slash;
       
+      case '*':
+        // continue in state machine
+        currentTokenString += currentChar;        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_star; 
       
-      // ...
+      case '+':
+        // continue in state machine
+        currentTokenString += currentChar;        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_plus; 
       
+      case ',':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_KOMMA));
+        
+        // begin next token
+        currentTokenString = "";
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
       
+      case '-':
+        // continue in state machine
+        currentTokenString += currentChar;        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_minus; 
+      
+      case '.':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_DOT));
+        
+        // begin next token
+        currentTokenString = "";
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      case ':':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_COLON));
+        
+        // begin next token
+        currentTokenString = "";
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      case ';':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_SEMICOLON));
+        
+        // begin next token
+        currentTokenString = "";
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      case '<':
+        // continue in state machine
+        currentTokenString += currentChar;        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_less_1;
+        
+      case '=':
+        // continue in state machine
+        currentTokenString += currentChar;        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_equal; 
+      
+      case '>':
+        // continue in state machine
+        currentTokenString += currentChar;        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_more_1;
+      
+      case '?':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_QUESTM));
+        
+        // begin next token
+        currentTokenString = "";
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      case '%':
+        // continue in state machine
+        currentTokenString += currentChar;        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_percent;
+      
+      case '&':
+        // continue in state machine
+        currentTokenString += currentChar;        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_and;
+      
+      case '[':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LBRACK));
+        
+        // begin next token
+        currentTokenString = "";
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      case ']':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_RBRACK));
+        
+        // begin next token
+        currentTokenString = "";
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      case '^':
+        // continue in state machine
+        currentTokenString += currentChar;        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_caret;
+      
+      case '{':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LBRACE));
+        
+        // begin next token
+        currentTokenString = "";
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      case '}':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_RBRACE));
+        
+        // begin next token
+        currentTokenString = "";
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      case '~':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_TILDE));
+        
+        // begin next token
+        currentTokenString = "";
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+        
+      case '|':
+        // continue in state machine
+        currentTokenString += currentChar;        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_pipe;
       
       // white spaces
       case ' ':
@@ -222,11 +381,418 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
     }
     
+    s_star:
+    switch (currentChar)
+    {
+      case '=':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_STAR_EQUAL));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      default:
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_STAR));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        goto s_0;
+    }
     
+    s_plus:
+    switch (currentChar)
+    {
+      case '=':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PLUS_EQUAL));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      case '+':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PLUS_PLUS));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      default:
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PLUS));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        goto s_0;
+    }
     
-    // ...
+    s_minus:
+    switch (currentChar)
+    {
+      case '=':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MINUS_EQUAL));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      case '-':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MINUS_MINUS));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      default:
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MINUS));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        goto s_0;
+    }
     
+    s_less_1:
+    switch (currentChar)
+    {
+      case '<':
+        // continue in state machine
+        currentTokenString += currentChar;        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_less_2;
+      
+      case '=':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LESS_EQUAL));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      default:
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LESS));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        goto s_0;
+    }
     
+    s_less_2:
+    switch (currentChar)
+    {
+      case '=':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LESS_LESS_EQUAL));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      default:
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LESS_LESS));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        goto s_0;
+    }
+    
+    s_equal:
+    switch (currentChar)
+    {
+      case '=':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_EQUAL_EQUAL));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      default:
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_EQUAL));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        goto s_0;
+    }
+    
+    s_more_1:
+    switch (currentChar)
+    {
+      case '>':
+        // continue in state machine
+        currentTokenString += currentChar;        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_more_2;
+      
+      case '=':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_EQUAL));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      default:
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        goto s_0;
+    }
+    
+    s_more_2:
+    switch (currentChar)
+    {
+      case '>':
+        // continue in state machine
+        currentTokenString += currentChar;        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_more_3;
+      
+      case '=':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_MORE_EQUAL));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      default:
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_MORE));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        goto s_0;
+    }
+    
+    s_more_3:
+    switch (currentChar)
+    {
+      case '=':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_MORE_MORE_EQUAL));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      default:
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_MORE_MORE));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        goto s_0;
+    }
+    
+    s_slash:
+    switch (currentChar)
+    {
+      case '=':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_SLASH_EQUAL));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      // found begin of comment
+      case '*':
+        // continue in state machine  
+        if (!inputFile.get(currentChar))
+          throw SyntaxError();
+        goto s_comment_1;
+      
+      default:
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_SLASH));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        goto s_0;
+    }
+    
+    s_comment_1:
+    switch (currentChar)
+    {
+      case '*':
+        // continue in state machine  
+        if (!inputFile.get(currentChar))
+          throw SyntaxError();
+        goto s_comment_2;
+      
+      default:
+        // continue in state machine  
+        if (!inputFile.get(currentChar))
+          throw SyntaxError();
+        goto s_comment_1;
+    }
+    
+    s_comment_2:
+    switch (currentChar)
+    {
+      case '/':
+        // for a comment to token will be inserted
+      
+        // begin next token
+        currentTokenString = "";
+        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      // comment did not end -> continue as comment
+      default:
+        // continue in state machine  
+        if (!inputFile.get(currentChar))
+          throw SyntaxError();
+        goto s_comment_1;
+    }
+    
+    s_percent:
+    switch (currentChar)
+    {
+      case '=':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PERCENT_EQUAL));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      default:
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PERCENT));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        goto s_0;
+    }
+    
+    s_and:
+    switch (currentChar)
+    {
+      case '=':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_AND_EQUAL));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      case '&':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_AND_AND));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      default:
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_AND));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        goto s_0;
+    }
+    
+    s_caret:
+    switch (currentChar)
+    {
+      case '=':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_CARET_EQUAL));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      default:
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_CARET));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        goto s_0;
+    }
+    
+    s_pipe:
+    switch (currentChar)
+    {
+      case '=':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PIPE_EQUAL));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      case '|':
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PIPE_PIPE));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        if (!inputFile.get(currentChar))
+          goto s_eof;
+        goto s_0;
+      
+      default:
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PIPE));
+        
+        // begin next token
+        currentTokenString = "";
+        
+        goto s_0;
+    }
     
     s_eof:
     return;
@@ -238,6 +804,7 @@ void Lexer::insertToken(std::unique_ptr<Token> token)
   // later this maybe can be used for callbacks etc.
   tokenArray.push_back(std::move(token));
   
+  // TODO: only for debugging! remove before release
   std::cout << "sizeof(tokenArray): " << tokenArray.size() << "\n";
 }
 
