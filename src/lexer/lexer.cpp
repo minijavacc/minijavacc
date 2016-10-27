@@ -799,12 +799,9 @@ void Lexer::run(std::ifstream &inputFile)
   }
 }
 
-void Lexer::insertToken(std::unique_ptr<Token> token)
+inline void Lexer::insertToken(std::unique_ptr<Token> token)
 {
   // later this maybe can be used for callbacks etc.
   tokenArray.push_back(std::move(token));
-  
-  // TODO: only for debugging! remove before release
-  std::cout << "sizeof(tokenArray): " << tokenArray.size() << "\n";
 }
 
