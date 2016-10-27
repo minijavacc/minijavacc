@@ -16,13 +16,13 @@ std::unique_ptr<Token> StringTable::insertString(std::string string)
     if (map[string].isKeyword)
     {
       // create token for keyword
-      auto token = std::make_unique<OperatorSeperatorKeywordToken>(map[string].tokenType);
+      std::unique_ptr<Token> token = std::make_unique<OperatorSeperatorKeywordToken>(map[string].tokenType);
       return token;
     }
     else
     {
       // create token for existing string
-      auto token = std::make_unique<IdentifierToken>(map[string].identifierTokenId);
+      std::unique_ptr<Token> token = std::make_unique<IdentifierToken>(map[string].identifierTokenId);
       return token;
     }
   }
@@ -38,7 +38,7 @@ std::unique_ptr<Token> StringTable::insertString(std::string string)
     map.insert(std::make_pair(string, container));
     
     // create token for new string
-    auto token = std::make_unique<IdentifierToken>(newIdentifierTokenId);
+    std::unique_ptr<Token> token = std::make_unique<IdentifierToken>(newIdentifierTokenId);
     return token;
   }
 }
