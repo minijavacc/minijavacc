@@ -1,7 +1,8 @@
 #include "stringtable.h"
 #include "token.h"
 
-#include <unordered_map>
+#include <map>
+#include <string>
 #include <memory>
 
 using namespace cmpl;

@@ -2,7 +2,7 @@
 
 #include "token.h"
 
-#include <unordered_map>
+#include <map>
 #include <memory>
 
 namespace cmpl
@@ -28,7 +28,7 @@ namespace cmpl
       void insertKeyword(std::string string, TokenType type);
       
     private:
-      std::unordered_map<std::string, StringTableContainer> map;
+      std::map<std::string, StringTableContainer> map;
       IdentifierTokenId nextIdentifierTokenId = 0;
   };
 
