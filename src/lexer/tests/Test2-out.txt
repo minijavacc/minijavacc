@@ -1,0 +1,57 @@
+class
+identifier Test2
+{
+public
+static
+void
+identifier main
+(
+String[]
+identifier args
+)
+{
+identifier Test2
+identifier test2
+=
+new
+identifier Test2
+(
+)
+;
+identifier test2
+.
+identifier integer
+(
+)
+;
+}
+public 
+int
+identifier integer
+(
+)
+{
+return
+integer literal 5
+;
+}
+public
+void
+identifier integer2
+(
+)
+{
+identifier integer
+(
+)
+;
+int
+identifier int3
+=
+identifier integer
+(
+)
+;
+}
+}
+EOF

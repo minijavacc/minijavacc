@@ -1,0 +1,37 @@
+class
+identifier Test1
+{
+public
+static
+void
+identifier main
+(
+String[]
+identifier args
+)
+{
+{
+}
+if
+(
+true
+)
+{
+int
+identifier test
+=
+integer literal 5
+;
+identifier System
+.
+identifier out
+.
+identifier println
+(
+identifier test
+)
+;
+}
+}
+}
+EOF
