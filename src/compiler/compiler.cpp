@@ -1,4 +1,7 @@
 #include "compiler.h"
+#include "lexer.h"
+#include "stringtable.h"
+#include "token.h"
 
 #include <iostream>
 #include <fstream>
@@ -16,6 +19,29 @@ int Compiler::echo(std::ifstream &file)
   }
   
   return 0;
+}
+
+int Compiler::lextest(std::ifstream &file)
+{
+  try {
+    Lexer l = Lexer();
+    l.run(file);
+  
+    std::unique_ptr<Token> t;
+    while (l.getNextToken(t))
+    {
+      std::cout << t->getStringValue() << "\n";
+    }
+  
+    std::cout << "EOF" << "\n";
+  
+    return 0;
+  }
+  catch (SyntaxError &e) 
+  {
+    std::cerr << "error\n";
+    return 1;
+  }
 }
 
 void Compiler::output(std::string msg)

@@ -22,7 +22,7 @@ std::unique_ptr<Token> StringTable::insertString(std::string string)
     else
     {
       // create token for existing string
-      std::unique_ptr<Token> token = std::make_unique<IdentifierToken>(map[string].identifierTokenId);
+      std::unique_ptr<Token> token = std::make_unique<IdentifierToken>(map[string].identifierTokenId, string);
       return token;
     }
   }
@@ -38,7 +38,7 @@ std::unique_ptr<Token> StringTable::insertString(std::string string)
     map.insert(std::make_pair(string, container));
     
     // create token for new string
-    std::unique_ptr<Token> token = std::make_unique<IdentifierToken>(newIdentifierTokenId);
+    std::unique_ptr<Token> token = std::make_unique<IdentifierToken>(newIdentifierTokenId, string);
     return token;
   }
 }

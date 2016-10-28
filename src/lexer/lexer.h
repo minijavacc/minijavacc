@@ -3,7 +3,7 @@
 #include "token.h"
 #include "stringtable.h"
 
-#include <vector>
+#include <queue>
 #include <iostream>
 #include <fstream>
 #include <memory>
@@ -14,15 +14,15 @@ namespace cmpl
   class Lexer
   {
     public:
-      Lexer(StringTable &stringTable) : stringTable(stringTable) {};
+      Lexer();
       void run(std::ifstream &inputFile);
-      Token getNextToken();
+      bool getNextToken(std::unique_ptr<Token> &t);
       
     private:
       void insertToken(std::unique_ptr<Token> token);
       
-      StringTable &stringTable;
-      std::vector<std::unique_ptr<Token>> tokenArray;
+      StringTable stringTable;
+      std::queue<std::unique_ptr<Token>> tokenArray;
   };
   
   class SyntaxError : public std::exception {};

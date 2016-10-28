@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <string>
 
 namespace cmpl
 {
@@ -57,43 +58,90 @@ namespace cmpl
     T_O_PIPE_PIPE, 
     T_O_PIPE, 
     
-    T_K_BOOLEAN,  
-    T_K_CLASS,  
-    T_K_ELSE,  
-    T_K_FALSE,  
-    T_K_IF,  
-    T_K_INT,  
-    T_K_NEW,  
-    T_K_NULL,  
-    T_K_PUBLIC,  
-    T_K_RETURN,  
-    T_K_STATIC,  // no real keyword, only to detect main function
-    T_K_THIS,  
-    T_K_TRUE,  
-    T_K_VOID,  
-    T_K_WHILE, 
+    T_K_ABSTRACT,
+    T_K_ASSERT,
+    T_K_BOOLEAN,
+    T_K_BREAK,
+    T_K_BYTE,
+    T_K_CASE,
+    T_K_CATCH,
+    T_K_CHAR,
+    T_K_CLASS,
+    T_K_CONST,
+    T_K_CONTINUE,
+    T_K_DEFAULT,
+    T_K_DOUBLE,
+    T_K_DO,
+    T_K_ELSE,
+    T_K_ENUM,
+    T_K_EXTENDS,
+    T_K_FALSE,
+    T_K_FINALLY,
+    T_K_FINAL,
+    T_K_FLOAT,
+    T_K_FOR,
+    T_K_GOTO,
+    T_K_IF,
+    T_K_IMPLEMENTS,
+    T_K_IMPORT,
+    T_K_INSTANCEOF,
+    T_K_INTERFACE,
+    T_K_INT,
+    T_K_LONG,
+    T_K_NATIVE,
+    T_K_NEW,
+    T_K_NULL,
+    T_K_PACKAGE,
+    T_K_PRIVATE,
+    T_K_PROTECTED,
+    T_K_PUBLIC,
+    T_K_RETURN,
+    T_K_SHORT,
+    T_K_STATIC,
+    T_K_STRICTFP,
+    T_K_SUPER,
+    T_K_SWITCH,
+    T_K_SYNCHRONIZED,
+    T_K_THIS,
+    T_K_THROWS,
+    T_K_THROW,
+    T_K_TRANSIENT,
+    T_K_TRUE,
+    T_K_TRY,
+    T_K_VOID,
+    T_K_VOLATILE,
+    T_K_WHILE
   }
   TokenType;
   
   typedef int IdentifierTokenId;
 
   class Token
-  {
+  {      
+    public:
+      virtual std::string getStringValue() = 0;
+      const static std::string stringRepresentations[99];
+      
     // TODO: add information about token position in source code
   };
   
   class OperatorSeperatorKeywordToken : public Token
-  {
+  {      
     public:
       OperatorSeperatorKeywordToken(TokenType type) : type(type) {};
       TokenType type;
+      std::string getStringValue();
   };
   
   class IdentifierToken : public Token
   {
     public:
-      IdentifierToken(IdentifierTokenId id) : id(id) {};
+      IdentifierToken(IdentifierTokenId id, std::string idString)
+        : id(id)
+        , identifierString(idString) {};
       IdentifierTokenId id;
+      std::string identifierString;
+      std::string getStringValue();
   };
   
   
@@ -102,6 +150,7 @@ namespace cmpl
     public:
       IntegerLiteralToken(uint32_t value) : value(value) {};
       uint32_t value;
+      std::string getStringValue();
   };
 
 }

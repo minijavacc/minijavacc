@@ -10,6 +10,7 @@ namespace cmpl {
   {
     public:
       int echo(std::ifstream &file);
+      int lextest(std::ifstream &file);
       
       void output(std::string msg);
       void error(std::string msg);

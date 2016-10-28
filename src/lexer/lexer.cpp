@@ -798,10 +798,34 @@ void Lexer::run(std::ifstream &inputFile)
     return;
   }
 }
+Lexer::Lexer() : stringTable(StringTable())
+{
+  // Set default string table
+  // this.stringTable = StringTable();
+  
+  for (int i = T_K_ABSTRACT; i < T_K_WHILE; i++)
+  {
+    stringTable.insertKeyword(Token::stringRepresentations[i], (TokenType)i);
+  }      
+}
 
 inline void Lexer::insertToken(std::unique_ptr<Token> token)
 {
   // later this maybe can be used for callbacks etc.
-  tokenArray.push_back(std::move(token));
+  tokenArray.push(std::move(token));
+}
+
+bool Lexer::getNextToken(std::unique_ptr<Token> &t)
+{
+  if (tokenArray.empty())
+  {
+    return false;
+  }
+  
+  std::unique_ptr<Token> token = std::move(tokenArray.front());
+  tokenArray.pop();
+  t = std::move(token);
+  
+  return true;
 }
 
