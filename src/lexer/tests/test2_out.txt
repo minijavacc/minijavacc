@@ -6,7 +6,9 @@ static
 void
 identifier main
 (
-String[]
+identifier String
+[
+]
 identifier args
 )
 {
@@ -25,7 +27,7 @@ identifier integer
 )
 ;
 }
-public 
+public
 int
 identifier integer
 (

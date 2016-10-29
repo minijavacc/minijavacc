@@ -6,7 +6,9 @@ static
 void
 identifier main
 (
-String[]
+identifier String
+[
+]
 identifier args
 )
 {
@@ -83,7 +85,7 @@ identifier s
 >>
 identifier s
 /
-2
+integer literal 2
 ;
 }
 public
@@ -103,7 +105,7 @@ integer literal 5
 integer literal 6
 )
 ;
-return 
+return
 new
 identifier Test5
 (

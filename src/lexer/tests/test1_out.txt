@@ -6,10 +6,13 @@ static
 void
 identifier main
 (
-String[]
+identifier String
+[
+]
 identifier args
 )
 {
+;
 {
 }
 if
