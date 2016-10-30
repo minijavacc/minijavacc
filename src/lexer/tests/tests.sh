@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -9,10 +9,10 @@ CLEAR='\033[0m'
 BASEDIR='./src/lexer/tests'
 cd ../../..
 
-lexer=./run
+lexer='./run'
 
-test_files=('edge_cases' 'prog1' 'test1' 'test2' 'test3' 'test4' 'test5' 'while')
-error_files=('errors')
+test_files=( 'edge_cases' 'prog1' 'test1' 'test2' 'test3' 'test4' 'test5' 'while' )
+error_files=( 'errors' )
 
 
 
@@ -49,7 +49,7 @@ do
   le=`cat "${BASEDIR}/"$i".err" | grep error | wc -l`
 
   if [ $le -lt 1  ]; then
-    echo "${RED}"$i" tests failed (stderr).${CLEAR} Should produce error but does not."
+    echo -e "${RED}"$i" tests failed (stderr).${CLEAR} Should produce error but does not."
     success=false
   fi
 
@@ -64,7 +64,7 @@ cd $BASEDIR
 
 
 if [ "$success" = true ]; then
-  echo "${GREEN}All lexer tests passed${CLEAR}"
+  echo -e "${GREEN}All lexer tests passed${CLEAR}"
   exit 0
 else
   exit 1

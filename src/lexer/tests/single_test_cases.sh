@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ops=(
 "!="
@@ -120,8 +120,8 @@ success=true
     
 for ((i=0; i<${#ops[*]}; i++));
 do
-  echo "${ops[$i]}" > "single_${op_names[$i]}_in.txt"
-  echo "${ops[$i]}\nEOF" > "single_${op_names[$i]}_out.txt"
+  echo -e "${ops[$i]}" > "single_${op_names[$i]}_in.txt"
+  echo -e "${ops[$i]}\nEOF" > "single_${op_names[$i]}_out.txt"
   
   $lexer --lextest "single_${op_names[$i]}_in.txt" > "single_${op_names[$i]}.out"
   
@@ -130,7 +130,7 @@ do
   lo=`cat o | wc -l`
   
   if [ $lo -ne 0 ]; then
-    echo "${RED}${op_names[$i]} tests failed (stdout).${CLEAR} Diff:"
+    echo -e "${RED}${op_names[$i]} tests failed (stdout).${CLEAR} Diff:"
     cat o
     # cat "${BASEDIR}/"$i".out"
     echo ''
@@ -145,7 +145,7 @@ done
 
 
 if [ "$success" = true ]; then
-  echo "${GREEN}All single token lexer tests passed${CLEAR}"
+  echo -e "${GREEN}All single token lexer tests passed${CLEAR}"
   exit 0
 else
   exit 1
