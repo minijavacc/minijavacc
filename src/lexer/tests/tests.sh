@@ -6,20 +6,13 @@ CLEAR='\033[0m'
 
 # Assume script resides inside src/lexer/tests directory and is always called from there
 
-BASEDIR='./src/lexer/tests/'
+BASEDIR='./src/lexer/tests'
 cd ../../..
 
 lexer=./run
 
-test_files[0]="edge_cases"
-test_files[2]="prog1"
-test_files[3]="test1"
-test_files[4]="test2"
-test_files[5]="test3"
-test_files[5]="test4"
-test_files[5]="test5"
-
-error_files[0]="errors"
+test_files=('edge_cases' 'prog1' 'test1' 'test2' 'test3' 'test4' 'test5' 'while')
+error_files=('errors')
 
 
 
@@ -38,6 +31,7 @@ do
   if [ $lo -ne 0  ]; then
     echo "${RED}"$i" tests failed (stdout).${CLEAR} Diff:"
     cat o
+    # cat "${BASEDIR}/"$i".out"
     echo ''
     success=false
   fi
