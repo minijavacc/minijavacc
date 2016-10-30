@@ -24,5 +24,18 @@ int main(int argc, char* argv[])
     }
   }
   
+  if (input.cmdOptionExists("--lextest"))
+  {
+    const std::string &filename = input.getCmdOption("--lextest");
+    if (!filename.empty())
+    {
+      std::ifstream file;
+      
+      file.open(filename);
+      c.lextest(file);
+      file.close();
+    }
+  }
+  
   return 0;
 }
