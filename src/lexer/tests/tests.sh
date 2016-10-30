@@ -58,6 +58,10 @@ done
 
 
 
+cd $BASEDIR
+./single_test_cases.sh
+
+
 
 if [ "$success" = true ]; then
   echo "${GREEN}All lexer tests passed${CLEAR}"
