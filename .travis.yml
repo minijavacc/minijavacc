@@ -1,4 +1,4 @@
-script: ./build
+script: ./build_and_test
 
 # Force use modern cpp environment, see http://stackoverflow.com/questions/35110123/travis-ci-with-c14-and-linux
 

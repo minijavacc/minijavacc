@@ -1,10 +1,12 @@
 #!/bin/sh
 
 RED='\033[0;31m'
+GREEN='\033[0;32m'
 CLEAR='\033[0m'
 
-BASEDIR=$(pwd)
+# Assume script resides inside src/lexer/tests directory and is always called from there
 
+BASEDIR='./src/lexer/tests/'
 cd ../../..
 
 lexer=./run
@@ -64,6 +66,7 @@ done
 
 
 if [ "$success" = true ]; then
+  echo "${GREEN}All lexer tests passed${CLEAR}"
   exit 0
 else
   exit 1

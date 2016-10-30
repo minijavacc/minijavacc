@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Assume script resides inside the project root directory and is always called from there
+./build
+cd ./src/lexer/tests/
+./tests.sh
