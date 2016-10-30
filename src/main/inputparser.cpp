@@ -1,31 +1,45 @@
 #include "inputparser.h"
 
-#include <vector>
-#include <string>
 #include <algorithm>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 using namespace cmpl;
 
-InputParser::InputParser (int &argc, char **argv){
+InputParser::InputParser() { }
+
+void InputParser::parseArgs(int &argc, char **argv)
+{
   for (int i=1; i < argc; ++i)
   {
-    this->tokens.push_back(std::string(argv[i]));
+    auto parameter = std::string(argv[i]);
+    auto it = this->knownParameters.find(parameter);
+    if (it != this->knownParameters.end()) // parameter known
+    {
+      std::string value = "";
+      if ((*it).second) // parameter needs a value
+      {
+        value = std::string(argv[++i]);
+      }
+      this->givenParameters.emplace(parameter, value);
+    }
+    else
+    {
+      std::string err("invalid argument\n");
+      throw ParameterError(err);
+    }
   }
 }
-    
+
 const std::string& InputParser::getCmdOption(const std::string &option) const
 {
-  std::vector<std::string>::const_iterator itr;
-  itr = std::find(this->tokens.begin(), this->tokens.end(), option);
-  
-  if (itr != this->tokens.end() && ++itr != this->tokens.end())
-  {
-    return *itr;
-  }
-  return "";
+  auto it = this->givenParameters.find(option);
+  return (*it).second;
 }
-    
+
 bool InputParser::cmdOptionExists(const std::string &option) const
 {
-  return std::find(this->tokens.begin(), this->tokens.end(), option) != this->tokens.end();
+  auto it = this->givenParameters.find(option);
+  return it != this->givenParameters.end();
 }
