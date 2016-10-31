@@ -24,3 +24,11 @@ matrix:
           sources:
             - llvm-toolchain-precise-3.8
             - ubuntu-toolchain-r-test
+    - env: CPPCHECK=RUN
+      os: linux
+      addons:
+        apt:
+          packages:
+            - cppcheck
+  allow_failures:
+    - env: CPPCHECK=RUN
