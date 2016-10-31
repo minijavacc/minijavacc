@@ -1,6 +1,7 @@
 import qualified Data.Char as Char
 import Data.List
 import System.IO
+import System.Environment
 
 data TokenType = T_EXCL
                | T_EXCL_EQUALS 
@@ -60,9 +61,18 @@ instance Show Token where
     show (Token t s p) = s
 
 
+readContents "--lextest" f = do
+    contents <- readFile f
+    return contents
+    
+readContents o f = do
+    contents <- getContents
+    return contents
+
 -- Main entry
 main = do
-    contents <- getContents
+    [o, f] <- getArgs
+    contents <- readContents o f
     let tokenList = tokenize contents in
         putStr (intercalate "\n" $ (map show tokenList) ++ ["EOF\n"])
               
