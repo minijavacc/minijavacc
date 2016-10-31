@@ -20,13 +20,20 @@ void InputParser::parseArgs(int &argc, char **argv)
       std::string value = "";
       if ((*it).second) // parameter needs a value
       {
-        value = std::string(argv[++i]);
+        if (++i < argc) {
+          value = std::string(argv[i]);
+        }
+        else
+        {
+          std::string err("insufficient arguments\n");
+          throw ParameterError(err);
+        }
       }
       this->givenParameters.emplace(parameter, value);
     }
     else
     {
-      std::string err("invalid argument\n");
+      std::string err("invalid parameters\n");
       throw ParameterError(err);
     }
   }
