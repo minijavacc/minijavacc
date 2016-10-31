@@ -9,9 +9,9 @@ include_directories(
   src
   src/main
   src/compiler
-  src/parser
   src/lexer
   src/stringtable
+  src/parser
 )
 
 # source files
