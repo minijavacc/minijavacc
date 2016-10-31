@@ -9,11 +9,11 @@ namespace cmpl {
   class Compiler
   {
     public:
-      int echo(std::ifstream &file);
-      int lextest(std::ifstream &file);
+      static int echo(std::ifstream &file);
+      static int lextest(std::ifstream &file);
       
-      void output(std::string msg);
-      void error(std::string msg);
+      static void output(std::string msg);
+      static void error(std::string msg);
   };
 
 }
