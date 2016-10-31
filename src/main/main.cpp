@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
       readFile(filename, file);
       c.echo(file);
     }
-    catch (std::runtime_error err)
+    catch (std::runtime_error &err)
     {
       printException(err);
       return 2;
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
     {
       readFile(filename, file);
     }
-    catch (std::runtime_error err)
+    catch (std::runtime_error &err)
     {
       printException(err);
       return 3;
