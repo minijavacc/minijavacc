@@ -9,14 +9,10 @@
 using namespace cmpl;
 
 
-std::ifstream readFile(const std::string& filename)
+void readFile(const std::string& filename, std::ifstream& file)
 {
-  std::ifstream file(filename);
-  if (file.good())
-  {
-    return file;
-  }
-  else
+  file.open(filename);
+  if (file.bad())
   {
     std::string err = "Can't read input file " + filename;
     throw std::runtime_error(err);
@@ -49,7 +45,7 @@ int main(int argc, char* argv[])
     std::ifstream file;
     try
     {
-      file = readFile(filename);
+      readFile(filename, file);
       c.echo(file);
     }
     catch (std::runtime_error err)
@@ -66,7 +62,7 @@ int main(int argc, char* argv[])
     std::ifstream file;
     try
     {
-      file = readFile(filename);
+      readFile(filename, file);
     }
     catch (std::runtime_error err)
     {
