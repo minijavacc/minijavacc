@@ -13,11 +13,15 @@ namespace cmpl
     public:
       Parser(Lexer &lexer) : lexer(lexer) {};
       void run();
-      void getAST(std::shared_ptr<Node> &t);
+      void getAST(std::unique_ptr<Node> &n);
     
     private:
+      std::unique_ptr<Node> parseProgram();
+      std::unique_ptr<Node> parseClassDeclaration();
+      std::unique_ptr<Node> parseClassMember();
+      
       Lexer& lexer;
-      std::shared_ptr<Node> ast;
+      std::unique_ptr<Node> ast;
   };
   
   class SemanticError : public std::exception {};

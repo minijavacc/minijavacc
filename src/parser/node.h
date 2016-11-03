@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 #include <string>
 
 namespace cmpl
@@ -22,30 +23,40 @@ namespace cmpl
   class UnaryNode : public Node
   {
     public:
-      UnaryNode(std::shared_ptr<Node> node) : node(node) {};
+      UnaryNode(std::unique_ptr<Node> node) : node(std::move(node)) {};
       virtual std::string getStringValue() = 0; // must be implemented by subclasses
     
     protected:
-      std::shared_ptr<Node> node;
+      std::unique_ptr<Node> node;
   };
 
   class BinaryNode : public Node
   {
     public:
-      BinaryNode(std::shared_ptr<Node> left, std::shared_ptr<Node> right) : left(left), right(right) {};
+      BinaryNode(std::unique_ptr<Node> left, std::unique_ptr<Node> right) : left(std::move(left)), right(std::move(right)) {};
       virtual std::string getStringValue() = 0; // must be implemented by subclasses
     
     protected:
-      std::shared_ptr<Node> left;
-      std::shared_ptr<Node> right;
+      std::unique_ptr<Node> left;
+      std::unique_ptr<Node> right;
+  };
+  
+  // n-ary Node
+  class NaryNode : public Node
+  {
+    public:
+      NaryNode(std::vector<std::unique_ptr<Node>> nodes) : nodes(std::move(nodes)) {};
+      virtual std::string getStringValue() = 0; // must be implemented by subclasses
+    
+    protected:
+      std::vector<std::unique_ptr<Node>> nodes;
   };
 
   // actual nodes
-  // TODO: implement nodes, only examples so far
-  class Addition : public BinaryNode
+  class ProgramNode : public NaryNode
   {
     public:
-      using BinaryNode::BinaryNode; // use constructor of base class
+      using NaryNode::NaryNode; // use constructor of base class
       std::string getStringValue();
   };
 

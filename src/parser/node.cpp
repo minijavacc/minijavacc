@@ -3,7 +3,8 @@
 using namespace cmpl;
 
 // example implementation to show getStringValue()
-std::string Addition::getStringValue()
+std::string ProgramNode::getStringValue()
 {
-  return "(" + left->getStringValue() + " + " + right->getStringValue() + ")";
+  // TODO: return some string representation of this node and its children
+  return "";
 }
