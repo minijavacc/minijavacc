@@ -1,29 +1,43 @@
 #pragma once
 
+#include "compiler.h"
+
+#include <functional>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace cmpl
 {
+  class Option
+  {
+    public:
+      Option(std::string string, std::function<int(std::ifstream &)> fn) :
+        string(string), fn(fn) { }
+      
+      std::string string;
+      std::function<int(std::ifstream &)> fn;
+      std::string filename;
+  };
 
   class InputParser
   {
-    typedef std::unordered_map<std::string,bool> parametermap;
-    typedef std::unordered_map<std::string,std::string> parameters;
+    typedef std::vector<std::pair<std::function<int(std::ifstream &)>, std::string>> parameters;
 
     public:
       InputParser();
       void parseArgs(int &argc, char **argv);
-      const std::string& getCmdOption(const std::string &option) const;
-      bool cmdOptionExists(const std::string &option) const;
+      int handleArgs() const;
       
     private:
-      // known parameters and whether they need an additional value (e.g. an input file)
-      const parametermap knownParameters = {{"--echo", true}, {"--lextest", true}};
+      // known parameters, their functions and whether they need an additional input file
+      const std::vector<Option> knownOptions = {
+        Option("--echo", Compiler::echo),
+        Option("--lextest", Compiler::lextest),
+        Option("--parsetest", Compiler::parsetest)
+      };
 
-      parameters givenParameters;
+      std::vector<Option> givenOptions;
   };
   
   class ParameterError : public std::invalid_argument
