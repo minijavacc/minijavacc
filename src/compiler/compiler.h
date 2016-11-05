@@ -11,6 +11,7 @@ namespace cmpl {
     public:
       static int echo(std::ifstream &file);
       static int lextest(std::ifstream &file);
+      static int parsetest(std::ifstream &file);
       
       static void output(std::string msg);
       static void error(std::string msg);
