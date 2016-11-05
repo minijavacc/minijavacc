@@ -44,6 +44,11 @@ int Compiler::lextest(std::ifstream &file)
   }
 }
 
+int Compiler::parsetest(std::ifstream &file)
+{
+  return 0;
+}
+
 void Compiler::output(std::string msg)
 {
   std::cout << msg << "\n";

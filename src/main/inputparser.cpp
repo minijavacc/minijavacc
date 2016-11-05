@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 using namespace cmpl;
@@ -13,25 +12,28 @@ void InputParser::parseArgs(int &argc, char **argv)
 {
   for (int i=1; i < argc; ++i)
   {
-    auto parameter = std::string(argv[i]);
-    auto it = this->knownParameters.find(parameter);
-    if (it != this->knownParameters.end()) // parameter known
+    bool paramFound = false;
+
+    for (Option opt : knownOptions)
     {
-      std::string value = "";
-      if ((*it).second) // parameter needs a value
+      if (opt.string.compare(std::string(argv[i])) == 0) // option known
       {
-        if (++i < argc) {
-          value = std::string(argv[i]);
-        }
-        else
-        {
-          std::string err("insufficient arguments\n");
-          throw ParameterError(err);
-        }
+          if (++i < argc)
+          {
+            opt.filename = std::string(argv[i]);
+            givenOptions.push_back(opt);
+          }
+          else
+          {
+            std::string err("insufficient arguments\n");
+            throw ParameterError(err);
+          }
+        paramFound = true;
+        break;
       }
-      this->givenParameters.emplace(parameter, value);
     }
-    else
+    
+    if (!paramFound)
     {
       std::string err("invalid parameters\n");
       throw ParameterError(err);
@@ -39,14 +41,19 @@ void InputParser::parseArgs(int &argc, char **argv)
   }
 }
 
-const std::string& InputParser::getCmdOption(const std::string &option) const
+int InputParser::handleArgs() const
 {
-  auto it = this->givenParameters.find(option);
-  return (*it).second;
-}
+  for (auto opt : givenOptions)
+  {
+    std::ifstream file(opt.filename);
+    
+    if (file.bad())
+    {
+      std::string err = "Can't read input file " + opt.filename;
+      throw std::runtime_error(err);
+    }
 
-bool InputParser::cmdOptionExists(const std::string &option) const
-{
-  auto it = this->givenParameters.find(option);
-  return it != this->givenParameters.end();
+    // actual call
+    return opt.fn(file);
+  }
 }

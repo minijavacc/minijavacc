@@ -2,22 +2,8 @@
 #include "inputparser.h"
 
 #include <iostream>
-#include <functional>
-#include <fstream>
-#include <stdexcept>
 
 using namespace cmpl;
-
-
-void readFile(const std::string& filename, std::ifstream& file)
-{
-  file.open(filename);
-  if (file.bad())
-  {
-    std::string err = "Can't read input file " + filename;
-    throw std::runtime_error(err);
-  }
-}
 
 void printException(const std::exception e)
 {
@@ -35,42 +21,17 @@ int main(int argc, char* argv[])
   }
   catch (ParameterError &e)
   {
-    std::cerr << e.what();
+    printException(e);
     return 1;
   }
-  
-  if (input.cmdOptionExists("--echo"))
+
+  try
   {
-    const std::string &filename = input.getCmdOption("--echo");
-    std::ifstream file;
-    try
-    {
-      readFile(filename, file);
-      c.echo(file);
-    }
-    catch (std::runtime_error &err)
-    {
-      printException(err);
-      return 2;
-    }
-    
+    return input.handleArgs();
   }
-  
-  if (input.cmdOptionExists("--lextest"))
+  catch (std::runtime_error &e)
   {
-    const std::string &filename = input.getCmdOption("--lextest");
-    std::ifstream file;
-    try
-    {
-      readFile(filename, file);
-    }
-    catch (std::runtime_error &err)
-    {
-      printException(err);
-      return 3;
-    }
-    c.lextest(file);
+    printException(e);
+    return 2;
   }
-  
-  return 0;
 }
