@@ -46,15 +46,14 @@ int InputParser::handleArgs() const
   for (auto opt : givenOptions)
   {
     std::ifstream file(opt.filename);
-    if (file.good())
+    
+    if (file.bad())
     {
-      // actual call
-      return opt.fn(file);
+      std::string err = "Can't read input file " + opt.filename;
+      throw std::runtime_error(err);
     }
-    else
-    {
-      std::cerr << "Can't read input file " << opt.filename;
-      return 5;
-    }
+
+    // actual call
+    return opt.fn(file);
   }
 }
