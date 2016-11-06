@@ -1,0 +1,103 @@
+Program -> ClassDeclarations
+ClassDeclarations -> ClassDeclaration ClassDeclarations | e
+
+ClassDeclaration -> class IDENT { ClassMembers }
+ClassMembers -> ClassMember ClassMembers | e
+
+ClassMember -> FieldMethod | MainMethod
+
+MainMethod -> public static void IDENT ( String [] IDENT ) Block
+
+FieldMethod -> public Type IDENT FieldMethod'
+FieldMethod' -> ( Parameters ) Block | ;
+
+Parameters -> Parameter Parameters' | e
+Parameters' -> , Parameter Parameters' | e
+Parameter -> Type IDENT
+
+Type -> BasicType Brackets
+
+Brackets -> [] Brackets | e
+
+BasicType -> int | boolean | void | IDENT
+
+Statement -> Block | IfStatement | EmptyStatement | ExpressionStatement | WhileStatement | ReturnStatement
+
+Block -> { BlockStatements }
+
+BlockStatements -> BlockStatement BlockStatements | e
+
+BlockStatement -> Statement | LocalVariableDeclarationStatement
+
+LocalVariableDeclarationStatement -> Type IDENT LVDS' ;
+LVDS' -> = Expression | e
+
+EmptyStatement -> ;
+
+WhileStatement -> while (Expression) Statement
+
+IfStatement -> if ( Expression ) Statement IfStatement'
+IfStatement' -> else Statement | e
+
+ExpressionStatement -> Expression ;
+
+ReturnStatement -> return ; | return Expression ;
+
+
+
+Expression -> AssignmentExpression
+
+AssignmentExpression -> LogicalOrExpression AssignmentExpression'
+AssignmentExpression' -> = AssignmentExpression | e
+
+LogicalOrExpression -> LogicalAndExpression LogicalOrExpression'
+LogicalOrExpression' -> || LogicalAndExpression LogicalOrExpression' | e
+
+LogicalAndExpression -> EqualityExpression LogicalAndExpression'
+LogicalAndExpression' -> && EqualityExpression LogicalAndExpression' | e
+
+EqualityExpression -> RelationalExpression EqualityExpression'
+EqualityExpression' -> == RelationalExpression EqualityExpression'
+                     | != RelationalExpression EqualityExpression'
+                     | e
+
+RelationalExpression -> AdditiveExpression RelationalExpression'
+RelationalExpression' -> < AdditiveExpression RelationalExpression'
+                       | <= AdditiveExpression RelationalExpression'
+                       | > AdditiveExpression RelationalExpression'
+                       | >= AdditiveExpression RelationalExpression'
+                       | e
+                      
+AdditiveExpression -> MultiplicativeExpression AdditiveExpression'
+AdditiveExpression' -> + MultiplicativeExpression AdditiveExpression'
+                     | - MultiplicativeExpression AdditiveExpression'
+                     | e
+                     
+MultiplicativeExpression -> UnaryExpression MultiplicativeExpression'
+MultiplicativeExpression' -> * UnaryExpression MultiplicativeExpression'
+                           | / UnaryExpression MultiplicativeExpression'
+                           | % UnaryExpression MultiplicativeExpression'
+                           | e
+
+UnaryExpression -> PostfixExpression | ! UnaryExpression | - UnaryExpression
+
+PostfixExpression -> PrimaryExpression PostfixOps
+PostfixOps -> PostFixOp PostfixOps | e
+PostfixOp -> MethodInvocation | FieldAccess | ArrayAccess
+
+MethodInvocation -> . IDENT ( Arguments )
+
+FieldAccess -> . IDENT
+
+ArrayAccess -> [ Expression ]
+
+Arguments -> Expression Arguments' | e
+Arguments' -> , Expression Arguments' | e
+
+PrimaryExpression -> null | false | true | INTEGER_LITERAL | IDENT | IDENT ( Arguments ) | this | ( Expression ) | NewObjectExpression | NewArrayExpression
+
+NewObjectExpression -> new IDENT ()
+  First = { new IDENT ( }
+
+NewArrayExpression -> new BasicType [ Expression ] Brackets
+  First = { new IDENT [, new void [, ... }
