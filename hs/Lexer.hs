@@ -71,7 +71,14 @@ tokenize s = start s (1, 1)
 -- Skip whitespace
 start (' ':xs)  (r, c) = start xs (r, c+1)
 start ('\t':xs) (r, c) = start xs (r, c+1)
-start ('\n':xs) (r, c) = start xs (r+1, c)
+start ('\n':xs) (r, c) = start xs (r+1, 0)
+start ('\0':xs) (r, c) = start xs (r, c+1)
+start ('\a':xs) (r, c) = start xs (r, c+1)
+start ('\b':xs) (r, c) = start xs (r, c+1)
+start ('\f':xs) (r, c) = start xs (r, c+1)
+start ('\r':xs) (r, c) = start xs (r, c+1)
+start ('\v':xs) (r, c) = start xs (r, c+1)
+
 
 -- Operators and separators
 start ('!':xs) (r, c) = excl xs (r, c)
