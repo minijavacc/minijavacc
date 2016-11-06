@@ -6,6 +6,7 @@ import Lexer
 type Ident = String
           
 data Program = Program ClassDeclarations deriving (Show)
+        
 data ClassDeclarations = CDs ClassDeclaration ClassDeclarations | CDEps deriving (Show)
 
 data ClassDeclaration = CD Ident ClassMembers deriving (Show)

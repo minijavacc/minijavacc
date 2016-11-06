@@ -10,6 +10,7 @@ import System.IO
 import System.Environment
 import Data.List
 import Control.Exception as X
+import System.Exit
 
 doSomething "--lextest" f = do
     contents <- readFile f
@@ -19,22 +20,32 @@ doSomething "--lextest" f = do
 doSomething "--parsetest" f = do
     contents <- readFile f
     let p = parse $ tokenize contents
+    X.catch (doParse contents) printErr
+    -- putStr (show p)
     return ()
 
-check f = doSomething "--parsetest" f
+doParse contents = do
+    let p = parse $ tokenize contents
+    hPutStr stdout ( case (show p) of
+        "error" -> "an error occurred\n"
+        s -> ""
+        )
 
 
 printErr :: SomeException -> IO ()
-printErr e =  do
-        case fromException e of
-                Just (x :: PatternMatchFail) -> putStrLn "I caught the exception" >> print x
-                nothing -> return ()
+printErr e = do
+    hPutStrLn stderr $ "an error occurred: " ++ show e
+    exitWith (ExitFailure 1)
                 
            
-doTest :: IO ()     
-doTest = do
-    let res = testProgram
-    return ()
+-- doTest :: IO ()
+-- doTest = do
+--     let res = testProgram
+--     putStrLn $ show res
+--     return ()
+--
+-- doTestWithCatch :: IO ()
+-- doTestWithCatch = X.catch doTest printErr
     
 
         
