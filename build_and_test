@@ -5,5 +5,9 @@ if [ "$CPPCHECK" = "RUN" ]
 then
   cppcheck --enable=all -i tests --error-exitcode=1 ./src/
 else
-  ./build && cd ./src/lexer/tests/ && ./tests.sh
+  ./build
+  cd ./src/lexer/tests/
+  ./tests.sh
+  cd ./../../../tests/
+  MJ_RUN="./run" ./mjt.py syntax
 fi
