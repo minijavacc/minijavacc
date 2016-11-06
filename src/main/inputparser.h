@@ -22,8 +22,6 @@ namespace cmpl
 
   class InputParser
   {
-    typedef std::vector<std::pair<std::function<int(std::ifstream &)>, std::string>> parameters;
-
     public:
       InputParser();
       void parseArgs(int &argc, char **argv);
