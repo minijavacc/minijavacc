@@ -2,6 +2,45 @@
 
 using namespace cmpl;
 
+/************************ helper functions **************/
+
+// if token array of lexer is empty (method returns false) throw semanticError for now,
+// later depends on implementation of lexer running in parallel (to avoid polling)
+inline void Parser::nextToken(std::unique_ptr<Token>& currentToken)
+{
+  if(!lexer.getNextToken(currentToken)) {
+    throw SemanticError();
+  }
+}
+
+// Checks whether given token is of specified type T
+// returned pointer is for read access only as it's a raw pointer of unique_pointer
+template<typename T>
+inline void Parser::checkNextTokenTypeIs(std::unique_ptr<Token>& token)
+{
+  nextToken(token);
+  if (!dynamic_cast<T*>(token.get()))
+  {
+    throw SemanticError();
+  }
+}
+
+// combines checkTokenTypeIs with checking for specialized sub-type of operator/seperator tokens
+inline void Parser::checkNextIsOSKTokenWithType(std::unique_ptr<Token>& token, const TokenType& tokenType)
+{
+  nextToken(token);
+  OperatorSeperatorKeywordToken* osk_t;
+  
+  if (!(osk_t = dynamic_cast<OperatorSeperatorKeywordToken*>(token.get()))
+      || osk_t->type != tokenType)
+  {
+    throw SemanticError();
+  }
+}
+
+/************************ end helper functions **************/
+
+
 void Parser::run()
 {
   // each parseNONTERMINAL() function requests their token at the beginning
@@ -13,8 +52,9 @@ std::unique_ptr<Node> Parser::parseProgram()
   std::unique_ptr<Token> currentToken;
   std::unique_ptr<Node> generatedNode;
   
-  // TODO: do something if array is empty (returns false) -> just throw semanticError?
-  lexer.getNextToken(currentToken);
+  nextToken(currentToken);
+  
+  // check for class token
   
   generatedNode = parseClassDeclaration();
   
@@ -26,72 +66,14 @@ std::unique_ptr<Node> Parser::parseClassDeclaration()
   std::unique_ptr<Token> currentToken;
   std::unique_ptr<Node> generatedNode;
   
-  // TODO: do something if array is empty (returns false) -> just throw semanticError?
-  lexer.getNextToken(currentToken);
-  
-  // check if current token is an OperatorSeperatorKeywordToken
-  OperatorSeperatorKeywordToken* osk_t; // only for read access! raw pointer of unique_pointer
-  if (!(osk_t = dynamic_cast<OperatorSeperatorKeywordToken*>(currentToken.get())))
-  {
-    throw SemanticError();
-  }
-  
-  // check if keyword is 'class'
-  if (osk_t->type != T_K_CLASS)
-  {
-    throw SemanticError();
-  }
-  
-  // TODO: do something if array is empty (returns false) -> just throw semanticError?
-  lexer.getNextToken(currentToken);
-  
-  // check if current token is an IdentifierToken
-  IdentifierToken* i_t; // only for read access! raw pointer of unique_pointer
-  if (!(i_t = dynamic_cast<IdentifierToken*>(currentToken.get())))
-  {
-    throw SemanticError();
-  }
-  
-  // TODO: do something if array is empty (returns false) -> just throw semanticError?
-  lexer.getNextToken(currentToken);
-  
-  // check if current token is an OperatorSeperatorKeywordToken
-  // reuse old osk_t pointer
-  if (!(osk_t = dynamic_cast<OperatorSeperatorKeywordToken*>(currentToken.get())))
-  {
-    throw SemanticError();
-  }
-  
-  // check if token is '{'
-  if (osk_t->type != T_O_LBRACE)
-  {
-    throw SemanticError();
-  }
-  
-  
-  
+  checkNextIsOSKTokenWithType(currentToken, T_K_CLASS);
+  checkNextTokenTypeIs<IdentifierToken>(currentToken);
+  checkNextIsOSKTokenWithType(currentToken, T_O_LBRACE);
   
   // call parseClassMember() and get AST
   generatedNode = parseClassMember();
   
-  
-  
-  
-  // TODO: do something if array is empty (returns false) -> just throw semanticError?
-  lexer.getNextToken(currentToken);
-  
-  // check if current token is an OperatorSeperatorKeywordToken
-  // reuse old osk_t pointer
-  if (!(osk_t = dynamic_cast<OperatorSeperatorKeywordToken*>(currentToken.get())))
-  {
-    throw SemanticError();
-  }
-  
-  // check if token is '}'
-  if (osk_t->type != T_O_RBRACE)
-  {
-    throw SemanticError();
-  }
+  checkNextIsOSKTokenWithType(currentToken, T_O_RBRACE);
   
   return generatedNode;
 }
