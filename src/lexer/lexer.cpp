@@ -704,7 +704,7 @@ void Lexer::run(std::ifstream &inputFile)
       
       // found begin of comment
       case '*':
-        // continue in state machine  
+        // continue in state machine
         if (!inputFile.get(currentChar)) {
           throw SyntaxError();
         }
@@ -723,14 +723,14 @@ void Lexer::run(std::ifstream &inputFile)
     switch (currentChar)
     {
       case '*':
-        // continue in state machine  
+        // continue in state machine
         if (!inputFile.get(currentChar)) {
           throw SyntaxError();
         }
         goto s_comment_2;
       
       default:
-        // continue in state machine  
+        // continue in state machine
         if (!inputFile.get(currentChar)) {
           throw SyntaxError();
         }
@@ -751,9 +751,16 @@ void Lexer::run(std::ifstream &inputFile)
         }
         goto s_0;
       
+      case '*':
+        // continue in state machin
+        if (!inputFile.get(currentChar)) {
+          throw SyntaxError();
+        }
+        goto s_comment_2;
+      
       // comment did not end -> continue as comment
       default:
-        // continue in state machine  
+        // continue in state machine
         if (!inputFile.get(currentChar)) {
           throw SyntaxError();
         }
