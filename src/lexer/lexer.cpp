@@ -912,3 +912,8 @@ bool Lexer::getNextToken(std::unique_ptr<Token> &t)
   return true;
 }
 
+bool Lexer:: hasNextToken() const
+{
+  return !tokenArray.empty();
+}
+
