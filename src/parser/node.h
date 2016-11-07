@@ -45,19 +45,59 @@ namespace cmpl
   class NaryNode : public Node
   {
     public:
-      NaryNode(std::vector<std::unique_ptr<Node>> nodes) : nodes(std::move(nodes)) {};
+      NaryNode(std::vector<std::unique_ptr<Node>> nodes) {
+        this->nodes =  std::move(nodes);
+      };
       virtual std::string getStringValue() = 0; // must be implemented by subclasses
     
     protected:
       std::vector<std::unique_ptr<Node>> nodes;
   };
 
-  // actual nodes
+  /************* actual nodes *************/
   class ProgramNode : public NaryNode
   {
     public:
       using NaryNode::NaryNode; // use constructor of base class
       std::string getStringValue();
+  };
+
+  class ClassNode : public NaryNode
+  {
+    public:
+      using NaryNode::NaryNode; // use constructor of base class
+      std::string getStringValue() {
+        return "";
+      };
+  };
+
+  // actual nodes
+  class ClassMemberNode : public NaryNode
+  {
+    public:
+      using NaryNode::NaryNode; // use constructor of base class
+      std::string getStringValue() {
+        return "";
+      };
+  };
+
+  // actual nodes
+  class TypeNode : public NaryNode
+  {
+    public:
+      using NaryNode::NaryNode; // use constructor of base class
+      std::string getStringValue() {
+        return "";
+      };
+  };
+  // actual nodes
+  class BasicTypeNode : public NaryNode
+  {
+    public:
+      using NaryNode::NaryNode; // use constructor of base class
+      std::string getStringValue() {
+        return "";
+      };
   };
 
 }
