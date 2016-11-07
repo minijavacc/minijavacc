@@ -13,8 +13,8 @@ namespace cmpl
   {
     T_O_EXCLM_EQUAL, 
     T_O_EXCLM, 
-    T_O_LPAREN, 
-    T_O_RPAREN, 
+    T_O_LPAREN,     // (
+    T_O_RPAREN,     // )
     T_O_STAR_EQUAL, 
     T_O_STAR, 
     T_O_PLUS_PLUS, 
@@ -28,7 +28,7 @@ namespace cmpl
     T_O_SLASH_EQUAL, 
     T_O_SLASH, 
     T_O_COLON, 
-    T_O_SEMICOLON, 
+    T_O_SEMICOLON,  // ;
     T_O_LESS_LESS_EQUAL, 
     T_O_LESS_LESS, 
     T_O_LESS_EQUAL, 
@@ -47,12 +47,12 @@ namespace cmpl
     T_O_AND_EQUAL, 
     T_O_AND_AND, 
     T_O_AND, 
-    T_O_LBRACK, 
-    T_O_RBRACK, 
+    T_O_LBRACK,     // [
+    T_O_RBRACK,     // ]
     T_O_CARET_EQUAL, 
     T_O_CARET, 
-    T_O_LBRACE, 
-    T_O_RBRACE, 
+    T_O_LBRACE,     // {
+    T_O_RBRACE,     // }
     T_O_TILDE, 
     T_O_PIPE_EQUAL, 
     T_O_PIPE_PIPE, 
