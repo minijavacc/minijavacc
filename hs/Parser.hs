@@ -125,48 +125,59 @@ data NewArrayExpression = NewArrayExpression BasicType Expression Brackets deriv
 
 -- Implementation
 
-parse :: [Token] -> Program
-parse ts = p
-    where
-        (p, []) = parseProgram ts
+parse :: [Token] -> Maybe Program
+parse ts = do
+    (p, ts') <- parseProgram ts
+    case ts' of
+        [] -> Just p
+        _ -> Nothing
 
 
-parseProgram ts = (Program decls, ts')
-    where
-        (decls, ts') = parseClassDeclarations ts
+parseProgram :: [Token] -> Maybe (Program, [Token])
+parseProgram ts = do
+    (decls, ts') <- parseClassDeclarations ts
+    return (Program decls, ts')
 
 
-parseClassDeclarations ts@((Token T_KEYWORD "class" _):tss) = (CDs cd cds, ts'')
-    where
-        (cd, ts') = parseClassDeclaration ts
-        (cds, ts'') = parseClassDeclarations ts'
-parseClassDeclarations [] = (CDEps, [])
+parseClassDeclarations :: [Token] -> Maybe (ClassDeclarations, [Token])
+parseClassDeclarations ts@((Token T_KEYWORD "class" _):tss) = do
+    (cd, rest1) <- parseClassDeclaration ts
+    (cds, rest2) <- parseClassDeclarations rest1
+    return (CDs cd cds, rest2)
+    
+parseClassDeclarations ts = Just (CDEps, ts)
 
 
+parseClassDeclaration :: [Token] -> Maybe (ClassDeclaration, [Token])
 parseClassDeclaration ((Token T_KEYWORD "class" _)
                       :(Token T_IDENT ident _)
                       :(Token T_LBRACE _ _)
-                      :ts) = (CD ident cms, ts')
-    where
-        (cms, (Token T_RBRACE _ _):ts') = parseClassMembers ts
+                      :ts) = do
+                          (cms, (Token T_RBRACE _ _):ts') <- parseClassMembers ts
+                          return (CD ident cms, ts')
+                          
+parseClassDeclaration _ = Nothing
 
         
-parseClassMembers ts@((Token T_RBRACE _ _):tss) = (CMEps, ts)
-parseClassMembers ts = (CMs cm cms, ts'')
-    where
-        (cm, ts') = parseClassMember ts
-        (cms, ts'') = parseClassMembers ts'
+parseClassMembers :: [Token] -> Maybe (ClassMembers, [Token])
+parseClassMembers ts@((Token T_RBRACE _ _):tss) = Just (CMEps, ts)
+parseClassMembers ts = do
+    (cm, ts') <- parseClassMember ts
+    (cms, ts'') <- parseClassMembers ts'
+    return (CMs cm cms, ts'')
 
         
-parseClassMember :: [Token] -> (ClassMember, [Token])
-parseClassMember ts@((Token T_KEYWORD "public" _):(Token T_KEYWORD "static" _):tss) = (CMMainMethod mm, ts')
-    where
-        (mm, ts') = parseMainMethod ts
-parseClassMember ts = (CMFieldMethod fm, ts')
-    where
-        (fm, ts') = parseFieldMethod ts
+parseClassMember :: [Token] -> Maybe (ClassMember, [Token])
+parseClassMember ts@((Token T_KEYWORD "public" _):(Token T_KEYWORD "static" _):tss) = do
+    (mm, ts') <- parseMainMethod ts
+    return (CMMainMethod mm, ts')
+    
+parseClassMember ts = do
+    (fm, ts') <- parseFieldMethod ts
+    return (CMFieldMethod fm, ts')
 
         
+parseMainMethod :: [Token] -> Maybe (MainMethod, [Token])
 parseMainMethod ((Token T_KEYWORD "public" _)
                 :(Token T_KEYWORD "static" _)
                 :(Token T_KEYWORD "void" _)
@@ -177,73 +188,105 @@ parseMainMethod ((Token T_KEYWORD "public" _)
                 :(Token T_RBRACKET _ _)
                 :(Token T_IDENT pa _)
                 :(Token T_RPAREN _ _)
-                :ts) = (MainMethod na pa bl, ts')
-                    where (bl, ts') = parseBlock ts
+                :ts) = do
+                    (bl, ts') <- parseBlock ts
+                    return (MainMethod na pa bl, ts')
+                    
+parseMainMethod _ = Nothing
         
         
-parseFieldMethod ((Token T_KEYWORD "public" _):ts) = (FM ty na fm', ts'')
-    where
-        (ty, (Token T_IDENT na _):ts') = parseType ts
-        (fm', ts'') = parseFieldMethod' ts'
+parseFieldMethod :: [Token] -> Maybe (FieldMethod, [Token])
+parseFieldMethod ((Token T_KEYWORD "public" _):ts) = do
+    (ty, (Token T_IDENT na _):ts') <- parseType ts
+    (fm', ts'') <- parseFieldMethod' ts'
+    return (FM ty na fm', ts'')
         
-parseFieldMethod _ = error "Expected field or method starting with \'public\'"
+parseFieldMethod _ = fail "parseFieldMethod failed"
         
-parseFieldMethod' ((Token T_LPAREN _ _):ts) = (FM' pas bl, ts'')
-    where
-        (pas, (Token T_RPAREN _ _):ts') = parseParameters ts
-        (bl, ts'') = parseBlock ts'
 
-parseFieldMethod' ((Token T_SEMICOLON _ _):ts) = (FM'Semi, ts)
+parseFieldMethod' :: [Token] -> Maybe (FieldMethod', [Token])
+parseFieldMethod' ((Token T_LPAREN _ _):ts) = do
+        (pas, (Token T_RPAREN _ _):ts') <- parseParameters ts
+        (bl, ts'') <- parseBlock ts'
+        return (FM' pas bl, ts'')
 
-parseParameters ts@((Token T_KEYWORD na _):tss) = (Pas pa pas, ts'')
-    where
-        (pa, ts') = parseParameter ts
-        (pas, ts'') = parseParameters' ts'
-        
-parseParameters ts@((Token T_IDENT na _):tss) = (Pas pa pas, ts'')
-    where
-        (pa, ts') = parseParameter ts
-        (pas, ts'') = parseParameters' ts'
-        
-parseParameters ts = (PasEps, ts)
+parseFieldMethod' ((Token T_SEMICOLON _ _):ts) = Just (FM'Semi, ts)
 
-parseParameters' ((Token T_COMMA _ _):ts) = (Pas' pa pas, ts'')
-    where
-        (pa, ts') = parseParameter ts
-        (pas, ts'') = parseParameters' ts'
-        
-parseParameters' ts = (Pas'Eps, ts)
-        
-parseParameter ts = (Pa ty na, ts')
-    where
-        (ty, (Token T_IDENT na _):ts') = parseType ts
-        
-parseType ts = (Ty bt bs, ts'')
-    where
-        (bt, ts') = parseBasicType ts
-        (bs, ts'') = parseBrackets ts'
-        
-parseBrackets ((Token T_LBRACKET _ _):(Token T_RBRACKET _ _):ts) = (Br bs, ts')
-    where
-        (bs, ts') = parseBrackets ts
-        
-parseBrackets ts = (BrEps, ts)
-
-parseBasicType (tok@(Token T_KEYWORD "int" _):ts) = (T_Int tok, ts)
-parseBasicType (tok@(Token T_KEYWORD "boolean" _):ts) = (T_Boolean tok, ts)
-parseBasicType (tok@(Token T_KEYWORD "void" _):ts) = (T_Void tok, ts)
-parseBasicType (tok@(Token T_IDENT _ _):ts) = (T_Ident tok, ts)
+parseFieldMethod' _ = Nothing
 
 
+parseParameters :: [Token] -> Maybe (Parameters, [Token])
+parseParameters ts@((Token T_KEYWORD na _):tss) = do
+        (pa, ts') <- parseParameter ts
+        (pas, ts'') <- parseParameters' ts'
+        return (Pas pa pas, ts'')
         
-parseStatement ts@((Token ty na _):_) = let
-    exprStmtRes = (let (res, ts') = parseExpressionStatement ts in (SEx res, ts'))
-    in case (ty, na) of
-        (T_LBRACE, _) -> let (res, ts') = parseBlock ts in (SBl res, ts')
-        (T_KEYWORD, "if") -> let (res, ts') = parseIfStatement ts in (SIf res, ts')
-        (T_SEMICOLON, _) -> let (res, ts') = parseEmptyStatement ts in (SEm res, ts')
-        (T_KEYWORD, "while") -> let (res, ts') = parseWhileStatement ts in (SWh res, ts')
-        (T_KEYWORD, "return") -> let (res, ts') = parseReturnStatement ts in (SRe res, ts')
+parseParameters ts@((Token T_IDENT na _):tss) = do
+        (pa, ts') <- parseParameter ts
+        (pas, ts'') <- parseParameters' ts'
+        return (Pas pa pas, ts'')
+        
+parseParameters ts = Just (PasEps, ts)
+
+
+parseParameters' :: [Token] -> Maybe (Parameters', [Token])
+parseParameters' ((Token T_COMMA _ _):ts) = do
+        (pa, ts') <- parseParameter ts
+        (pas, ts'') <- parseParameters' ts'
+        return (Pas' pa pas, ts'')
+        
+parseParameters' ts = Just (Pas'Eps, ts)
+        
+
+parseParameter :: [Token] -> Maybe (Parameter, [Token])
+parseParameter ts = do
+        (ty, (Token T_IDENT na _):ts') <- parseType ts
+        return (Pa ty na, ts')
+        
+        
+parseType :: [Token] -> Maybe (Type, [Token])
+parseType ts = do
+        (bt, ts') <- parseBasicType ts
+        (bs, ts'') <- parseBrackets ts'
+        return (Ty bt bs, ts'')
+        
+        
+parseBrackets :: [Token] -> Maybe (Brackets, [Token])
+parseBrackets ((Token T_LBRACKET _ _):(Token T_RBRACKET _ _):ts) = do
+        (bs, ts') <- parseBrackets ts
+        return (Br bs, ts')
+        
+parseBrackets ts = Just (BrEps, ts)
+
+parseBasicType :: [Token] -> Maybe (BasicType, [Token])
+parseBasicType (tok@(Token T_KEYWORD "int" _):ts) = Just (T_Int tok, ts)
+parseBasicType (tok@(Token T_KEYWORD "boolean" _):ts) = Just (T_Boolean tok, ts)
+parseBasicType (tok@(Token T_KEYWORD "void" _):ts) = Just (T_Void tok, ts)
+parseBasicType (tok@(Token T_IDENT _ _):ts) = Just (T_Ident tok, ts)
+parseBasicType _ = Nothing
+
+
+parseStatement :: [Token] -> Maybe (Statement, [Token])
+parseStatement ts@((Token ty na _):_) = do
+    let exprStmtRes = do
+        (res, ts') <- parseExpressionStatement ts
+        return (SEx res, ts')
+    case (ty, na) of
+        (T_LBRACE, _) -> do
+            (res, ts') <- parseBlock ts
+            return (SBl res, ts')
+        (T_KEYWORD, "if") -> do
+            (res, ts') <- parseIfStatement ts
+            return (SIf res, ts')
+        (T_SEMICOLON, _) -> do
+            (res, ts') <- parseEmptyStatement ts
+            return (SEm res, ts')
+        (T_KEYWORD, "while") -> do
+            (res, ts') <- parseWhileStatement ts
+            return (SWh res, ts')
+        (T_KEYWORD, "return") -> do
+            (res, ts') <- parseReturnStatement ts
+            return (SRe res, ts')
         (T_EXCL, _) -> exprStmtRes
         (T_MINUS, _) -> exprStmtRes
         (T_LPAREN, _) -> exprStmtRes
@@ -254,24 +297,35 @@ parseStatement ts@((Token ty na _):_) = let
         (T_KEYWORD, "new") -> exprStmtRes
         (T_INTEGER_LITERAL, _) -> exprStmtRes
         (T_IDENT, _) -> exprStmtRes
-        (_, _) -> error "parseStatement"        
+        (_, _) -> Nothing
         
+parseStatement _ = Nothing
         
-parseBlock ((Token T_LBRACE _ _):ts) = (Bl bs, ts')
-    where
-        (bs, (Token T_RBRACE _ _):ts') = parseBlockStatements ts
+   
+parseBlock :: [Token] -> Maybe (Block, [Token])     
+parseBlock ((Token T_LBRACE _ _):ts) = do
+    (bs, (Token T_RBRACE _ _):ts') <- parseBlockStatements ts
+    return (Bl bs, ts')
+    
+parseBlock _ = Nothing
         
-parseBlockStatements ts@((Token T_RBRACE _ _):_) = (BSsEps, ts)
+parseBlockStatements :: [Token] -> Maybe (BlockStatements, [Token])  
+parseBlockStatements ts@((Token T_RBRACE _ _):_) = Just (BSsEps, ts)
         
-parseBlockStatements ts = (BSs bs bss, ts'')
-    where
-        (bs, ts') = parseBlockStatement ts
-        (bss, ts'') = parseBlockStatements ts'
+parseBlockStatements ts = do
+    (bs, ts') <- parseBlockStatement ts
+    (bss, ts'') <- parseBlockStatements ts'
+    return (BSs bs bss, ts'')
         
-parseBlockStatement ts@((Token ty na _):(Token ty1 na1 _):(Token ty2 na2 _):_) = let
-    stmtRes = let (res, ts') = parseStatement ts in (BS1 res, ts')
-    lvdsRes = let (res, ts') = parseLocalVariableDeclarationStatement ts in (BS2 res, ts')
-    in case (ty, na) of
+parseBlockStatement :: [Token] -> Maybe (BlockStatement, [Token])  
+parseBlockStatement ts@((Token ty na _):(Token ty1 na1 _):(Token ty2 na2 _):_) = do
+    let stmtRes = do
+        (res, ts') <- parseStatement ts
+        return (BS1 res, ts')
+    let lvdsRes = do
+        (res, ts') <- parseLocalVariableDeclarationStatement ts
+        return (BS2 res, ts')
+    case (ty, na) of
         (T_LBRACE, _) -> stmtRes
         (T_KEYWORD, "if") -> stmtRes
         (T_SEMICOLON, _) -> stmtRes
@@ -295,311 +349,369 @@ parseBlockStatement ts@((Token ty na _):(Token ty1 na1 _):(Token ty2 na2 _):_) =
                 (T_RBRACKET, _) -> lvdsRes
                 (_, _) -> stmtRes
             (_, _) -> stmtRes
-        (_, _) -> error "parseBlockStatement"
+        (_, _) -> fail "parseBlockStatement"
+        
+parseBlockStatement _ = Nothing
 
-parseLocalVariableDeclarationStatement :: [Token] -> (LocalVariableDeclarationStatement, [Token])
-parseLocalVariableDeclarationStatement ts = (LVDS ty na lvds', ts'')
-    where
-        (ty, (Token T_IDENT na _):ts') = parseType ts
-        (lvds', (Token T_SEMICOLON _ _):ts'') = parseLVDS' ts'
+parseLocalVariableDeclarationStatement :: [Token] -> Maybe (LocalVariableDeclarationStatement, [Token])
+parseLocalVariableDeclarationStatement ts = do
+        (ty, (Token T_IDENT na _):ts') <- parseType ts
+        (lvds', (Token T_SEMICOLON _ _):ts'') <- parseLVDS' ts'
+        return (LVDS ty na lvds', ts'')
        
-parseLVDS' :: [Token] -> (LVDS', [Token]) 
-parseLVDS' ((Token T_EQUALS _ _):ts) = let (ex, ts') = parseExpression ts in (LVDS' ex, ts')
-parseLVDS' ts@((Token T_SEMICOLON _ _):_) = (LVDS'Eps, ts)
-            
-parseEmptyStatement :: [Token] -> (EmptyStatement, [Token]) 
-parseEmptyStatement ((Token T_SEMICOLON _ _):ts) = (EmS, ts)
-
-parseWhileStatement :: [Token] -> (WhileStatement, [Token]) 
-parseWhileStatement ((Token T_KEYWORD "while" _):(Token T_LPAREN _ _):ts) = (WS ex s, ts'')
-    where
-        (ex, (Token T_RPAREN _ _):ts') = parseExpression ts
-        (s, ts'') = parseStatement ts'
+parseLVDS' :: [Token] -> Maybe (LVDS', [Token]) 
+parseLVDS' ((Token T_EQUALS _ _):ts) = do
+        (ex, ts') <- parseExpression ts 
+        return (LVDS' ex, ts')
         
-parseIfStatement :: [Token] -> (IfStatement, [Token]) 
-parseIfStatement ((Token T_KEYWORD "if" _):(Token T_LPAREN _ _):ts) = (If ex s if', ts''')
-    where
-        (ex, (Token T_RPAREN _ _):ts') = parseExpression ts
-        (s, ts'') = parseStatement ts'
-        (if', ts''') = parseIfStatement' ts''
+parseLVDS' ts@((Token T_SEMICOLON _ _):_) = Just (LVDS'Eps, ts)
+
+parseLVDS' _ = Nothing
             
-parseIfStatement' :: [Token] -> (IfStatement', [Token]) 
-parseIfStatement' ((Token T_KEYWORD "else" _):ts) = (If' s, ts')
-    where
-        (s, ts') = parseStatement ts
+parseEmptyStatement :: [Token] -> Maybe (EmptyStatement, [Token]) 
+parseEmptyStatement ((Token T_SEMICOLON _ _):ts) = Just (EmS, ts)
 
-parseIfStatement' ts = (If'Eps, ts)
+parseEmptyStatement _ = Nothing
 
-parseExpressionStatement :: [Token] -> (ExpressionStatement, [Token]) 
-parseExpressionStatement ts = (ES e, ts')
-    where
-        (e, (Token T_SEMICOLON _ _):ts') = parseExpression ts
+parseWhileStatement :: [Token] -> Maybe (WhileStatement, [Token]) 
+parseWhileStatement ((Token T_KEYWORD "while" _):(Token T_LPAREN _ _):ts) = do
+        (ex, (Token T_RPAREN _ _):ts') <- parseExpression ts
+        (s, ts'') <- parseStatement ts'
+        return (WS ex s, ts'')
         
-parseReturnStatement :: [Token] -> (ReturnStatement, [Token])
-parseReturnStatement ((Token T_KEYWORD "return" _):(Token T_SEMICOLON _ _):ts) = (RS, ts)
-parseReturnStatement ((Token T_KEYWORD "return" _):ts) = (RSE ex, ts')
-    where
-        (ex, (Token T_SEMICOLON _ _):ts') = parseExpression ts
+parseWhileStatement _ = Nothing
+        
+parseIfStatement :: [Token] -> Maybe (IfStatement, [Token]) 
+parseIfStatement ((Token T_KEYWORD "if" _):(Token T_LPAREN _ _):ts) = do
+        (ex, (Token T_RPAREN _ _):ts') <- parseExpression ts
+        (s, ts'') <- parseStatement ts'
+        (if', ts''') <- parseIfStatement' ts''
+        return (If ex s if', ts''')
+            
+parseIfStatement _ = Nothing
+            
+parseIfStatement' :: [Token] -> Maybe (IfStatement', [Token]) 
+parseIfStatement' ((Token T_KEYWORD "else" _):ts) = do
+        (s, ts') <- parseStatement ts
+        return (If' s, ts')
+
+parseIfStatement' ts = Just (If'Eps, ts)
+
+parseExpressionStatement :: [Token] -> Maybe (ExpressionStatement, [Token]) 
+parseExpressionStatement ts = do
+        (e, (Token T_SEMICOLON _ _):ts') <- parseExpression ts
+        return (ES e, ts')
+        
+parseReturnStatement :: [Token] -> Maybe (ReturnStatement, [Token])
+parseReturnStatement ((Token T_KEYWORD "return" _):(Token T_SEMICOLON _ _):ts) = Just (RS, ts)
+
+parseReturnStatement ((Token T_KEYWORD "return" _):ts) = do
+        (ex, (Token T_SEMICOLON _ _):ts') <- parseExpression ts
+        return (RSE ex, ts')
+        
+parseReturnStatement _ = Nothing
 
 
 
 -- Expressions
 --------------
             
-parseExpression :: [Token] -> (Expression, [Token])
-parseExpression ts = (let (ae, ts') = parseAssignmentExpression ts in (Expr ae, ts'))
+parseExpression :: [Token] -> Maybe (Expression, [Token])
+parseExpression ts = do
+    (ae, ts') <- parseAssignmentExpression ts
+    return (Expr ae, ts')
 
 
 
-parseAssignmentExpression ts = (AE oe ae, ts'')
-    where
-        (oe, ts') = parseLogicalOrExpression ts
-        (ae, ts'') = parseAssignmentExpression' ts'
+parseAssignmentExpression :: [Token] -> Maybe (AssignmentExpression, [Token])
+parseAssignmentExpression ts = do
+        (oe, ts') <- parseLogicalOrExpression ts
+        (ae, ts'') <- parseAssignmentExpression' ts'
+        return (AE oe ae, ts'')
+
+parseAssignmentExpression' :: [Token] -> Maybe (AssignmentExpression', [Token])
+parseAssignmentExpression' ((Token T_EQUALS _ _):ts) = do
+        (ae, ts') <- parseAssignmentExpression ts
+        return (AE' ae, ts')
         
-parseAssignmentExpression' ((Token T_EQUALS _ _):ts) = (AE' ae, ts')
-    where
-        (ae, ts') = parseAssignmentExpression ts
-        
-parseAssignmentExpression' ts = (AE'Eps, ts)
+parseAssignmentExpression' ts = Just (AE'Eps, ts)
 
 
 
-parseLogicalOrExpression ts = (LOE ae oe', ts'')
-    where
-        (ae, ts') = parseLogicalAndExpression ts
-        (oe', ts'') = parseLogicalOrExpression' ts'
+parseLogicalOrExpression :: [Token] -> Maybe (LogicalOrExpression, [Token])
+parseLogicalOrExpression ts = do
+        (ae, ts') <- parseLogicalAndExpression ts
+        (oe', ts'') <- parseLogicalOrExpression' ts'
+        return (LOE ae oe', ts'')
+
+parseLogicalOrExpression' :: [Token] -> Maybe (LogicalOrExpression', [Token])
+parseLogicalOrExpression' ((Token T_PIPE_PIPE _ _):ts) = do
+        (ae, ts') <- parseLogicalAndExpression ts
+        (oe', ts'') <- parseLogicalOrExpression' ts'
+        return (LOE' ae oe', ts'')
         
-parseLogicalOrExpression' ((Token T_PIPE_PIPE _ _):ts) = (LOE' ae oe', ts'')
-    where
-        (ae, ts') = parseLogicalAndExpression ts
-        (oe', ts'') = parseLogicalOrExpression' ts'
-        
-parseLogicalOrExpression' ts = (LOE'Eps, ts)
+parseLogicalOrExpression' ts = Just (LOE'Eps, ts)
        
        
+parseLogicalAndExpression :: [Token] -> Maybe (LogicalAndExpression, [Token])
+parseLogicalAndExpression ts = do
+        (ee, ts') <- parseEqualityExpression ts
+        (ae', ts'') <- parseLogicalAndExpression' ts'
+        return (LAE ee ae', ts'')
         
-parseLogicalAndExpression ts = (LAE ee ae', ts'')
-    where
-        (ee, ts') = parseEqualityExpression ts
-        (ae', ts'') = parseLogicalAndExpression' ts'
+parseLogicalAndExpression' :: [Token] -> Maybe (LogicalAndExpression', [Token])
+parseLogicalAndExpression' ((Token T_AMPERSAND_AMPERSAND _ _):ts) = do
+        (ee, ts') <- parseEqualityExpression ts
+        (ae', ts'') <- parseLogicalAndExpression' ts'
+        return (LAE' ee ae', ts'')
         
-parseLogicalAndExpression' ((Token T_AMPERSAND_AMPERSAND _ _):ts) = (LAE' ee ae', ts'')
-    where
-        (ee, ts') = parseEqualityExpression ts
-        (ae', ts'') = parseLogicalAndExpression' ts'
-        
-parseLogicalAndExpression' ts = (LAE'Eps, ts)
+parseLogicalAndExpression' ts = Just (LAE'Eps, ts)
 
 
 
-parseEqualityExpression ts = (EqE re ee', ts'')
-    where
-        (re, ts') = parseRelationalExpression ts
-        (ee', ts'') = parseEqualityExpression' ts'
+parseEqualityExpression :: [Token] -> Maybe (EqualityExpression, [Token])
+parseEqualityExpression ts = do
+        (re, ts') <- parseRelationalExpression ts
+        (ee', ts'') <- parseEqualityExpression' ts'
+        return (EqE re ee', ts'')
+
+parseEqualityExpression' :: [Token] -> Maybe (EqualityExpression', [Token])
+parseEqualityExpression' ((Token T_EQUALS_EQUALS _ _):ts) = do
+        (re, ts') <- parseRelationalExpression ts
+        (ee', ts'') <- parseEqualityExpression' ts'
+        return (EqE'Eq re ee', ts'')
         
-parseEqualityExpression' ((Token T_EQUALS_EQUALS _ _):ts) = (EqE'Eq re ee', ts'')
-    where
-        (re, ts') = parseRelationalExpression ts
-        (ee', ts'') = parseEqualityExpression' ts'
+parseEqualityExpression' ((Token T_EXCL_EQUALS _ _):ts) = do
+        (re, ts') <- parseRelationalExpression ts
+        (ee', ts'') <- parseEqualityExpression' ts'
+        return (EqE'Neq re ee', ts'')
         
-parseEqualityExpression' ((Token T_EXCL_EQUALS _ _):ts) = (EqE'Neq re ee', ts'')
-    where
-        (re, ts') = parseRelationalExpression ts
-        (ee', ts'') = parseEqualityExpression' ts'
-        
-parseEqualityExpression' ts = (EqE'Eps, ts)
+parseEqualityExpression' ts = Just (EqE'Eps, ts)
 
 
 
-parseRelationalExpression ts = (RE ae re', ts'')
-    where
-        (ae, ts') = parseAdditiveExpression ts
-        (re', ts'') = parseRelationalExpression' ts'
+parseRelationalExpression :: [Token] -> Maybe (RelationalExpression, [Token])
+parseRelationalExpression ts = do
+        (ae, ts') <- parseAdditiveExpression ts
+        (re', ts'') <- parseRelationalExpression' ts'
+        return (RE ae re', ts'')
+
+parseRelationalExpression' :: [Token] -> Maybe (RelationalExpression', [Token])
+parseRelationalExpression' ((Token T_LANGLE _ _):ts) = do
+        (ae, ts') <- parseAdditiveExpression ts
+        (re', ts'') <- parseRelationalExpression' ts'
+        return (RE'Lt ae re', ts'')
         
-parseRelationalExpression' ((Token T_LANGLE _ _):ts) = (RE'Lt ae re', ts'')
-    where
-        (ae, ts') = parseAdditiveExpression ts
-        (re', ts'') = parseRelationalExpression' ts'
+parseRelationalExpression' ((Token T_LANGLE_EQUALS _ _):ts) = do
+        (ae, ts') <- parseAdditiveExpression ts
+        (re', ts'') <- parseRelationalExpression' ts'
+        return (RE'LtEq ae re', ts'')
         
-parseRelationalExpression' ((Token T_LANGLE_EQUALS _ _):ts) = (RE'LtEq ae re', ts'')
-    where
-        (ae, ts') = parseAdditiveExpression ts
-        (re', ts'') = parseRelationalExpression' ts'
+parseRelationalExpression' ((Token T_RANGLE _ _):ts) = do
+        (ae, ts') <- parseAdditiveExpression ts
+        (re', ts'') <- parseRelationalExpression' ts'
+        return (RE'Gt ae re', ts'')
         
-parseRelationalExpression' ((Token T_RANGLE _ _):ts) = (RE'Gt ae re', ts'')
-    where
-        (ae, ts') = parseAdditiveExpression ts
-        (re', ts'') = parseRelationalExpression' ts'
+parseRelationalExpression' ((Token T_RANGLE_EQUALS _ _):ts) = do
+        (ae, ts') <- parseAdditiveExpression ts
+        (re', ts'') <- parseRelationalExpression' ts'
+        return (RE'GtEq ae re', ts'')
         
-parseRelationalExpression' ((Token T_RANGLE_EQUALS _ _):ts) = (RE'GtEq ae re', ts'')
-    where
-        (ae, ts') = parseAdditiveExpression ts
-        (re', ts'') = parseRelationalExpression' ts'
-        
-parseRelationalExpression' ts = (RE'Eps, ts)
+parseRelationalExpression' ts = Just (RE'Eps, ts)
 
 
 
-parseAdditiveExpression ts = (AdE me ae', ts'')
-    where
-        (me, ts') = parseMultiplicativeExpression ts
-        (ae', ts'') = parseAdditiveExpression' ts'
+parseAdditiveExpression :: [Token] -> Maybe (AdditiveExpression, [Token])
+parseAdditiveExpression ts = do
+        (me, ts') <- parseMultiplicativeExpression ts
+        (ae', ts'') <- parseAdditiveExpression' ts'
+        return (AdE me ae', ts'')
+
+parseAdditiveExpression' :: [Token] -> Maybe (AdditiveExpression', [Token])
+parseAdditiveExpression' ((Token T_PLUS _ _):ts) = do
+        (me, ts') <- parseMultiplicativeExpression ts
+        (ae', ts'') <- parseAdditiveExpression' ts'
+        return (AdE'Plus me ae', ts'')
         
-parseAdditiveExpression' ((Token T_PLUS _ _):ts) = (AdE'Plus me ae', ts'')
-    where
-        (me, ts') = parseMultiplicativeExpression ts
-        (ae', ts'') = parseAdditiveExpression' ts'
+parseAdditiveExpression' ((Token T_MINUS _ _):ts) = do
+        (me, ts') <- parseMultiplicativeExpression ts
+        (ae', ts'') <- parseAdditiveExpression' ts'
+        return (AdE'Minus me ae', ts'')
         
-parseAdditiveExpression' ((Token T_MINUS _ _):ts) = (AdE'Minus me ae', ts'')
-    where
-        (me, ts') = parseMultiplicativeExpression ts
-        (ae', ts'') = parseAdditiveExpression' ts'
-        
-parseAdditiveExpression' ts = (AdE'Eps, ts)
+parseAdditiveExpression' ts = Just (AdE'Eps, ts)
 
 
 
-parseMultiplicativeExpression ts = (ME ue me', ts'')
-    where
-        (ue, ts') = parseUnaryExpression ts
-        (me', ts'') = parseMultiplicativeExpression' ts'
+parseMultiplicativeExpression :: [Token] -> Maybe (MultiplicativeExpression, [Token])
+parseMultiplicativeExpression ts = do
+        (ue, ts') <- parseUnaryExpression ts
+        (me', ts'') <- parseMultiplicativeExpression' ts'
+        return (ME ue me', ts'')
         
-parseMultiplicativeExpression' ((Token T_STAR _ _):ts) = (ME'Mul ue me', ts'')
-    where
-        (ue, ts') = parseUnaryExpression ts
-        (me', ts'') = parseMultiplicativeExpression' ts'
+parseMultiplicativeExpression' :: [Token] -> Maybe (MultiplicativeExpression', [Token])
+parseMultiplicativeExpression' ((Token T_STAR _ _):ts) = do
+        (ue, ts') <- parseUnaryExpression ts
+        (me', ts'') <- parseMultiplicativeExpression' ts'
+        return (ME'Mul ue me', ts'')
         
-parseMultiplicativeExpression' ((Token T_SLASH _ _):ts) = (ME'Div ue me', ts'')
-    where
-        (ue, ts') = parseUnaryExpression ts
-        (me', ts'') = parseMultiplicativeExpression' ts'
+parseMultiplicativeExpression' ((Token T_SLASH _ _):ts) = do
+        (ue, ts') <- parseUnaryExpression ts
+        (me', ts'') <- parseMultiplicativeExpression' ts'
+        return (ME'Div ue me', ts'')
         
-parseMultiplicativeExpression' ((Token T_PERCENT _ _):ts) = (ME'Mod ue me', ts'')
-    where
-        (ue, ts') = parseUnaryExpression ts
-        (me', ts'') = parseMultiplicativeExpression' ts'
+parseMultiplicativeExpression' ((Token T_PERCENT _ _):ts) = do
+        (ue, ts') <- parseUnaryExpression ts
+        (me', ts'') <- parseMultiplicativeExpression' ts'
+        return (ME'Mod ue me', ts'')
         
-parseMultiplicativeExpression' ts = (ME'Eps, ts)
+parseMultiplicativeExpression' ts = Just (ME'Eps, ts)
 
 
 
-parseUnaryExpression ((Token T_EXCL _ _):ts) = (UENeg ue, ts')
-    where
-        (ue, ts') = parseUnaryExpression ts
+parseUnaryExpression :: [Token] -> Maybe (UnaryExpression, [Token])
+parseUnaryExpression ((Token T_EXCL _ _):ts) = do
+        (ue, ts') <- parseUnaryExpression ts
+        return (UENeg ue, ts')
         
-parseUnaryExpression ((Token T_MINUS _ _):ts) = (UEMinus ue, ts')
-    where
-        (ue, ts') = parseUnaryExpression ts
+parseUnaryExpression ((Token T_MINUS _ _):ts) = do
+        (ue, ts') <- parseUnaryExpression ts
+        return (UEMinus ue, ts')
         
-parseUnaryExpression ts = (UEPost pe, ts')
-    where
-        (pe, ts') = parsePostfixExpression ts
+parseUnaryExpression ts = do
+        (pe, ts') <- parsePostfixExpression ts
+        return (UEPost pe, ts')
         
         
         
-parsePostfixExpression ts = (PfE pe ops, ts'')
-    where
-        (pe, ts') = parsePrimaryExpression ts
-        (ops, ts'') = parsePostfixOps ts'
+parsePostfixExpression :: [Token] -> Maybe (PostfixExpression, [Token])
+parsePostfixExpression ts = do
+        (pe, ts') <- parsePrimaryExpression ts
+        (ops, ts'') <- parsePostfixOps ts'
+        return (PfE pe ops, ts'')
         
-parsePostfixOps ts@((Token T_DOT _ _):tss) = (PfOs pfo ops, ts'')
-    where
-        (pfo, ts') = parsePostfixOp ts
-        (ops, ts'') = parsePostfixOps ts'
+parsePostfixOps :: [Token] -> Maybe (PostfixOps, [Token])
+parsePostfixOps ts@((Token T_DOT _ _):tss) = do
+        (pfo, ts') <- parsePostfixOp ts
+        (ops, ts'') <- parsePostfixOps ts'
+        return (PfOs pfo ops, ts'')
         
-parsePostfixOps ts@((Token T_LBRACKET _ _):tss) = (PfOs pfo ops, ts'')
-    where
-        (pfo, ts') = parsePostfixOp ts
-        (ops, ts'') = parsePostfixOps ts'
+parsePostfixOps ts@((Token T_LBRACKET _ _):tss) = do
+        (pfo, ts') <- parsePostfixOp ts
+        (ops, ts'') <- parsePostfixOps ts'
+        return (PfOs pfo ops, ts'')
         
-parsePostfixOps ts = (PfOsEps, ts)
+parsePostfixOps ts = Just (PfOsEps, ts)
 
-parsePostfixOp ts@((Token T_DOT _ _):(Token T_IDENT _ _):(Token T_LPAREN _ _):tss) = (PfOMI mi, ts')
-    where
-        (mi, ts') = parseMethodInvocation ts
+parsePostfixOp :: [Token] -> Maybe (PostfixOp, [Token])
+parsePostfixOp ts@((Token T_DOT _ _):(Token T_IDENT _ _):(Token T_LPAREN _ _):tss) = do
+        (mi, ts') <- parseMethodInvocation ts
+        return (PfOMI mi, ts')
         
-parsePostfixOp ts@((Token T_DOT _ _):(Token T_IDENT _ _):tss) = (PfOFA fa, ts')
-    where
-        (fa, ts') = parseFieldAccess ts
+parsePostfixOp ts@((Token T_DOT _ _):(Token T_IDENT _ _):tss) = do
+        (fa, ts') <- parseFieldAccess ts
+        return (PfOFA fa, ts')
         
-parsePostfixOp ts@((Token T_LBRACKET _ _):tss) = (PfOAA aa, ts')
-    where
-        (aa, ts') = parseArrayAccess ts
+parsePostfixOp ts@((Token T_LBRACKET _ _):tss) = do
+        (aa, ts') <- parseArrayAccess ts
+        return (PfOAA aa, ts')
         
-
-
-parseMethodInvocation ((Token T_DOT _ _):(Token T_IDENT na _):(Token T_LPAREN _ _):ts) = (MI na args, ts')
-    where
-        (args, (Token T_RPAREN _ _):ts') = parseArguments ts
+parsePostfixOp _ = Nothing
         
-parseFieldAccess ((Token T_DOT _ _):(Token T_IDENT na _):ts) = (FA na, ts)
-
-parseArrayAccess ((Token T_LBRACKET _ _):ts) = (AA ex, ts')
-    where
-        (ex, (Token T_RBRACKET _ _):ts') = parseExpression ts
-        
-        
-        
-parseArguments ts@((Token ty na _):tss) = let
-    res = let (ex, ts') = parseExpression ts
-              (args', ts'') = parseArguments' ts'
-              in (Arguments ex args', ts'')
-              in case (ty, na) of
-                  (T_EXCL, _) -> res
-                  (T_MINUS, _) -> res
-                  (T_LPAREN, _) -> res
-                  (T_KEYWORD, "null") -> res
-                  (T_KEYWORD, "false") -> res
-                  (T_KEYWORD, "true") -> res
-                  (T_KEYWORD, "this") -> res
-                  (T_KEYWORD, "new") -> res
-                  (T_INTEGER_LITERAL, _) -> res
-                  (T_IDENT, _) -> res
-                  (_, _) -> (ArgumentsEps, ts)
-                  
-parseArguments' ((Token T_COMMA _ _):ts) = (Arguments' ex args', ts'')
-    where
-        (ex, ts') = parseExpression ts
-        (args', ts'') = parseArguments' ts'
-        
-parseArguments' ts = (Arguments'Eps, ts)
 
 
+parseMethodInvocation :: [Token] -> Maybe (MethodInvocation, [Token])
+parseMethodInvocation ((Token T_DOT _ _):(Token T_IDENT na _):(Token T_LPAREN _ _):ts) = do
+        (args, (Token T_RPAREN _ _):ts') <- parseArguments ts
+        return (MI na args, ts')
+        
+parseMethodInvocation _ = Nothing
 
-parsePrimaryExpression (tok@(Token T_KEYWORD "null" _):ts) = (PENull tok, ts)
-parsePrimaryExpression (tok@(Token T_KEYWORD "true" _):ts) = (PETrue tok, ts)
-parsePrimaryExpression (tok@(Token T_KEYWORD "false" _):ts) = (PEFalse tok, ts)
-parsePrimaryExpression (tok@(Token T_KEYWORD "this" _):ts) = (PEThis tok, ts)
-parsePrimaryExpression (tok@(Token T_INTEGER_LITERAL _ _):ts) = (PEInteger tok, ts)
+parseFieldAccess :: [Token] -> Maybe (FieldAccess, [Token])
+parseFieldAccess ((Token T_DOT _ _):(Token T_IDENT na _):ts) = Just (FA na, ts)
 
-parsePrimaryExpression (tok@(Token T_IDENT _ _):(Token T_LPAREN _ _):ts) = (PEIdentArg tok args, ts')
-    where
-        (args, (Token T_RPAREN _ _):ts') = parseArguments ts
-        
-parsePrimaryExpression (tok@(Token T_IDENT _ _):ts) = (PEIdent tok, ts)
+parseFieldAccess _ = Nothing
 
-parsePrimaryExpression ((Token T_LPAREN _ _):ts) = (PEExpr ex, ts')
-    where
-        (ex, (Token T_RPAREN _ _):ts') = parseExpression ts
+parseArrayAccess :: [Token] -> Maybe (ArrayAccess, [Token])
+parseArrayAccess ((Token T_LBRACKET _ _):ts) = do
+        (ex, (Token T_RBRACKET _ _):ts') <- parseExpression ts
+        return (AA ex, ts')
         
-parsePrimaryExpression ts@((Token T_KEYWORD "new" _):(Token T_IDENT _ _):(Token T_LPAREN _ _):_) = (PENewObj obj, ts')
-    where
-        (obj, ts') = parseNewObjectExpression ts
-        
-parsePrimaryExpression ts = (PENewArr arr, ts')
-    where
-        (arr, ts') = parseNewArrayExpression ts
+parseArrayAccess _ = Nothing
         
         
         
+parseArguments :: [Token] -> Maybe (Arguments, [Token])
+parseArguments ts@((Token ty na _):tss) = do
+    let res = do 
+        (ex, ts') <- parseExpression ts
+        (args', ts'') <- parseArguments' ts'
+        return (Arguments ex args', ts'')
+    case (ty, na) of
+      (T_EXCL, _) -> res
+      (T_MINUS, _) -> res
+      (T_LPAREN, _) -> res
+      (T_KEYWORD, "null") -> res
+      (T_KEYWORD, "false") -> res
+      (T_KEYWORD, "true") -> res
+      (T_KEYWORD, "this") -> res
+      (T_KEYWORD, "new") -> res
+      (T_INTEGER_LITERAL, _) -> res
+      (T_IDENT, _) -> res
+      (_, _) -> return (ArgumentsEps, ts)
+      
+parseArguments _ = Nothing
+
+parseArguments' :: [Token] -> Maybe (Arguments', [Token])
+parseArguments' ((Token T_COMMA _ _):ts) = do
+        (ex, ts') <- parseExpression ts
+        (args', ts'') <- parseArguments' ts'
+        return (Arguments' ex args', ts'')
+        
+parseArguments' ts = Just (Arguments'Eps, ts)
+
+
+
+parsePrimaryExpression :: [Token] -> Maybe (PrimaryExpression, [Token])
+parsePrimaryExpression (tok@(Token T_KEYWORD "null" _):ts) = Just (PENull tok, ts)
+parsePrimaryExpression (tok@(Token T_KEYWORD "true" _):ts) = Just (PETrue tok, ts)
+parsePrimaryExpression (tok@(Token T_KEYWORD "false" _):ts) = Just (PEFalse tok, ts)
+parsePrimaryExpression (tok@(Token T_KEYWORD "this" _):ts) = Just (PEThis tok, ts)
+parsePrimaryExpression (tok@(Token T_INTEGER_LITERAL _ _):ts) = Just (PEInteger tok, ts)
+
+parsePrimaryExpression (tok@(Token T_IDENT _ _):(Token T_LPAREN _ _):ts) = do
+        (args, (Token T_RPAREN _ _):ts') <- parseArguments ts
+        return (PEIdentArg tok args, ts')
+        
+parsePrimaryExpression (tok@(Token T_IDENT _ _):ts) = Just (PEIdent tok, ts)
+
+parsePrimaryExpression ((Token T_LPAREN _ _):ts) = do
+        (ex, (Token T_RPAREN _ _):ts') <- parseExpression ts
+        return (PEExpr ex, ts')
+        
+parsePrimaryExpression ts@((Token T_KEYWORD "new" _):(Token T_IDENT _ _):(Token T_LPAREN _ _):_) = do
+        (obj, ts') <- parseNewObjectExpression ts
+        return (PENewObj obj, ts')
+        
+parsePrimaryExpression ts = do
+        (arr, ts') <- parseNewArrayExpression ts
+        return (PENewArr arr, ts')
+        
+        
+        
+parseNewObjectExpression :: [Token] -> Maybe (NewObjectExpression, [Token])
 parseNewObjectExpression ((Token T_KEYWORD "new" _)
                          :(Token T_IDENT na _)
                          :(Token T_LPAREN _ _)
                          :(Token T_RPAREN _ _)
-                         :ts) = (NewObjectExpression na, ts)
+                         :ts) = Just (NewObjectExpression na, ts)
                          
-parseNewArrayExpression ((Token T_KEYWORD "new" _):ts) = (NewArrayExpression ty ex br, ts''')
-    where
-        (ty, (Token T_LBRACKET _ _):ts') = parseBasicType ts
-        (ex, (Token T_RBRACKET _ _):ts'') = parseExpression ts'
-        (br, ts''') = parseBrackets ts''
+parseNewObjectExpression _ = Nothing
+                         
+parseNewArrayExpression :: [Token] -> Maybe (NewArrayExpression, [Token])
+parseNewArrayExpression ((Token T_KEYWORD "new" _):ts) = do
+        (ty, (Token T_LBRACKET _ _):ts') <- parseBasicType ts
+        (ex, (Token T_RBRACKET _ _):ts'') <- parseExpression ts'
+        (br, ts''') <- parseBrackets ts''
+        return (NewArrayExpression ty ex br, ts''')
+        
+parseNewArrayExpression _ = Nothing
