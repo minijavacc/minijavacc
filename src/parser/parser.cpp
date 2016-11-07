@@ -6,7 +6,7 @@ using namespace cmpl;
 
 // if token array of lexer is empty (method returns false) throw semanticError for now,
 // later depends on implementation of lexer running in parallel (to avoid polling)
-inline void Parser::nextToken(std::unique_ptr<Token>& currentToken)
+inline void Parser::nextToken()
 {
   if(!lexer.getNextToken(currentToken)) {
     throw SemanticError();
@@ -16,22 +16,22 @@ inline void Parser::nextToken(std::unique_ptr<Token>& currentToken)
 // Checks whether given token is of specified type T
 // returned pointer is for read access only as it's a raw pointer of unique_pointer
 template<typename T>
-inline void Parser::checkNextTokenTypeIs(std::unique_ptr<Token>& token)
+inline void Parser::checkNextTokenTypeIs()
 {
-  nextToken(token);
-  if (!dynamic_cast<T*>(token.get()))
+  nextToken();
+  if (!dynamic_cast<T*>(currentToken.get()))
   {
     throw SemanticError();
   }
 }
 
 // combines checkTokenTypeIs with checking for specialized sub-type of operator/seperator tokens
-inline void Parser::checkNextIsOSKTokenWithType(std::unique_ptr<Token>& token, const TokenType& tokenType)
+inline void Parser::checkNextIsOSKTokenWithType(const TokenType& tokenType)
 {
-  nextToken(token);
+  nextToken();
   OperatorSeperatorKeywordToken* osk_t;
   
-  if (!(osk_t = dynamic_cast<OperatorSeperatorKeywordToken*>(token.get()))
+  if (!(osk_t = dynamic_cast<OperatorSeperatorKeywordToken*>(currentToken.get()))
       || osk_t->type != tokenType)
   {
     throw SemanticError();
@@ -49,12 +49,9 @@ void Parser::run()
 
 std::unique_ptr<Node> Parser::parseProgram()
 {
-  std::unique_ptr<Token> currentToken;
   std::unique_ptr<Node> generatedNode;
   
-  nextToken(currentToken);
-  
-  // check for class token
+  //TODO multile classes (loop)
   
   generatedNode = parseClassDeclaration();
   
@@ -63,17 +60,16 @@ std::unique_ptr<Node> Parser::parseProgram()
 
 std::unique_ptr<Node> Parser::parseClassDeclaration()
 {
-  std::unique_ptr<Token> currentToken;
   std::unique_ptr<Node> generatedNode;
   
-  checkNextIsOSKTokenWithType(currentToken, T_K_CLASS);
-  checkNextTokenTypeIs<IdentifierToken>(currentToken);
-  checkNextIsOSKTokenWithType(currentToken, T_O_LBRACE);
+  checkNextIsOSKTokenWithType(T_K_CLASS);
+  checkNextTokenTypeIs<IdentifierToken>();
+  checkNextIsOSKTokenWithType(T_O_LBRACE);
   
   // call parseClassMember() and get AST
   generatedNode = parseClassMember();
   
-  checkNextIsOSKTokenWithType(currentToken, T_O_RBRACE);
+  checkNextIsOSKTokenWithType(T_O_RBRACE);
   
   return generatedNode;
 }

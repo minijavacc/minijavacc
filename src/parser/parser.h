@@ -22,12 +22,12 @@ namespace cmpl
       
       Lexer& lexer;
       std::unique_ptr<Node> ast;
+      std::unique_ptr<Token> currentToken;
       
-      inline void checkNextIsOSKTokenWithType(std::unique_ptr<Token>& token,
-                                              const TokenType& tokenType);
+      inline void checkNextIsOSKTokenWithType(const TokenType& tokenType);
       template<typename T>
-      inline void checkNextTokenTypeIs(std::unique_ptr<Token>& token);
-      inline void nextToken(std::unique_ptr<Token>& currentToken);
+      inline void checkNextTokenTypeIs();
+      inline void nextToken();
   };
   
   class SemanticError : public std::exception {};
