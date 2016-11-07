@@ -148,8 +148,8 @@ namespace cmpl
   class IntegerLiteralToken : public Token
   {
     public:
-      IntegerLiteralToken(uint32_t value) : value(value) {};
-      uint32_t value;
+      IntegerLiteralToken(std::string value) : value(value) {};
+      std::string value;
       std::string getStringValue();
   };
 
