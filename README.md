@@ -1,9 +1,11 @@
-Compiler
-========
+minijavacc
+==========
 
 [![Build Status](https://travis-ci.org/minijavacc/minijavacc.svg?branch=develop)](https://travis-ci.org/minijavacc/minijavacc)
 
-of group 5 at Compilerpraktikum WS 2016/2017
+of team 5 at Compilerpraktikum WS 2016/2017
+
+This compiler in comparison to the other teams: http://speedcenter.informatik.kit.edu/ 
 
 ## Directory structure
 ```
@@ -17,10 +19,12 @@ of group 5 at Compilerpraktikum WS 2016/2017
 └── test
 ```
 
-## Building
+## Build
 ```
-$ cmake ./
-$ make
+$ ./build
 ```
 
-or just run ```build.sh``` in the base directory. 
+## Build and Test
+```
+$ ./build_and_test
+```

@@ -17,6 +17,7 @@ namespace cmpl
       Lexer();
       void run(std::ifstream &inputFile);
       bool getNextToken(std::unique_ptr<Token> &t);
+      bool hasNextToken() const;
       
     private:
       void insertToken(std::unique_ptr<Token> token);

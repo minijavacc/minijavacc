@@ -121,5 +121,5 @@ std::string IdentifierToken::getStringValue()
 
 std::string IntegerLiteralToken::getStringValue()
 {
-  return "integer literal " + std::to_string(value);
+  return "integer literal " + value;
 }

@@ -1,6 +1,13 @@
 #!/bin/sh
 
 # Assume script resides inside the project root directory and is always called from there
-./build
-cd ./src/lexer/tests/
-./tests.sh
+if [ "$CPPCHECK" = "RUN" ]
+then
+  cppcheck --enable=all -i tests --error-exitcode=1 ./src/
+else
+  ./build
+  cd ./src/lexer/tests/
+  ./tests.sh
+  cd ./../../../tests/
+  MJ_RUN="./run" ./mjt.py syntax
+fi
