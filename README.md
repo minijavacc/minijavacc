@@ -9,14 +9,22 @@ This compiler in comparison to the other teams: http://speedcenter.informatik.ki
 
 ## Directory structure
 ```
-├── bin          - the build system creates the executable "compiler" in this directory
+├── bin             - the build system creates the executable "compiler" in this directory
+├── hs              - haskell fun
 ├── src
-│   ├── main     - contains main function
-│   ├── compiler - base class calling the single stages
-│   ├── lexer    \
-│   └── parser   / compiler pipeline stages
-│   
-└── test
+│   ├── main        - contains main function
+│   ├── compiler    - base class calling the single stages
+│   ├── lexer       \
+│   ├── parser      / compiler pipeline stages
+│   └── stringtable - string management
+└── tests
+```
+
+## Setup
+After cloning, run
+```
+$ git submodule init
+$ git submodule update
 ```
 
 ## Build
