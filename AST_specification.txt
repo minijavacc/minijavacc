@@ -1,0 +1,95 @@
+Ref ::
+  # Attribute id of type IDENT
+  # Attribute decl of type pointer to Declaration
+  
+Declaration :: ClassDeclaration | ClassMember | Parameter | LocalVariableDeclaration
+  # Attribute name of type Ident
+
+Type :: BasicType
+  # Attribute dimensions of type Int
+  
+BasicType :: int | boolean | void | UserType
+
+UserType :: 
+  # Attribute decl of type pointer to Declaration
+  
+  
+
+Program :: [ClassDeclaration]
+
+ClassDeclaration :: [ClassMember]
+  
+ClassMember :: Field | Method | MainMethod
+
+MainMethod :: Ref Block
+  
+Field :: Type
+  
+Method :: Type [Parameter] Block
+  
+Parameter :: Type
+  
+Type :: BasicType
+  # Attribute dimensions of type Int
+  
+BasicType :: int | boolean | void | UserType
+
+UserType :: 
+  # Attribute decl of type pointer to ClassDeclaration
+  
+Statement :: Block | IfStatement | ExpressionStatement | WhileStatement | ReturnStatement
+
+Block :: [LocalVariableDeclaration] [Statement]
+  
+LocalVariableDeclaration :: Type Expression
+  
+IfStatement :: Expr Statement Statement
+  # second Statement is nullable
+  
+ExpressionStatement :: Expression
+
+WhileStatement :: Expression Statement
+
+ReturnStatement :: Expression
+  # Expression is nullable
+  
+
+Expression :: AssignOp | LogicalOrOp | LogicalAndOp | EqualityOp | RelationalOp | AddOp | MultOp | null | false | true | INTEGER_LITERAL | Ref | this | NewObject | NewArray | CallOp
+  # [prefixOperator] [postfixOperator]
+  # example: !-a.b().c is: Expression(a) with [prefixOperator] = [-, !], [postfixOperator] = [MethodInvocation(b), FieldAccess(c)]
+
+AssignOp :: Ref Expression
+
+LogicalOrOp :: Expression Expression
+
+LogicalAndOp :: Expression Expression
+
+EqualityOp :: Expression Expression
+  # operator
+
+RelationalOp :: Expression Expression
+  # operator
+
+AddOp :: Expression Expression
+  # operator
+
+MultOp :: Expression Expression
+  # operator
+  
+CallOp :: Ref [Expression]
+  
+PrefixOperator :: ! | -
+
+PostfixOperator :: MethodInvocation | FieldAccess | ArrayAccess
+
+MethodInvocation :: Ref [Expression]
+
+FieldAccess :: Ref
+
+ArrayAccess :: Expression
+
+NewObject :: Ref
+
+NewArray :: BasicType Expression
+  # Attribute dimension of type Int
+  # example: new Foo[4][][] is: NewArray(Foo, 4) with dimension 3
