@@ -2,7 +2,9 @@
 
 using namespace cmpl;
 
+
 /************************ helper functions **************/
+
 
 // if token array of lexer is empty (method returns false) throw semanticError for now,
 // later depends on implementation of lexer running in parallel (to avoid polling)
@@ -73,6 +75,8 @@ inline bool Parser::isNextTokenOSKTokenOfType(const TokenType& tokenType) {
   nextToken();
   return isCurrentTokenOSKTokenOfType(tokenType);
 }
+
+
 /************************ end helper functions **************/
 
 
@@ -143,35 +147,32 @@ std::unique_ptr<Node> Parser::parseClassMember()
 std::unique_ptr<Node> Parser::parseType()
 {
   std::vector<std::unique_ptr<Node>> generatedNodes;
+  std::string type;
+  // basic type
+  if(isCurrentTokenOSKTokenOfType(T_K_BOOLEAN)) {
+    type="boolean";
+  } else if(isCurrentTokenOfType<IntegerLiteralToken>()) {
+    type="int";
+  } else if(isCurrentTokenOSKTokenOfType(T_K_VOID)) {
+    type="void";
+  } else if(assureCurrentTokenTypeIs<IdentifierToken>()) {
+    type=(dynamic_cast<IdentifierToken>currentToken);
+  }
   
-  generatedNodes.push_back(parseBasicType());
   while(isCurrentTokenOSKTokenOfType(T_O_LBRACK)) {
     assureNextIsOSKTokenWithType(T_O_RBRACK);
-    nextToken();
+    
   }
   
   std::unique_ptr<TypeNode> generatedNode;//(generatedNodes);
   return generatedNode;
 }
 
-std::unique_ptr<Node> Parser::parseBasicType()
+std::unique_ptr<Node> Parser::parseExpression()
 {
-  std::unique_ptr<BasicTypeNode> generatedNode;
-  
-  if(isCurrentTokenOSKTokenOfType(T_K_BOOLEAN)) {
-    // boolean
-  } else if(isCurrentTokenOfType<IntegerLiteralToken>()) {
-    // int
-  } else if(isCurrentTokenOSKTokenOfType(T_K_VOID)) {
-    // void
-  } else if(isCurrentTokenOfType<IdentifierToken>()) {
-    // ident
-  }
-  
-  nextToken();
-  
-  return generatedNode;
+  return nullptr;
 }
+
 
 void Parser::getAST(std::unique_ptr<Node> &n)
 {

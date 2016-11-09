@@ -11,7 +11,7 @@ namespace cmpl
   class Parser
   {
     public:
-      Parser(Lexer &lexer) : lexer(lexer) {};
+      Parser(Lexer &lexer) : lexer(lexer) { };
       void run();
       void getAST(std::unique_ptr<Node> &n);
     
@@ -45,6 +45,6 @@ namespace cmpl
 
   };
   
-  class SemanticError : public std::exception {};
+  class SemanticError : public std::exception { };
 
 }
