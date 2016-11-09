@@ -1,13 +1,10 @@
 #pragma once
 
-#include <stdint.h>
-#include <string>
-
+// forward declarations
 namespace cmpl
 {
-  
   // operators,seperators T_O_*
-  // keywords (only the ones used by MiniJava) T_K_*
+  // keywords T_K_*
   // all information from "MiniJava Sprachbericht"
   typedef enum
   {
@@ -115,18 +112,30 @@ namespace cmpl
   TokenType;
   
   typedef int IdentifierTokenId;
+  
+  class Token;
+}
 
+#include "stringtable.h"
+
+#include <stdint.h>
+#include <string>
+
+namespace cmpl
+{
   class Token
-  {      
+  {
     public:
       virtual std::string getStringValue() = 0;
       const static std::string stringRepresentations[99];
       
+      unsigned int row;
+      unsigned int column;
     // TODO: add information about token position in source code
   };
   
   class OperatorSeperatorKeywordToken : public Token
-  {      
+  {
     public:
       OperatorSeperatorKeywordToken(TokenType type) : type(type) {};
       TokenType type;
@@ -136,14 +145,12 @@ namespace cmpl
   class IdentifierToken : public Token
   {
     public:
-      IdentifierToken(IdentifierTokenId id, std::string idString)
-        : id(id)
-        , identifierString(idString) {};
+      IdentifierToken(IdentifierTokenId id, StringTable &stringTable)
+        : id(id), stringTable(stringTable) {};
+      StringTable &stringTable;
       IdentifierTokenId id;
-      std::string identifierString;
       std::string getStringValue();
   };
-  
   
   class IntegerLiteralToken : public Token
   {

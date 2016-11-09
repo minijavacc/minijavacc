@@ -1,5 +1,4 @@
 #include "stringtable.h"
-#include "token.h"
 
 #include <map>
 #include <string>
@@ -22,7 +21,7 @@ std::unique_ptr<Token> StringTable::insertString(std::string string)
     else
     {
       // create token for existing string
-      std::unique_ptr<Token> token = std::make_unique<IdentifierToken>(map[string].identifierTokenId, string);
+      std::unique_ptr<Token> token = std::make_unique<IdentifierToken>(map[string].identifierTokenId, *this);
       return token;
     }
   }
@@ -38,7 +37,7 @@ std::unique_ptr<Token> StringTable::insertString(std::string string)
     map.insert(std::make_pair(string, container));
     
     // create token for new string
-    std::unique_ptr<Token> token = std::make_unique<IdentifierToken>(newIdentifierTokenId, string);
+    std::unique_ptr<Token> token = std::make_unique<IdentifierToken>(newIdentifierTokenId, *this);
     return token;
   }
 }
@@ -50,4 +49,17 @@ void StringTable::insertKeyword(std::string string, TokenType type)
     container.tokenType = type;
   
   map.insert(std::make_pair(string, container));
+}
+
+std::string StringTable::lookupIdentifier(IdentifierTokenId id)
+{
+  for (auto &pair : map)
+  {
+    if (pair.second.isKeyword == false && pair.second.identifierTokenId == id)
+    {
+      return pair.first;
+    }
+  }
+  
+  throw StringTableNotFound();
 }

@@ -116,7 +116,9 @@ std::string OperatorSeperatorKeywordToken::getStringValue()
 
 std::string IdentifierToken::getStringValue()
 {
-	return "identifier " + this->identifierString;
+  // lookup in stringtable
+  std::string identifierString = stringTable.lookupIdentifier(id);
+	return "identifier " + identifierString;
 }
 
 std::string IntegerLiteralToken::getStringValue()
