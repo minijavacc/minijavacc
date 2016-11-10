@@ -30,7 +30,7 @@ namespace cmpl
   class StringTable
   {
     public:
-      std::unique_ptr<Token> insertString(std::string string);
+      std::unique_ptr<Token> insertString(std::string string, unsigned int line, unsigned int column);
       void insertKeyword(std::string string, TokenType type);
       std::string lookupIdentifier(IdentifierTokenId id);
       

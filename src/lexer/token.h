@@ -126,18 +126,20 @@ namespace cmpl
   class Token
   {
     public:
+      Token(unsigned int line, unsigned int column) 
+        : line(line), column(column) {};
       virtual std::string getStringValue() = 0;
       const static std::string stringRepresentations[99];
       
-      unsigned int row;
+      unsigned int line;
       unsigned int column;
-    // TODO: add information about token position in source code
   };
   
   class OperatorSeperatorKeywordToken : public Token
   {
     public:
-      OperatorSeperatorKeywordToken(TokenType type) : type(type) {};
+      OperatorSeperatorKeywordToken(TokenType type, unsigned int line, unsigned int column)
+        : Token(line, column), type(type) {};
       TokenType type;
       std::string getStringValue();
   };
@@ -145,8 +147,8 @@ namespace cmpl
   class IdentifierToken : public Token
   {
     public:
-      IdentifierToken(IdentifierTokenId id, StringTable &stringTable)
-        : id(id), stringTable(stringTable) {};
+      IdentifierToken(IdentifierTokenId id, StringTable &stringTable, unsigned int line, unsigned int column)
+        : Token(line, column), id(id), stringTable(stringTable) {};
       StringTable &stringTable;
       IdentifierTokenId id;
       std::string getStringValue();
@@ -155,7 +157,8 @@ namespace cmpl
   class IntegerLiteralToken : public Token
   {
     public:
-      IntegerLiteralToken(std::string value) : value(value) {};
+      IntegerLiteralToken(std::string value, unsigned int line, unsigned int column)
+        : Token(line, column), value(value) {};
       std::string value;
       std::string getStringValue();
   };

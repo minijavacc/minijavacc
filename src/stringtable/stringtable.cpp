@@ -6,7 +6,7 @@
 
 using namespace cmpl;
 
-std::unique_ptr<Token> StringTable::insertString(std::string string)
+std::unique_ptr<Token> StringTable::insertString(std::string string, unsigned int line, unsigned int column)
 {
   // check if element exists already
   if (map.count(string) > 0)
@@ -15,13 +15,13 @@ std::unique_ptr<Token> StringTable::insertString(std::string string)
     if (map[string].isKeyword)
     {
       // create token for keyword
-      std::unique_ptr<Token> token = std::make_unique<OperatorSeperatorKeywordToken>(map[string].tokenType);
+      std::unique_ptr<Token> token = std::make_unique<OperatorSeperatorKeywordToken>(map[string].tokenType, line, column);
       return token;
     }
     else
     {
       // create token for existing string
-      std::unique_ptr<Token> token = std::make_unique<IdentifierToken>(map[string].identifierTokenId, *this);
+      std::unique_ptr<Token> token = std::make_unique<IdentifierToken>(map[string].identifierTokenId, *this, line, column);
       return token;
     }
   }
@@ -37,7 +37,7 @@ std::unique_ptr<Token> StringTable::insertString(std::string string)
     map.insert(std::make_pair(string, container));
     
     // create token for new string
-    std::unique_ptr<Token> token = std::make_unique<IdentifierToken>(newIdentifierTokenId, *this);
+    std::unique_ptr<Token> token = std::make_unique<IdentifierToken>(newIdentifierTokenId, *this, line, column);
     return token;
   }
 }

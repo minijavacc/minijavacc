@@ -2,6 +2,7 @@
 
 #include "token.h"
 #include "stringtable.h"
+#include "compiler.h"
 
 #include <queue>
 #include <iostream>
@@ -20,7 +21,7 @@ namespace cmpl
       bool hasNextToken() const;
       
     private:
-      void insertToken(std::unique_ptr<Token> token);
+      inline void insertToken(std::unique_ptr<Token> token);
       
       StringTable stringTable;
       std::queue<std::unique_ptr<Token>> tokenArray;
