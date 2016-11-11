@@ -45,9 +45,13 @@ AddOp = Add | Subtract
 
 MultOp = Multiply | Divide | Modulo
 
-UnaryOp = Negate | Minus | MethodInvocation | FieldAccess Ident | ArrayAccess Expression deriving (Show)
+UnaryOp = Negate | Minus | MethodInvocation | FieldAccess | ArrayAccess
 
 MethodInvocation :: Ident [Expression]
+
+FieldAccess :: Ident
+
+ArrayAccess :: Expression
 
 Expression = AssignmentExpression 
            | LogicalOrExpression 
