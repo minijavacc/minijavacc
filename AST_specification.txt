@@ -29,14 +29,6 @@ Method :: Type [Parameter] Block
   
 Parameter :: Type
   
-Type :: BasicType
-  # Attribute dimensions of type Int
-  
-BasicType :: int | boolean | void | UserType
-
-UserType :: 
-  # Attribute decl of type pointer to ClassDeclaration
-  
 Statement :: Block | IfStatement | ExpressionStatement | WhileStatement | ReturnStatement | EmptyStatement
 
 Block :: [LocalVariableDeclaration] [Statement]
