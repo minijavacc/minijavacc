@@ -86,38 +86,37 @@ void Parser::run()
   ast = parseProgram();
 }
 
-std::unique_ptr<Node> Parser::parseProgram()
+std::unique_ptr<Program> Parser::parseProgram()
 {
-  std::vector<std::unique_ptr<Node>> generatedNodes;
+  std::vector<std::unique_ptr<Class>> classes;
   
   // multile classes
   while(lexer.hasNextToken()) {
     assureNextIsOSKTokenWithType(T_K_CLASS);
-    generatedNodes.push_back(parseClassDeclaration());
+    classes.push_back(parseClassDeclaration());
   }
-  
-  std::unique_ptr<ProgramNode> generatedNode;//(generatedNodes);
-  return generatedNode;
+  return std::make_unique<Program>(std::move(classes));
+//  std::unique_ptr<Program> generatedNode;//(generatedNodes);
+//  return generatedNode;
 }
 
 /* start: current = "class" */
 std::unique_ptr<Node> Parser::parseClassDeclaration()
 {
-  std::vector<std::unique_ptr<Node>> generatedNodes;
+  std::vector<std::unique_ptr<ClassMember>> classMembers;
+  std::string ID;
   
   assureNextTokenTypeIs<IdentifierToken>();
+  ID = dynamic_cast<IdentifierToken>(currentToken)->getStringValue();
   assureNextIsOSKTokenWithType(T_O_LBRACE);
   
   // multile class members
-  nextToken();
-  while(!isCurrentTokenOSKTokenOfType(T_O_RBRACE)) {
-    generatedNodes.push_back(parseClassMember());
+  while(!isNextTokenOSKTokenOfType(T_O_RBRACE)) {
+    classMembers.push_back(parseClassMember());
     //TODO depending on what is returned maybe use current
-    nextToken();
   }
-  
-  std::unique_ptr<ClassNode> generatedNode;//(generatedNodes);
-  return generatedNode;
+
+  return std::make_unique<Class>(ID, std::move(classMembers));
 }
 
 std::unique_ptr<Node> Parser::parseClassMember()
@@ -156,7 +155,7 @@ std::unique_ptr<Node> Parser::parseType()
   } else if(isCurrentTokenOSKTokenOfType(T_K_VOID)) {
     type="void";
   } else if(assureCurrentTokenTypeIs<IdentifierToken>()) {
-    type=(dynamic_cast<IdentifierToken>currentToken);
+    type=dynamic_cast<IdentifierToken*>(currentToken)->getStringValue();
   }
   
   while(isCurrentTokenOSKTokenOfType(T_O_LBRACK)) {
@@ -164,7 +163,7 @@ std::unique_ptr<Node> Parser::parseType()
     
   }
   
-  std::unique_ptr<TypeNode> generatedNode;//(generatedNodes);
+  std::unique_ptr<Type> generatedNode;//(generatedNodes);
   return generatedNode;
 }
 

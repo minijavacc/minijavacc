@@ -3,8 +3,8 @@
 #include "prettyprinter.h"
 
 #include <memory>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace cmpl
 {
@@ -12,7 +12,7 @@ namespace cmpl
   class Node
   {
     public:
-      virtual void toString(PrettyPrinter printer) = 0; // must be implemented by subclasses
+      virtual void toString(PrettyPrinter printer) const = 0; // must be implemented by subclasses
   };
   
 /**************** actual nodes ****************/
@@ -28,29 +28,44 @@ namespace cmpl
       int arrayDepth;
       std::string type;
       
-      Type(int arrayDepth, std::string type) :
+      Type(int &arrayDepth, std::string &type) :
            arrayDepth(arrayDepth), type(type) { };
       
       void toString(PrettyPrinter &printer) {
         printer.print(type);
         for(int i=0;i<arrayDepth;i++) {
-          printer.print([]);
+          printer.print("[]");
         }
       };
   };
   
+  class Parameter : public Node
+  {
+    public:
+      std::unique_ptr<Type> type;
+      IdentifierTokenId ID;
+      
+      Parameter(std::unique_ptr<Type> &type, IdentifierTokenId &ID) :
+            type(type), ID(ID) { };
+      
+      void toString(PrettyPrinter &printer) {
+        type.toString(printer);
+        printer.println(" " + ID);
+      };
+  };
+
   class Block : public Node
   {
     public:
-      std::vector<BlockStatement> statements;
+      std::vector<std::unique_ptr<BlockStatement>> statements;
       
-      Block(std::vector<BlockStatement> statements) :
+      Block(std::vector<std::unique_ptr<BlockStatement>> &statements) :
             statements(statements) { };
       
       void toString(PrettyPrinter &printer) {
         printer.println("{");
         printer.addIndent();
-        for(BlockStatement statement : statements) {
+        for(auto const& statement : statements) {
           statement.toString(printer);
         }
         printer.removeIndent();
@@ -62,10 +77,10 @@ namespace cmpl
   class IfStatement : public Statement
   {
     public:
-      Expression &expression;
-      Statement &ifStatement;
+      std::unique_ptr<Expression> expression;
+      Statement ifStatement;
       
-      IfStatement(Expression &expression, Statement &ifStatement) :
+      IfStatement(std::unique_ptr<Expression> &expression, std::unique_ptr<Statement> &ifStatement) :
                   expression(expression), ifStatement(ifStatement) { };
       
       void toString(PrettyPrinter &printer) {
@@ -87,12 +102,13 @@ namespace cmpl
   class IfElseStatement : public Statement
   {
     public:
-      Expression expression;
-      Statement ifStatement;
-      Statement elseStatement;
+      std::unique_ptr<Expression> expression;
+      std::unique_ptr<Statement> ifStatement;
+      std::unique_ptr<Statement> elseStatement;
       
-      IfElseStatement(Expression expression, Statement ifStatement, Statement elseStatement) :
-                      expression(expression), ifStatement(ifStatement), elseStatement(elseStatement) { };
+      IfElseStatement(std::unique_ptr<Expression> &expression, std::unique_ptr<Statement> &ifStatement,
+                      std::unique_ptr<Statement> &elseStatement) :
+                        expression(expression), ifStatement(ifStatement), elseStatement(elseStatement) { };
       
       void toString(PrettyPrinter &printer) {
         printer.print("if (");
@@ -134,10 +150,10 @@ namespace cmpl
   class WhileStatement : public Statement
   {
     public:
-      Expression expression;
-      Statement statement;
+      std::unique_ptr<Expression> expression;
+      std::unique_ptr<Statement> statement;
       
-      WhileStatement(Expression expression, Statement statement) :
+      WhileStatement(std::unique_ptr<Expression> &expression, std::unique_ptr<Statement> &statement) :
                      expression(expression), statement(statement) { };
       
       void toString(PrettyPrinter &printer) {
@@ -158,9 +174,9 @@ namespace cmpl
   class ExpressionStatement : public Statement
   {
     public:
-      Expression expression;
+      std::unique_ptr<Expression> expression;
       
-      ExpressionStatement(Expression expression) :
+      ExpressionStatement(std::unique_ptr<Expression> &expression) :
                      expression(expression) { };
       
       void toString(PrettyPrinter &printer) {
@@ -172,9 +188,9 @@ namespace cmpl
   class LocalVarDeclStatement : public BlockStatement
   {
     public:
-      Type type;
-      std::string ID;
-      LocalVarDeclStatement(Type type, std::string ID) :
+      std::unique_ptr<Type> type;
+      IdentifierTokenId ID;
+      LocalVarDeclStatement(std::unique_ptr<Type> &type, IdentifierTokenId &ID) :
            type(type), ID(ID) { };
       
       void toString(PrettyPrinter &printer) {
@@ -186,10 +202,10 @@ namespace cmpl
   class Field : public ClassMember
   {
     public:
-      Type type;
-      std:string ID;
+      std::unique_ptr<Type> type;
+      IdentifierTokenId ID;
       
-      Field(Type type, std::string ID) :
+      Field(std::unique_ptr<Type> &type, IdentifierTokenId &ID) :
             type(type), ID(ID) { };
       
       void toString(PrettyPrinter &printer) {
@@ -201,26 +217,26 @@ namespace cmpl
   class Method : public ClassMember
   {
     public:
-      Type type;
-      std:string ID;
-      std::vector<Parameter> parameters;
-      Block block;
+      std::unique_ptr<Type> type;
+      IdentifierTokenId ID;
+      std::vector<std::unique_ptr<Parameter>> parameters;
+      std::unique_ptr<Block> block;
       
-      Method(Type type, std::string ID, std::vector<Parameter> parameters, Block block) :
-             type(type), ID(ID), parameters(parameters), block(block) { };
+      Method(std::unique_ptr<Type> &type, IdentifierTokenId &ID, std::vector<std::unique_ptr<Parameter>> &parameters,
+             std::unique_ptr<Block> &block) :
+               type(type), ID(ID), parameters(parameters), block(block) { };
       
       void toString(PrettyPrinter &printer) {
         printer.print("public ");
         type.toString(printer);
         printer.print(" " + ID + "(");
-        if(params.size() >= 1) {
+        if(parameters.size() >= 1) {
           parameters[0].toString(printer);
         }
-        for(int i=1; i < params.size(); i++) {
+        for(int i=1; i < parameters.size(); i++) {
           printer.print(", ");
           parameters[i].toString(printer);
         }
-        printer.print(params);
         printer.print(")");
         block.toString(printer);
       };
@@ -229,12 +245,13 @@ namespace cmpl
   class MainMethod : public ClassMember
   {
     public:
-      std:string ID;
-      std:string parameterID;
-      Block block;
+      IdentifierTokenId ID;
+      std::string parameterID;
+      std::unique_ptr<Block> block;
       
-      MainMethod(Type type, std::string ID, Block block, std::string parameterID) :
-                 type(type), ID(ID), block(block), parameterID(parameterID) { };
+      MainMethod(std::unique_ptr<Type> &type, IdentifierTokenId &ID, std::unique_ptr<Block> &block,
+                 std::string &parameterID) :
+                   type(type), ID(ID), block(block), parameterID(parameterID) { };
       
       void toString(PrettyPrinter &printer) {
         printer.print("public static void " + ID +"(String[] " + parameterID + ")");
@@ -245,14 +262,16 @@ namespace cmpl
   class Class : public Node
   {
     public:
-      std::vector<ClassMember> classMembers;
+      IdentifierTokenId ID;
+      std::vector<std::unique_ptr<ClassMember>> classMembers;
       
-      Class(std::vector<ClassMember> classMembers) : classMembers(classMembers) { };
+      Class(IdentifierTokenId &ID, std::vector<std::unique_ptr<ClassMember>> &classMembers) :
+            ID(ID), classMembers(classMembers) { };
       void toString(PrettyPrinter &printer) {
         printer.println("class " + ID + "{");
         printer.addIndent();
-        for(auto Class : Classs) {
-          Class.toString(printer);
+        for(auto const& classMember : classMembers) {
+          classMember.toString(printer);
         }
         printer.removeIndent();
         printer.println("}");
@@ -262,34 +281,15 @@ namespace cmpl
   class Program : public Node
   {
     public:
-      std::string ID;
-      std::vector<Class> classes;
+      std::vector<std::unique_ptr<Class>> classes;
       
-      Program(std::string ID, std::vector<Class> classes) :
-              ID(ID), classes(classes) { };
+      Program(std::vector<std::unique_ptr<Class>> &classes) :
+              classes(classes) { };
 
       void toString(PrettyPrinter &printer) {
-        for(auto clss : classes) {
+        for(auto const& clss : classes) {
           clss.toString(printer);
         }
       };
   };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
 }

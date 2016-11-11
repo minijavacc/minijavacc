@@ -22,6 +22,7 @@ namespace cmpl
       std::unique_ptr<Node> parseClassMember();
       std::unique_ptr<Node> parseType();
       std::unique_ptr<Node> parseBasicType();
+      std::unique_ptr<Node> Parser::parseExpression();
       
       Lexer& lexer;
       std::unique_ptr<Node> ast;
