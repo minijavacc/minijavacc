@@ -37,7 +37,7 @@ BasicType :: int | boolean | void | UserType
 UserType :: 
   # Attribute decl of type pointer to ClassDeclaration
   
-Statement :: Block | IfStatement | ExpressionStatement | WhileStatement | ReturnStatement
+Statement :: Block | IfStatement | ExpressionStatement | WhileStatement | ReturnStatement | EmptyStatement
 
 Block :: [LocalVariableDeclaration] [Statement]
   
@@ -52,6 +52,8 @@ WhileStatement :: Expression Statement
 
 ReturnStatement :: Expression
   # Expression is nullable
+  
+EmptyStatement ::
   
 
 Expression :: AssignOp | LogicalOrOp | LogicalAndOp | EqualityOp | RelationalOp | AddOp | MultOp | null | false | true | INTEGER_LITERAL | Ref | this | NewObject | NewArray | CallOp
