@@ -1,89 +1,82 @@
-Ref ::
-  # Attribute id of type IDENT
-  # Attribute decl of type pointer to Declaration
-  
-Declaration :: ClassDeclaration | ClassMember | Parameter | LocalVariableDeclaration
-  # Attribute name of type Ident
+Type :: BasicType Int
 
-Type :: BasicType
-  # Attribute dimensions of type Int
-  
-BasicType :: int | boolean | void | UserType
+BasicType = TypeInt | TypeBoolean | TypeVoid | UserType
 
-UserType :: 
-  # Attribute decl of type pointer to Declaration
-  
-  
+UserType :: Ident
+
 
 Program :: [ClassDeclaration]
 
-ClassDeclaration :: [ClassMember]
-  
-ClassMember :: Field | Method | MainMethod
+ClassDeclaration :: Ident [ClassMember]
+    
+ClassMember = Field | Method | MainMethod
+                 
+Field :: Ident Type
+Method :: Ident Type [Parameter] Statement
+MainMethod :: Ident Statement
 
-MainMethod :: Ref Block
-  
-Field :: Type
-  
-Method :: Type [Parameter] Block
-  
-Parameter :: Type
-  
-Statement :: Block | IfStatement | ExpressionStatement | WhileStatement | ReturnStatement | EmptyStatement
+Parameter :: Ident Type
 
-Block :: [LocalVariableDeclaration] [Statement]
-  
-LocalVariableDeclaration :: Type Expression
-  
-IfStatement :: Expr Statement Statement
-  # second Statement is nullable
-  
-ExpressionStatement :: Expression
-
+Statement = Block
+          | IfStatement | IfElseStatement 
+          | ExpressionStatement 
+          | WhileStatement
+          | ReturnExpressionStatement | ReturnStatement
+          | EmptyStatement
+          | LocalVariableDeclaration
+          | LocalVariableExpressionDeclaration
+                
+Block :: [Statement]
+IfStatement :: Expression Statement
+IfElseStatement :: Expression Statement Statement 
+ExpressionStatement :: Expression 
 WhileStatement :: Expression Statement
+ReturnExpressionStatement :: Expression
+LocalVariableDeclaration :: Ident Type
+LocalVariableExpressionDeclaration :: Ident Type Expression
+               
+               
+               
+EqualityOp = NotEquals | Equals
 
-ReturnStatement :: Expression
-  # Expression is nullable
-  
-EmptyStatement ::
-  
+RelationalOp = LessThan | LessThanOrEqual | GreaterThan | GreaterThanOrEqual
 
-Expression :: AssignOp | LogicalOrOp | LogicalAndOp | EqualityOp | RelationalOp | AddOp | MultOp | null | false | true | INTEGER_LITERAL | Ref | this | NewObject | NewArray | CallOp
-  # [prefixOperator] [postfixOperator]
-  # example: !-a.b().c is: Expression(a) with [prefixOperator] = [-, !], [postfixOperator] = [MethodInvocation(b), FieldAccess(c)]
+AddOp = Add | Subtract
 
-AssignOp :: Ref Expression
+MultOp = Multiply | Divide | Modulo
 
-LogicalOrOp :: Expression Expression
+UnaryOp = Negate | Minus | MethodInvocation | FieldAccess Ident | ArrayAccess Expression deriving (Show)
 
-LogicalAndOp :: Expression Expression
+MethodInvocation :: Ident [Expression]
 
-EqualityOp :: Expression Expression
-  # operator
-
-RelationalOp :: Expression Expression
-  # operator
-
-AddOp :: Expression Expression
-  # operator
-
-MultOp :: Expression Expression
-  # operator
-  
-CallOp :: Ref [Expression]
-  
-PrefixOperator :: ! | -
-
-PostfixOperator :: MethodInvocation | FieldAccess | ArrayAccess
-
-MethodInvocation :: Ref [Expression]
-
-FieldAccess :: Ref
-
-ArrayAccess :: Expression
-
-NewObject :: Ref
-
-NewArray :: BasicType Expression
-  # Attribute dimension of type Int
-  # example: new Foo[4][][] is: NewArray(Foo, 4) with dimension 3
+Expression = AssignmentExpression 
+           | LogicalOrExpression 
+           | LogicalAndExpression 
+           | EqualityExpression
+           | RelationalExpression
+           | AdditiveExpression 
+           | MultiplicativeExpression
+           | CallExpression
+           | UnaryExpression
+           | CNull
+           | CFalse
+           | CTrue
+           | CIntegerLiteral
+           | CRef
+           | CThis
+           | NewObject
+           | NewArray
+           
+AssignmentExpression :: Expression Expression
+LogicalOrExpression :: Expression Expression
+LogicalAndExpression :: Expression Expression
+EqualityExpression :: EqualityOp Expression Expression
+RelationalExpression :: RelationalOp Expression Expression
+AdditiveExpression :: AddOp Expression Expression
+MultiplicativeExpression :: MultOp Expression Expression
+CallExpression :: Ident [Expression]
+UnaryExpression :: UnaryOp Expression
+CIntegerLiteral :: Int
+CRef :: Ident
+NewObject :: Ident
+NewArray :: Int BasicType Expression

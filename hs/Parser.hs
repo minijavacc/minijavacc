@@ -16,9 +16,9 @@ data Program = Program [ClassDeclaration] deriving (Show)
 
 data ClassDeclaration = ClassDeclaration Ident [ClassMember] deriving (Show)
     
-data ClassMember = Field Type
-                 | Method Type [Parameter] Statement
-                 | MainMethod Ident Statement deriving (Show)
+data ClassMember = Field Ident Type
+                 | Method Ident Type [Parameter] Statement
+                 | MainMethod Ident Ident Statement deriving (Show)
 
 data Parameter = Parameter Ident Type deriving (Show)
 
@@ -28,8 +28,8 @@ data Statement = Block [Statement]
                | WhileStatement Expression Statement
                | ReturnExpressionStatement Expression | ReturnStatement
                | EmptyStatement
-               | LocalVariableDeclaration Type
-               | LocalVariableExpressionDeclaration Type Expression deriving (Show)
+               | LocalVariableDeclaration Ident Type
+               | LocalVariableExpressionDeclaration Ident Type Expression deriving (Show)
                
                
                
@@ -134,7 +134,7 @@ parseMainMethod ((Token T_KEYWORD "public" _)
                 :(Token T_RPAREN _ _)
                 :ts) = do
                     (bl, ts') <- parseBlock ts
-                    return (MainMethod pa bl, ts')
+                    return (MainMethod na pa bl, ts')
                     
 parseMainMethod _ = Nothing
         
@@ -142,21 +142,21 @@ parseMainMethod _ = Nothing
 parseFieldMethod :: [Token] -> Maybe (ClassMember, [Token])
 parseFieldMethod ((Token T_KEYWORD "public" _):ts) = do
     (ty, (Token T_IDENT na _):ts') <- parseType ts
-    (fm', ts'') <- parseFieldMethod' ty ts'
+    (fm', ts'') <- parseFieldMethod' na ty ts'
     return (fm', ts'')
         
 parseFieldMethod _ = fail "parseFieldMethod failed"
         
 
-parseFieldMethod' :: Type -> [Token] -> Maybe (ClassMember, [Token])
-parseFieldMethod' ty ((Token T_LPAREN _ _):ts) = do
+parseFieldMethod' :: Ident -> Type -> [Token] -> Maybe (ClassMember, [Token])
+parseFieldMethod' na ty ((Token T_LPAREN _ _):ts) = do
         (pas, (Token T_RPAREN _ _):ts') <- parseParameters ts
         (bl, ts'') <- parseBlock ts'
-        return (Method ty pas bl, ts'')
+        return (Method na ty pas bl, ts'')
 
-parseFieldMethod' ty ((Token T_SEMICOLON _ _):ts) = Just (Field ty, ts)
+parseFieldMethod' na ty ((Token T_SEMICOLON _ _):ts) = Just (Field na ty, ts)
 
-parseFieldMethod' _ _ = Nothing
+parseFieldMethod' _ _ _ = Nothing
 
 
 parseParameters :: [Token] -> Maybe ([Parameter], [Token])
@@ -300,17 +300,17 @@ parseBlockStatement _ = Nothing
 parseLocalVariableDeclarationStatement :: [Token] -> Maybe (Statement, [Token])
 parseLocalVariableDeclarationStatement ts = do
         (ty, (Token T_IDENT na _):ts') <- parseType ts
-        (lvds', (Token T_SEMICOLON _ _):ts'') <- parseLVDS' ty ts'
+        (lvds', (Token T_SEMICOLON _ _):ts'') <- parseLVDS' na ty ts'
         return (lvds', ts'')
        
-parseLVDS' :: Type -> [Token] -> Maybe (Statement, [Token]) 
-parseLVDS' ty ((Token T_EQUALS _ _):ts) = do
+parseLVDS' :: Ident -> Type -> [Token] -> Maybe (Statement, [Token]) 
+parseLVDS' na ty ((Token T_EQUALS _ _):ts) = do
         (ex, ts') <- parseExpression ts
-        return (LocalVariableExpressionDeclaration ty ex, ts')
+        return (LocalVariableExpressionDeclaration na ty ex, ts')
         
-parseLVDS' ty ts@((Token T_SEMICOLON _ _):_) = Just (LocalVariableDeclaration ty, ts)
+parseLVDS' na ty ts@((Token T_SEMICOLON _ _):_) = Just (LocalVariableDeclaration na ty, ts)
 
-parseLVDS' _ _ = Nothing
+parseLVDS' _ _ _ = Nothing
             
 parseEmptyStatement :: [Token] -> Maybe (Statement, [Token]) 
 parseEmptyStatement ((Token T_SEMICOLON _ _):ts) = Just (EmptyStatement, ts)
