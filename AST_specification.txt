@@ -13,7 +13,7 @@ ClassMember = Field | Method | MainMethod
                  
 Field :: Ident Type
 Method :: Ident Type [Parameter] Statement
-MainMethod :: Ident Statement
+MainMethod :: Ident Ident Statement
 
 Parameter :: Ident Type
 
