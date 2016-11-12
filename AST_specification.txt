@@ -12,8 +12,8 @@ ClassDeclaration :: Ident [ClassMember]
 ClassMember = Field | Method | MainMethod
                  
 Field :: Ident Type
-Method :: Ident Type [Parameter] Statement
-MainMethod :: Ident Ident Statement
+Method :: Ident Type [Parameter] Block
+MainMethod :: Ident Ident Block
 
 Parameter :: Ident Type
 
