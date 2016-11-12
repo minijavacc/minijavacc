@@ -838,7 +838,7 @@ Lexer::Lexer() : stringTable(StringTable())
 {
   for (int i = T_K_ABSTRACT; i <= T_K_WHILE; i++)
   {
-    stringTable.insertKeyword(Token::stringRepresentations[i], (TokenType)i);
+    stringTable.insertKeyword(Token::tokenAttribues[i].stringRepresentation, (TokenType)i);
   }      
 }
 

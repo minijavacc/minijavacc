@@ -22,7 +22,7 @@ namespace cmpl
       std::unique_ptr<Node> parseClassMember();
       std::unique_ptr<Node> parseType();
       std::unique_ptr<Node> parseBasicType();
-      std::unique_ptr<Node> Parser::parseExpression();
+      std::unique_ptr<Node> parseExpression();
       
       Lexer& lexer;
       std::unique_ptr<Node> ast;
@@ -42,6 +42,7 @@ namespace cmpl
       template<typename T>
       inline bool isNextTokenOfType();
       inline bool isCurrentTokenOSKTokenOfType(const TokenType& tokenType);
+      inline bool Parser::isCurrentTokenOSKTokenOfCategory(const TokenCategory& tokenCategoryOut);
       inline bool isNextTokenOSKTokenOfType(const TokenType& tokenType);
 
   };

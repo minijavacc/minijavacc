@@ -70,6 +70,19 @@ inline bool Parser::isCurrentTokenOSKTokenOfType(const TokenType& tokenType) {
           && (osk_t->type != tokenType));
 }
 
+// combines isCurrentTokenOfType with checking for specialized sub-type of operator/seperator tokens
+inline bool Parser::isCurrentTokenOSKTokenOfCategory(const TokenCategory& tokenCategory, TokenType& tokenTypeOut) {
+  OperatorSeperatorKeywordToken* osk_t = dynamic_cast<OperatorSeperatorKeywordToken*>(currentToken.get())
+  if (!osk_t)
+  {
+    return false;
+  }
+  
+  tokenTypeOut = osk_t->type;
+  
+  return (Token::tokenAttribues[osk_t->type] == binaryOperator);
+}
+
 // combines isNextTokenOfType with checking for specialized sub-type of operator/seperator tokens
 inline bool Parser::isNextTokenOSKTokenOfType(const TokenType& tokenType) {
   nextToken();
@@ -167,11 +180,140 @@ std::unique_ptr<Node> Parser::parseType()
   return generatedNode;
 }
 
-std::unique_ptr<Node> Parser::parseExpression()
+std::unique_ptr<Expression> Parser::parseExpression(unsigned int minPrecedence = 0)
 {
-  return nullptr;
+  std::unique_ptr<Expression> rightNode;
+  std::unique_ptr<Expression> node;
+  
+  TokenType tokenType;
+  unsigned int currentPrecedence;
+  
+  // check for "(" determining subexpression
+  if(isCurrentTokenOSKTokenOfType(T_O_LPAREN))
+  {
+    // parse subexpression
+    nextToken();
+    node = parseExpression();
+    
+    // and check for closing parensis
+    assureNextIsOSKTokenWithType(T_O_RPAREN);
+  }
+  // otherwise it has to be an UnaryExpression
+  else
+  {
+    node = parseUnaryExpression();
+  }
+  
+  
+  // precedence climbing
+  while (isCurrentTokenOSKTokenOfCategory(binaryOperator, tokenType) && 
+    (Token::tokenAttribues[tokenType].precedence; >= minPrecedence))
+  {
+    currentPrecedence = Token::tokenAttribues[tokenType].precedence;
+    
+    if (Token::tokenAttribues[tokenType].associativity == left)
+    {
+      currentPrecedence++;
+    }
+    
+    // recursively get right side of binary operator
+    rightNode = precedenceClimbingParseExpression(currentPrecedence);
+    
+    // check which binary operator was used and create AST element
+    switch (tokenType)
+    {
+      case T_O_EQUAL:
+      {
+        node = std::make_unique<Assignment>(std::move(node), std::move(rightNode));
+        break;
+      }
+      
+      case T_O_PIPE_PIPE:
+      {
+        node = std::make_unique<Or>(std::move(node), std::move(rightNode));
+        break;
+      }
+      
+      case T_O_AND_AND:
+      {
+        node = std::make_unique<And>(std::move(node), std::move(rightNode));
+        break;
+      }
+      
+      case T_O_EQUAL_EQUAL:
+      {
+        node = std::make_unique<Equals>(std::move(node), std::move(rightNode));
+        break;
+      }
+      
+      case T_O_EXCLM_EQUAL:
+      {
+        node = std::make_unique<NotEquals>(std::move(node), std::move(rightNode));
+        break;
+      }
+      
+      case T_O_LESS:
+      {
+        node = std::make_unique<LessThan>(std::move(node), std::move(rightNode));
+        break;
+      }
+      
+      case T_O_LESS_EQUAL:
+      {
+        node = std::make_unique<LessThanOrEqual>(std::move(node), std::move(rightNode));
+        break;
+      }
+      
+      case T_O_MORE:
+      {
+        node = std::make_unique<GreaterThan>(std::move(node), std::move(rightNode));
+        break;
+      }
+      
+      case T_O_MORE_EQUAL:
+      {
+        node = std::make_unique<GreaterThanOrEqual>(std::move(node), std::move(rightNode));
+        break;
+      }
+      
+      case T_O_PLUS:
+      {
+        node = std::make_unique<Add>(std::move(node), std::move(rightNode));
+        break;
+      }
+      
+      case T_O_MINUS:
+      {
+        node = std::make_unique<Minus>(std::move(node), std::move(rightNode));
+        break;
+      }
+      
+      case T_O_STAR:
+      {
+        node = std::make_unique<Multiply>(std::move(node), std::move(rightNode));
+        break;
+      }
+      
+      case T_O_SLASH:
+      {
+        node = std::make_unique<Divide>(std::move(node), std::move(rightNode));
+        break;
+      }
+      
+      case T_O_PERCENT:
+      {
+        node = std::make_unique<Modulo>(std::move(node), std::move(rightNode));
+        break;
+      }
+      
+      default:
+        throw std::logic_error("ERROR: non-binary Token appeared in precedence climbing, where it should never get");
+    }
+  }
+  
+  // return whole AST subtree
+  return std::move(node);
 }
-
 
 void Parser::getAST(std::unique_ptr<Node> &n)
 {
