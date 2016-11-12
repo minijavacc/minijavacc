@@ -55,7 +55,7 @@ const OperatorSeperatorKeywordContainer Token::tokenAttribues[99] = {
   
   [T_O_LPAREN]               = {seperator, "(", 0, none}, 
   [T_O_RPAREN]               = {seperator, ")", 0, none}, 
-  [T_O_KOMMA]                = {seperator, ",", 0, none}, 
+  [T_O_COMMA]                = {seperator, ",", 0, none}, 
   [T_O_DOT]                  = {seperator, ".", 0, none}, 
   [T_O_COLON]                = {seperator, ":", 0, none}, 
   [T_O_SEMICOLON]            = {seperator, ";", 0, none}, 

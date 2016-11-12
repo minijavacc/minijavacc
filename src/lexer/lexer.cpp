@@ -110,7 +110,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_plus; 
       
       case ',':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_KOMMA, line, column));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_COMMA, line, column));
         
         // begin next token
         currentTokenString = "";
