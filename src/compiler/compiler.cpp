@@ -40,12 +40,35 @@ int Compiler::lextest(std::ifstream &file)
   }
   catch (SyntaxError &e) 
   {
-    std::cerr << "error\n";
+    std::cerr << "syntax error: " << e.what() << "\n";
     return 1;
   }
 }
 
 int Compiler::parsetest(std::ifstream &file)
+{
+  try {
+    Lexer l = Lexer();
+    l.run(file);
+  
+    Parser p = Parser(l);
+    p.run();
+  
+    return 0;
+  }
+  catch (SyntaxError &e) 
+  {
+    std::cerr << "syntax error: " << e.what() << "\n";
+    return 1;
+  }
+  catch (SemanticError &e) 
+  {
+    std::cerr << "semantic error: " << e.what() << "\n";
+    return 1;
+  }
+}
+
+int Compiler::printast(std::ifstream &file)
 {
   try {
     Lexer l = Lexer();
@@ -64,12 +87,12 @@ int Compiler::parsetest(std::ifstream &file)
   }
   catch (SyntaxError &e) 
   {
-    std::cerr << "syntax error\n";
+    std::cerr << "syntax error: " << e.what() << "\n";
     return 1;
   }
   catch (SemanticError &e) 
   {
-    std::cerr << "semantic error\n";
+    std::cerr << "semantic error: " << e.what() << "\n";
     return 1;
   }
 }

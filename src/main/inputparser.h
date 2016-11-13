@@ -32,7 +32,8 @@ namespace cmpl
       const std::vector<Option> knownOptions = {
         Option("--echo", Compiler::echo),
         Option("--lextest", Compiler::lextest),
-        Option("--parsetest", Compiler::parsetest)
+        Option("--parsetest", Compiler::parsetest),
+        Option("--print-ast", Compiler::printast)
       };
 
       std::vector<Option> givenOptions;

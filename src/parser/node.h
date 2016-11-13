@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 namespace cmpl
 {
@@ -558,7 +559,7 @@ namespace cmpl
         printer.print("if (");
         expression->toString(printer);
         
-        /*if(dynamic_cast<Block>(ifStatement)) { TODO
+        if(dynamic_cast<Block*>(ifStatement.get())) {
           printer.print(") ");
           ifStatement->toString(printer);
         } else {
@@ -566,7 +567,7 @@ namespace cmpl
           printer.addIndent();
           ifStatement->toString(printer);
           printer.removeIndent();
-        }*/
+        }
       };
   };
   
@@ -586,7 +587,7 @@ namespace cmpl
         printer.print("if (");
         expression->toString(printer);
         
-        /*if(dynamic_cast<Block>(ifStatement)) { TODO
+        if(dynamic_cast<Block*>(ifStatement.get())) {
           printer.print(") ");
           ifStatement->toString(printer);
         } else {
@@ -596,7 +597,7 @@ namespace cmpl
           printer.removeIndent();
         }
         
-        if(dynamic_cast<Block>(elseStatement)) {
+        if(dynamic_cast<Block*>(elseStatement.get())) {
           printer.print("else ");
           elseStatement->toString(printer);
         } else {
@@ -604,7 +605,7 @@ namespace cmpl
           printer.addIndent();
           elseStatement->toString(printer);
           printer.removeIndent();
-        }*/
+        }
       };
   };
   
@@ -634,7 +635,7 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("while (");
         expression->toString(printer);
-/*        if(dynamic_cast<Block>(statement)) { TODO
+        if(dynamic_cast<Block*>(statement.get())) {
           printer.print(") ");
           statement->toString(printer);
         } else {
@@ -642,7 +643,7 @@ namespace cmpl
           printer.addIndent();
           statement->toString(printer);
           printer.removeIndent();
-        }*/
+        }
       };
   };
   
@@ -796,6 +797,65 @@ namespace cmpl
                          ID(std::move(ID)), classMembers(std::move(classMembers)) { };
       
       void toString(PrettyPrinter &printer) const {
+        // sort the classMembers
+        // first methods then fields, each of them in alphabetical order
+        std::sort(classMembers.begin(), classMembers.end(), 
+          [](const std::unique_ptr<ClassMember> &a, const std::unique_ptr<ClassMember> &b) -> bool{
+            Field* a_p;
+            Field* b_p;
+            
+            if ((a_p = dynamic_cast<Field*>(a.get())) && (b_p = dynamic_cast<Field*>(b.get())))
+            {
+              // a and b are both Fields
+              
+              // get identifier strings and compare them
+              return a_p->ID.get()->getIdentifier().compare(b_p->ID.get()->getIdentifier());
+            }
+            else if ((dynamic_cast<Method*>(a.get()) || dynamic_cast<MainMethod*>(a.get())) && 
+              (dynamic_cast<Method*>(b.get()) || dynamic_cast<MainMethod*>(b.get())))
+            {
+              // a and b are both either Method or MainMethod
+              std::string a_s;
+              std::string b_s;
+              Method* m;
+              MainMethod* mm;
+              
+              // get identifier string for a
+              if (m = dynamic_cast<Method*>(a.get()))
+              {
+                a_s = m->ID.get()->getIdentifier();
+              }
+              else if (mm = dynamic_cast<MainMethod*>(a.get()))
+              {
+                a_s = mm->ID.get()->getIdentifier();
+              }
+              
+              // get identifier string for b
+              if (m = dynamic_cast<Method*>(b.get()))
+              {
+                b_s = m->ID.get()->getIdentifier();
+              }
+              else if (mm = dynamic_cast<MainMethod*>(b.get()))
+              {
+                b_s = mm->ID.get()->getIdentifier();
+              }
+              
+              // compare strings
+              return a_s.compare(b_s);
+            }
+            else if (dynamic_cast<Field*>(a.get()) && 
+              (dynamic_cast<Method*>(b.get()) || dynamic_cast<MainMethod*>(b.get())))
+            {
+              // a is field and b is Method or MainMethod
+              return 1;
+            }
+            else
+            {
+              // a is Method or MainMethod and b is Field
+              return -1;
+            }
+        });
+        
         printer.println("class "+ ID->getIdentifier() + " {");
         printer.addIndent();
         for(auto const& classMember : classMembers) {
