@@ -797,6 +797,8 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         // sort the classMembers
         // first methods then fields, each of them in alphabetical order
+        
+        // TODO: sort() throws compiler error
         /*std::sort(classMembers.begin(), classMembers.end(), 
           [](const std::unique_ptr<ClassMember> &a, const std::unique_ptr<ClassMember> &b) -> bool{
             Field* a_p;
@@ -874,6 +876,14 @@ namespace cmpl
                 classDeclarations(std::move(classDeclarations)) { };
 
       void toString(PrettyPrinter &printer) const {
+        // sort classes by alphabetical order
+        
+        // TODO: sort() throws compiler error
+        /*std::sort(classDeclarations.begin(), classDeclarations.end(), 
+          [](const std::unique_ptr<ClassDeclaration> &a, const std::unique_ptr<ClassDeclaration> &b) -> bool{
+            return StringTable::lookupIdentifier(a->ID).compare(StringTable::lookupIdentifier(b->ID));
+        });*/
+        
         for(auto const& classDeclaration : classDeclarations) {
           classDeclaration->toString(printer);
         }
