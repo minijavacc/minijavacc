@@ -118,7 +118,7 @@ std::unique_ptr<Program> Parser::parseProgram()
     classes.push_back(std::move(parseClassDeclaration()));
   }
   
-  return std::make_unique<Program>(std::move(classes));
+  return std::make_unique<Program>(classes);
 }
 
 /* start: current = "class" */
@@ -134,7 +134,7 @@ std::unique_ptr<ClassDeclaration> Parser::parseClassDeclaration()
     classMembers.push_back(std::move(parseClassMember()));
   }
 
-  return std::make_unique<ClassDeclaration>(std::move(ID), std::move(classMembers));
+  return std::make_unique<ClassDeclaration>(ID, classMembers);
 }
 
 std::unique_ptr<ClassMember> Parser::parseClassMember()
@@ -160,13 +160,13 @@ std::unique_ptr<ClassMember> Parser::parseClassMember()
     assureNextIsOSKTokenWithType(T_O_RPAREN);
     nextToken();
     block = parseBlock();
-    return std::make_unique<MainMethod>(std::move(ID), std::move(parameterID), std::move(block));
+    return std::make_unique<MainMethod>(ID, parameterID, block);
   } else {
     std::unique_ptr<Type> type = parseType();
     std::unique_ptr<IdentifierToken> ID = getIdentifierFromNext();
     if(isNextTokenOSKTokenOfType(T_O_SEMICOLON)) {
       // Field
-      return std::make_unique<Field>(std::move(type), std::move(ID));
+      return std::make_unique<Field>(type, ID);
     } else if(isCurrentTokenOSKTokenOfType(T_O_LPAREN)) {
       // Method
       std::vector<std::unique_ptr<Parameter>> parameters;
@@ -176,7 +176,7 @@ std::unique_ptr<ClassMember> Parser::parseClassMember()
         parameters.push_back(std::move(parseParameter()));
       } while(isCurrentTokenOSKTokenOfType(T_O_COMMA));
       
-      return std::make_unique<Method>(std::move(type), std::move(ID), std::move(parameters), std::move(block));
+      return std::make_unique<Method>(type, ID, parameters, block);
     } else {
       throw SemanticError();
     }
@@ -194,7 +194,7 @@ std::unique_ptr<Type> Parser::parseType()
     nextToken();
   }
   
-  return std::make_unique<Type>(std::move(type), arrayDepth);
+  return std::make_unique<Type>(type, arrayDepth);
 }
 
 std::unique_ptr<BasicType> Parser::parseBasicType()
@@ -207,7 +207,7 @@ std::unique_ptr<BasicType> Parser::parseBasicType()
     return std::make_unique<TypeVoid>();
   } else {
     std::unique_ptr<IdentifierToken> ID = getIdentifierFromCurrent();
-    return std::make_unique<UserType>(std::move(ID));
+    return std::make_unique<UserType>(ID);
   }
 }
 
@@ -216,7 +216,7 @@ std::unique_ptr<Parameter> Parser::parseParameter()
   std::unique_ptr<Type> type = parseType();
   std::unique_ptr<IdentifierToken> ID = getIdentifierFromCurrent();
   
-  return std::make_unique<Parameter>(std::move(type), std::move(ID));
+  return std::make_unique<Parameter>(type, ID);
 }
 
 std::unique_ptr<Block> Parser::parseBlock()
@@ -229,7 +229,7 @@ std::unique_ptr<Block> Parser::parseBlock()
     statements.push_back(std::move(parseStatement()));
   }
   
-  return std::make_unique<Block>(std::move(statements));
+  return std::make_unique<Block>(statements);
 }
 
 
@@ -270,11 +270,11 @@ std::unique_ptr<Statement> Parser::parseIfElseStatement()
   nextToken();
   ifStatement = parseStatement();
   if(!isCurrentTokenOSKTokenOfType(T_K_ELSE)) {
-    return std::make_unique<IfStatement>(std::move(expression), std::move(ifStatement));
+    return std::make_unique<IfStatement>(expression, ifStatement);
   } else {
     // else
     std::unique_ptr<Statement> elseStatement = parseStatement();
-    return std::make_unique<IfElseStatement>(std::move(expression), std::move(ifStatement), std::move(elseStatement));
+    return std::make_unique<IfElseStatement>(expression, ifStatement, elseStatement);
   }
 };
 
@@ -291,7 +291,7 @@ std::unique_ptr<Statement> Parser::parseWhileStatement()
   nextToken();
   statement = parseStatement();
   
-  return std::make_unique<WhileStatement>(std::move(expression), std::move(statement));
+  return std::make_unique<WhileStatement>(expression, statement);
 };
 
 /* start: current = "return" */
@@ -301,7 +301,7 @@ std::unique_ptr<Statement> Parser::parseReturnStatement()
     return std::make_unique<ReturnStatement>();
   } else {
     std::unique_ptr<Expression> expression = parseExpression();
-    return std::make_unique<ReturnExpressionStatement>(std::move(expression));
+    return std::make_unique<ReturnExpressionStatement>(expression);
   }
 };
 
@@ -349,85 +349,96 @@ std::unique_ptr<Expression> Parser::parseExpression(unsigned int minPrecedence)
     {
       case T_O_EQUAL:
       {
-        node = std::make_unique<AssignmentExpression>(std::move(node), std::move(rightNode));
+        node = std::make_unique<AssignmentExpression>(node, rightNode);
         break;
       }
       
       case T_O_PIPE_PIPE:
       {
-        node = std::make_unique<LogicalOrExpression>(std::move(node), std::move(rightNode));
+        node = std::make_unique<LogicalOrExpression>(node, rightNode);
         break;
       }
       
       case T_O_AND_AND:
       {
-        node = std::make_unique<LogicalAndExpression>(std::move(node), std::move(rightNode));
+        node = std::make_unique<LogicalAndExpression>(node, rightNode);
         break;
       }
       
       case T_O_EQUAL_EQUAL:
       {
-        node = std::make_unique<EqualityExpression>(std::make_unique<Equals>(), std::move(node), std::move(rightNode));
+        std::unique_ptr<EqualityOp> op = std::make_unique<Equals>();
+        node = std::make_unique<EqualityExpression>(op, node, rightNode);
         break;
       }
       
       case T_O_EXCLM_EQUAL:
       {
-        node = std::make_unique<EqualityExpression>(std::make_unique<NotEquals>(), std::move(node), std::move(rightNode));
+        std::unique_ptr<EqualityOp> op = std::make_unique<NotEquals>();
+        node = std::make_unique<EqualityExpression>(op, node, rightNode);
         break;
       }
       
       case T_O_LESS:
       {
-        node = std::make_unique<RelationalExpression>(std::make_unique<LessThan>(), std::move(node), std::move(rightNode));
+        std::unique_ptr<RelationalOp> op = std::make_unique<LessThan>();
+        node = std::make_unique<RelationalExpression>(op, node, rightNode);
         break;
       }
       
       case T_O_LESS_EQUAL:
       {
-        node = std::make_unique<RelationalExpression>(std::make_unique<LessThanOrEqual>(), std::move(node), std::move(rightNode));
+        std::unique_ptr<RelationalOp> op = std::make_unique<LessThanOrEqual>();
+        node = std::make_unique<RelationalExpression>(op, node, rightNode);
         break;
       }
       
       case T_O_MORE:
       {
-        node = std::make_unique<RelationalExpression>(std::make_unique<GreaterThan>(), std::move(node), std::move(rightNode));
+        std::unique_ptr<RelationalOp> op = std::make_unique<GreaterThan>();
+        node = std::make_unique<RelationalExpression>(op, node, rightNode);
         break;
       }
       
       case T_O_MORE_EQUAL:
       {
-        node = std::make_unique<RelationalExpression>(std::make_unique<GreaterThanOrEqual>(), std::move(node), std::move(rightNode));
+        std::unique_ptr<RelationalOp> op = std::make_unique<GreaterThanOrEqual>();
+        node = std::make_unique<RelationalExpression>(op, node, rightNode);
         break;
       }
       
       case T_O_PLUS:
       {
-        node = std::make_unique<AdditiveExpression>(std::make_unique<Add>(), std::move(node), std::move(rightNode));
+        std::unique_ptr<AddOp> op = std::make_unique<Add>();
+        node = std::make_unique<AdditiveExpression>(op, node, rightNode);
         break;
       }
       
       case T_O_MINUS:
       {
-        node = std::make_unique<AdditiveExpression>(std::make_unique<Minus>(), std::move(node), std::move(rightNode));
+        std::unique_ptr<AddOp> op = std::make_unique<Subtract>();
+        node = std::make_unique<AdditiveExpression>(op, node, rightNode);
         break;
       }
       
       case T_O_STAR:
       {
-        node = std::make_unique<MultiplicativeExpression>(std::make_unique<Multiply>(), std::move(node), std::move(rightNode));
+        std::unique_ptr<MultOp> op = std::make_unique<Multiply>();
+        node = std::make_unique<MultiplicativeExpression>(op, node, rightNode);
         break;
       }
       
       case T_O_SLASH:
       {
-        node = std::make_unique<MultiplicativeExpression>(std::make_unique<Divide>(), std::move(node), std::move(rightNode));
+        std::unique_ptr<MultOp> op = std::make_unique<Divide>();
+        node = std::make_unique<MultiplicativeExpression>(op, node, rightNode);
         break;
       }
       
       case T_O_PERCENT:
       {
-        node = std::make_unique<MultiplicativeExpression>(std::make_unique<Modulo>(), std::move(node), std::move(rightNode));
+        std::unique_ptr<MultOp> op = std::make_unique<Modulo>();
+        node = std::make_unique<MultiplicativeExpression>(op, node, rightNode);
         break;
       }
       
