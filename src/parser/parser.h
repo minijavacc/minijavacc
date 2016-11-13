@@ -16,19 +16,30 @@ namespace cmpl
       void getAST(std::unique_ptr<Node> &n);
     
     private:
-      /* all parsing functions have currentToken point to the position one after their last token */
-      std::unique_ptr<Node> parseProgram();
-      std::unique_ptr<Node> parseClassDeclaration();
-      std::unique_ptr<Node> parseClassMember();
-      std::unique_ptr<Node> parseType();
-      std::unique_ptr<Node> parseBasicType();
-      std::unique_ptr<Node> parseExpression();
+      /* all parsing functions have currentToken point to their first token upon calling
+         and point to the next token on returning. */
+      std::unique_ptr<Program> parseProgram();
+      std::unique_ptr<ClassDeclaration> parseClassDeclaration();
+      std::unique_ptr<ClassMember> parseClassMember();
+      std::unique_ptr<Type> parseType();
+      std::unique_ptr<BasicType> parseBasicType();
+      std::unique_ptr<Parameter> parseParameter();
+      std::unique_ptr<Block> parseBlock();
+      std::unique_ptr<Statement> parseStatement();
+      std::unique_ptr<Statement> parseIfElseStatement();
+      std::unique_ptr<Statement> parseWhileStatement();
+      std::unique_ptr<Statement> parseReturnStatement();
+      std::unique_ptr<Expression> parseExpression(unsigned int minPrecedence = 0);
+      std::unique_ptr<UnaryExpression> parseUnaryExpression();
       
       Lexer& lexer;
       std::unique_ptr<Node> ast;
       std::unique_ptr<Token> currentToken;
 
       inline void nextToken();
+      
+      inline std::unique_ptr<IdentifierToken> getIdentifierFromCurrent();
+      inline std::unique_ptr<IdentifierToken> getIdentifierFromNext();
       
       template<typename T>
       inline void assureCurrentTokenTypeIs();
@@ -42,7 +53,7 @@ namespace cmpl
       template<typename T>
       inline bool isNextTokenOfType();
       inline bool isCurrentTokenOSKTokenOfType(const TokenType& tokenType);
-      inline bool Parser::isCurrentTokenOSKTokenOfCategory(const TokenCategory& tokenCategoryOut);
+      inline bool isCurrentTokenOSKTokenOfCategory(const TokenCategory& tokenCategory, TokenType& tokenTypeOut);
       inline bool isNextTokenOSKTokenOfType(const TokenType& tokenType);
 
   };
