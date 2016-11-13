@@ -16,7 +16,13 @@ inline void Parser::nextToken()
 }
 
 inline std::unique_ptr<IdentifierToken> Parser::getIdentifierFromCurrent() {
-  return std::move(dynamic_cast<IdentifierToken*>(currentToken.get()));
+
+  IdentifierToken* id_t;
+  if (id_t = dynamic_cast<IdentifierToken*>(currentToken.get())) {
+    return std::unique_ptr<IdentifierToken>(id_t);
+  } else {
+    throw SemanticError();
+  }
 }
 
 inline std::unique_ptr<IdentifierToken> Parser::getIdentifierFromNext() {
