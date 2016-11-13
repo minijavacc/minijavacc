@@ -842,10 +842,16 @@ Lexer::Lexer()
   }
 }
 
+
 inline void Lexer::insertToken(std::unique_ptr<Token> token)
 {
   // later this maybe can be used for callbacks etc.
-  tokenArray.push(std::move(token));
+  tokenArray.push_back(std::move(token));
+}
+
+bool Lexer::putBackToken(std::unique_ptr<Token> &t)
+{
+  tokenArray.push_front(std::move(t));
 }
 
 bool Lexer::getNextToken(std::unique_ptr<Token> &t)
@@ -856,7 +862,7 @@ bool Lexer::getNextToken(std::unique_ptr<Token> &t)
   }
   
   std::unique_ptr<Token> token = std::move(tokenArray.front());
-  tokenArray.pop();
+  tokenArray.pop_front();
   t = std::move(token);
   
   return true;
