@@ -1,5 +1,7 @@
 #include "parser.h"
 
+#include <iostream>
+#include <typeinfo> //TODO
 using namespace cmpl;
 
 
@@ -16,7 +18,7 @@ inline void Parser::nextToken()
 }
 
 inline std::unique_ptr<IdentifierToken> Parser::getIdentifierFromCurrent() {
-
+  std::cout << "ID\n";
   IdentifierToken* id_t;
   if (id_t = dynamic_cast<IdentifierToken*>(currentToken.get())) {
     return std::unique_ptr<IdentifierToken>(id_t);
@@ -51,6 +53,7 @@ inline void Parser::assureNextTokenTypeIs()
 // combines assureNextTokenTypeIs with checking for specialized sub-type of operator/seperator tokens
 inline void Parser::assureCurrentIsOSKTokenWithType(const TokenType& tokenType)
 {
+  std::cout << "assure ";
   if (!isCurrentTokenOSKTokenOfType(tokenType))
   {
     throw SemanticError();
@@ -61,6 +64,7 @@ inline void Parser::assureCurrentIsOSKTokenWithType(const TokenType& tokenType)
 inline void Parser::assureNextIsOSKTokenWithType(const TokenType& tokenType)
 {
   nextToken();
+  std::cout << "inside\n";
   assureCurrentIsOSKTokenWithType(tokenType);
 }
 
@@ -68,6 +72,9 @@ inline void Parser::assureNextIsOSKTokenWithType(const TokenType& tokenType)
 // Checks whether current token is of specified type T
 template<typename T>
 inline bool Parser::isCurrentTokenOfType() {
+  std::cout << "is of type ";
+  std::cout << typeid(T).name();
+  std::cout << "?\n";
   return dynamic_cast<T*>(currentToken.get());
 }
 
@@ -80,9 +87,17 @@ inline bool Parser::isNextTokenOfType() {
 
 // combines isCurrentTokenOfType with checking for specialized sub-type of operator/seperator tokens
 inline bool Parser::isCurrentTokenOSKTokenOfType(const TokenType& tokenType) {
-  OperatorSeperatorKeywordToken* osk_t;
-  return ((osk_t = dynamic_cast<OperatorSeperatorKeywordToken*>(currentToken.get()))
-          && (osk_t->type != tokenType));
+  std::cout << "is " << Token::tokenAttribues[tokenType].stringRepresentation << " ?\n";
+  OperatorSeperatorKeywordToken* osk_t = dynamic_cast<OperatorSeperatorKeywordToken*>(currentToken.get());
+  std::cout << "fgfd\n";
+  return osk_t && ((osk_t->type) == tokenType);
+}
+
+
+// combines isNextTokenOfType with checking for specialized sub-type of operator/seperator tokens
+inline bool Parser::isNextTokenOSKTokenOfType(const TokenType& tokenType) {
+  nextToken();
+  return isCurrentTokenOSKTokenOfType(tokenType);
 }
 
 // combines isCurrentTokenOfType with checking for specialized sub-type of operator/seperator tokens
@@ -98,38 +113,35 @@ inline bool Parser::isCurrentTokenOSKTokenOfCategory(const TokenCategory& tokenC
   return (Token::tokenAttribues[osk_t->type].category == binaryOperator);
 }
 
-// combines isNextTokenOfType with checking for specialized sub-type of operator/seperator tokens
-inline bool Parser::isNextTokenOSKTokenOfType(const TokenType& tokenType) {
-  nextToken();
-  return isCurrentTokenOSKTokenOfType(tokenType);
-}
-
 
 /************************ end helper functions **************/
 
 
 void Parser::run()
 {
-  // each parseNONTERMINAL() function requests their token at the beginning
   ast = parseProgram();
 }
 
 std::unique_ptr<Program> Parser::parseProgram()
 {
+  std::cout << "program\n";
   std::vector<std::unique_ptr<ClassDeclaration>> classes;
   
   // multile classes
   while(lexer.hasNextToken()) {
+    std::cout << "next class\n";
     assureNextIsOSKTokenWithType(T_K_CLASS);
     classes.push_back(std::move(parseClassDeclaration()));
   }
   
+  std::cout << "program done\n";
   return std::make_unique<Program>(classes);
 }
 
 /* start: current = "class" */
 std::unique_ptr<ClassDeclaration> Parser::parseClassDeclaration()
 {
+  std::cout << "declaration\n";
   std::vector<std::unique_ptr<ClassMember>> classMembers;
   std::unique_ptr<IdentifierToken> ID;
   
@@ -140,13 +152,16 @@ std::unique_ptr<ClassDeclaration> Parser::parseClassDeclaration()
     classMembers.push_back(std::move(parseClassMember()));
   }
 
+  std::cout << "declaration done\n";
   return std::make_unique<ClassDeclaration>(ID, classMembers);
 }
 
 std::unique_ptr<ClassMember> Parser::parseClassMember()
 {
+  std::cout << "member\n";
   assureNextIsOSKTokenWithType(T_K_PUBLIC);
   
+  std::cout << "asdf\n";
   if(isNextTokenOSKTokenOfType(T_K_STATIC)) {
     // MainMethod
     std::unique_ptr<IdentifierToken> ID;

@@ -53,9 +53,9 @@ namespace cmpl
       template<typename T>
       inline bool isNextTokenOfType();
       inline bool isCurrentTokenOSKTokenOfType(const TokenType& tokenType);
-      inline bool isCurrentTokenOSKTokenOfCategory(const TokenCategory& tokenCategory, TokenType& tokenTypeOut);
       inline bool isNextTokenOSKTokenOfType(const TokenType& tokenType);
 
+      inline bool isCurrentTokenOSKTokenOfCategory(const TokenCategory& tokenCategory, TokenType& tokenTypeOut);
   };
   
   class SemanticError : public std::exception { };
