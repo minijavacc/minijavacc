@@ -142,7 +142,7 @@ namespace cmpl
       const OperatorAssociativity associativity;
   };
   
-  typedef int IdentifierTokenId;
+  typedef int StringIdentifier;
   
   class Token;
 }
@@ -175,12 +175,10 @@ namespace cmpl
   class IdentifierToken : public Token
   {
     public:
-      IdentifierToken(IdentifierTokenId id, StringTable &stringTable, unsigned int line, unsigned int column)
-        : Token(line, column), id(id), stringTable(stringTable) {};
-      StringTable &stringTable;
-      IdentifierTokenId id;
+      IdentifierToken(StringIdentifier id, unsigned int line, unsigned int column)
+        : Token(line, column), id(id) {};
+      StringIdentifier id;
       std::string getStringValue();
-      std::string getIdentifier();
   };
   
   class IntegerLiteralToken : public Token

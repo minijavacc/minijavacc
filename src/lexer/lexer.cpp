@@ -300,7 +300,7 @@ void Lexer::run(std::ifstream &inputFile)
         // continue in state machine
         currentTokenString += currentChar;
         if (!inputFile.get(currentChar)) {
-          auto token = stringTable.insertString(currentTokenString, line, column);
+          auto token = StringTable::insertString(currentTokenString, line, column);
           insertToken(std::move(token));
           goto s_eof;
         }
@@ -340,7 +340,7 @@ void Lexer::run(std::ifstream &inputFile)
         // continue in state machine
         currentTokenString += currentChar;
         if (!inputFile.get(currentChar)) {
-          auto token = stringTable.insertString(currentTokenString, line, column);
+          auto token = StringTable::insertString(currentTokenString, line, column);
           insertToken(std::move(token));
           goto s_eof;
         }
@@ -349,7 +349,7 @@ void Lexer::run(std::ifstream &inputFile)
       default:
         // lookup in string table and add the returning token
         // string table automatically checks if token is keyword
-        auto token = stringTable.insertString(currentTokenString, line, column);
+        auto token = StringTable::insertString(currentTokenString, line, column);
         insertToken(std::move(token));
         
         // begin next token
@@ -834,12 +834,12 @@ void Lexer::run(std::ifstream &inputFile)
   }
 }
 
-Lexer::Lexer() : stringTable(StringTable())
+Lexer::Lexer()
 {
   for (int i = T_K_ABSTRACT; i <= T_K_WHILE; i++)
   {
-    stringTable.insertKeyword(Token::tokenAttribues[i].stringRepresentation, (TokenType)i);
-  }      
+    StringTable::insertKeyword(Token::tokenAttribues[i].stringRepresentation, (TokenType)i);
+  }
 }
 
 inline void Lexer::insertToken(std::unique_ptr<Token> token)

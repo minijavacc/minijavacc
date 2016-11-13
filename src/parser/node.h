@@ -80,12 +80,12 @@ namespace cmpl
   class UserType : public BasicType
   {
     public:
-      std::unique_ptr<IdentifierToken> ID;
+      StringIdentifier ID;
       
-      UserType(std::unique_ptr<IdentifierToken> &ID) : ID(std::move(ID)) { }
+      UserType(StringIdentifier &ID) : ID(ID) { }
       
       void toString(PrettyPrinter &printer) const {
-        printer.print(ID->getIdentifier());
+        printer.print(StringTable::lookupIdentifier(ID));
       };
   };
 
@@ -222,14 +222,14 @@ namespace cmpl
   class MethodInvocation : public UnaryOp
   {
     public:
-      std::unique_ptr<IdentifierToken> ID;
+      StringIdentifier ID;
       std::vector<std::unique_ptr<Expression>> expressions;
       
-      MethodInvocation(std::unique_ptr<IdentifierToken> &ID, std::vector<std::unique_ptr<Expression>> &expressions) :
-                         ID(std::move(ID)), expressions(std::move(expressions)) { };
+      MethodInvocation(StringIdentifier &ID, std::vector<std::unique_ptr<Expression>> &expressions) :
+                         ID(ID), expressions(std::move(expressions)) { };
         
       void toString(PrettyPrinter &printer) const {
-        printer.print("." + ID->getIdentifier() + "(");
+        printer.print("." + StringTable::lookupIdentifier(ID) + "(");
         
         bool continous = false;
         for(auto const& expression:expressions) {
@@ -247,12 +247,12 @@ namespace cmpl
   class FieldAccess : public UnaryOp
   {
     public:
-      std::unique_ptr<IdentifierToken> ID;
+      StringIdentifier ID;
       
-      FieldAccess(std::unique_ptr<IdentifierToken> &ID) : ID(std::move(ID)) { };
+      FieldAccess(StringIdentifier &ID) : ID(ID) { };
     
       void toString(PrettyPrinter &printer) const {
-        printer.print("." + ID->getIdentifier());
+        printer.print("." + StringTable::lookupIdentifier(ID));
       };
   };
 
@@ -372,14 +372,14 @@ namespace cmpl
   class CallExpression : public Expression
   {
     public:
-      std::unique_ptr<IdentifierToken> ID;
+      StringIdentifier ID;
       std::vector<std::unique_ptr<Expression>> expressions;
       
-      CallExpression(std::unique_ptr<IdentifierToken> &ID, std::vector<std::unique_ptr<Expression>> &expressions) :
-                       ID(std::move(ID)), expressions(std::move(expressions)) { };
+      CallExpression(StringIdentifier &ID, std::vector<std::unique_ptr<Expression>> &expressions) :
+                       ID(ID), expressions(std::move(expressions)) { };
     
       void toString(PrettyPrinter &printer) const {
-        printer.print(ID->getIdentifier() + "(");
+        printer.print(StringTable::lookupIdentifier(ID) + "(");
         
         bool continous = false;
         for(auto const& expression:expressions) {
@@ -464,24 +464,24 @@ namespace cmpl
   class CRef : public Expression
   {
     public:
-      std::unique_ptr<IdentifierToken> ID;
+      StringIdentifier ID;
       
-      CRef(std::unique_ptr<IdentifierToken> &ID) : ID(std::move(ID)) { };
+      CRef(StringIdentifier &ID) : ID(ID) { };
     
       void toString(PrettyPrinter &printer) const {
-        printer.print(ID->getIdentifier());
+        printer.print(StringTable::lookupIdentifier(ID));
       };
   };
   
   class NewObject : public Expression
   {
     public:
-      std::unique_ptr<IdentifierToken> ID;
+      StringIdentifier ID;
       
-      NewObject(std::unique_ptr<IdentifierToken> &ID) : ID(std::move(ID)) { };
+      NewObject(StringIdentifier &ID) : ID(ID) { };
     
       void toString(PrettyPrinter &printer) const {
-        printer.print("new " + ID->getIdentifier() + "()");
+        printer.print("new " + StringTable::lookupIdentifier(ID) + "()");
       };
   };
   
@@ -513,14 +513,14 @@ namespace cmpl
   {
     public:
       std::unique_ptr<Type>            type;
-      std::unique_ptr<IdentifierToken> ID;
+      StringIdentifier ID;
       
-      Parameter(std::unique_ptr<Type> &type, std::unique_ptr<IdentifierToken> &ID) :
-            type(std::move(type)), ID(std::move(ID)) { };
+      Parameter(std::unique_ptr<Type> &type, StringIdentifier &ID) :
+            type(std::move(type)), ID(ID) { };
       
       void toString(PrettyPrinter &printer) const {
         type->toString(printer);
-        printer.println(" " + ID->getIdentifier());
+        printer.println(" " + StringTable::lookupIdentifier(ID));
       };
   };
   
@@ -685,32 +685,32 @@ namespace cmpl
   class LocalVariableDeclaration : public Statement
   {
     public:
-      std::unique_ptr<Type>            type;
-      std::unique_ptr<IdentifierToken> ID;
+      std::unique_ptr<Type>             type;
+      StringIdentifier ID;
       
-      LocalVariableDeclaration(std::unique_ptr<Type> &type, std::unique_ptr<IdentifierToken> &ID) :
-                                 type(std::move(type)), ID(std::move(ID)) { };
+      LocalVariableDeclaration(std::unique_ptr<Type> &type, StringIdentifier &ID) :
+                                 type(std::move(type)), ID(ID) { };
       
       void toString(PrettyPrinter &printer) const {
         type->toString(printer);
-        printer.println(" " + ID->getIdentifier() + ";");
+        printer.println(" " + StringTable::lookupIdentifier(ID) + ";");
       };
   };
   
   class LocalVariableExpressionDeclaration : public Statement
   {
     public:
-      std::unique_ptr<Type>            type;
-      std::unique_ptr<IdentifierToken> ID;
-      std::unique_ptr<Expression>      expression;
+      std::unique_ptr<Type>             type;
+      StringIdentifier ID;
+      std::unique_ptr<Expression>       expression;
       
-      LocalVariableExpressionDeclaration(std::unique_ptr<Type> &type, std::unique_ptr<IdentifierToken> &ID,
+      LocalVariableExpressionDeclaration(std::unique_ptr<Type> &type, StringIdentifier &ID,
                                          std::unique_ptr<Expression> &expression) :
-                                           type(std::move(type)), ID(std::move(ID)), expression(std::move(expression)) { };
+                                           type(std::move(type)), ID(ID), expression(std::move(expression)) { };
       
       void toString(PrettyPrinter &printer) const {
         type->toString(printer);
-        printer.println(" " + ID->getIdentifier());
+        printer.println(" " + StringTable::lookupIdentifier(ID));
         printer.println(" = ");
         expression->toString(printer);
         printer.println(";");
@@ -725,14 +725,14 @@ namespace cmpl
   {
     public:
       std::unique_ptr<Type> type;
-      std::unique_ptr<IdentifierToken> ID;
+      StringIdentifier ID;
       
-      Field(std::unique_ptr<Type> &type, std::unique_ptr<IdentifierToken> &ID) :
-            type(std::move(type)), ID(std::move(ID)) { };
+      Field(std::unique_ptr<Type> &type, StringIdentifier &ID) :
+            type(std::move(type)), ID(ID) { };
       
       void toString(PrettyPrinter &printer) const {
         type->toString(printer);
-        printer.println(" " + ID->getIdentifier() + ";");
+        printer.println(" " + StringTable::lookupIdentifier(ID) + ";");
       };
   };
   
@@ -740,18 +740,18 @@ namespace cmpl
   {
     public:
       std::unique_ptr<Type> type;
-      std::unique_ptr<IdentifierToken> ID;
+      StringIdentifier ID;
       std::vector<std::unique_ptr<Parameter>> parameters;
       std::unique_ptr<Block> block;
       
-      Method(std::unique_ptr<Type> &type, std::unique_ptr<IdentifierToken> &ID,
-             std::vector<std::unique_ptr<Parameter>> &parameters, std::unique_ptr<Block> &block) :
-               type(std::move(type)), ID(std::move(ID)), parameters(std::move(parameters)), block(std::move(block)) { };
+      Method(std::unique_ptr<Type> &type, StringIdentifier &ID, std::vector<std::unique_ptr<Parameter>> &parameters,
+             std::unique_ptr<Block> &block) :
+               type(std::move(type)), ID(ID), parameters(std::move(parameters)), block(std::move(block)) { };
       
       void toString(PrettyPrinter &printer) const {
         printer.print("public ");
         type->toString(printer);
-        printer.print(ID->getIdentifier() + "(");
+        printer.print(StringTable::lookupIdentifier(ID) + "(");
 
         bool continous = false;
         for(auto const& parameter:parameters) {
@@ -771,16 +771,15 @@ namespace cmpl
   class MainMethod : public ClassMember
   {
     public:
-      std::unique_ptr<IdentifierToken> ID;
-      std::unique_ptr<IdentifierToken> parameterID;
+      StringIdentifier ID;
+      StringIdentifier parameterID;
       std::unique_ptr<Block>             block;
       
-      MainMethod(std::unique_ptr<IdentifierToken> &ID, std::unique_ptr<IdentifierToken> &parameterID,
-                 std::unique_ptr<Block> &block) :
-                   ID(std::move(ID)), parameterID(std::move(parameterID)), block(std::move(block)) { };
+      MainMethod(StringIdentifier &ID, StringIdentifier &parameterID, std::unique_ptr<Block> &block) :
+                   ID(ID), parameterID(std::move(parameterID)), block(std::move(block)) { };
       
       void toString(PrettyPrinter &printer) const {
-        printer.print("public static void " + ID->getIdentifier() + "(String[] " + parameterID->getIdentifier() + ")");
+        printer.print("public static void " + StringTable::lookupIdentifier(ID) + "(String[] " + StringTable::lookupIdentifier(parameterID) + ")");
         block->toString(printer);
       };
   };
@@ -789,17 +788,16 @@ namespace cmpl
   class ClassDeclaration : public Node
   {
     public:
-      std::unique_ptr<IdentifierToken> ID;
+      StringIdentifier ID;
       std::vector<std::unique_ptr<ClassMember>> classMembers;
       
-      ClassDeclaration(std::unique_ptr<IdentifierToken> &ID,
-                       std::vector<std::unique_ptr<ClassMember>> &classMembers) :
-                         ID(std::move(ID)), classMembers(std::move(classMembers)) { };
+      ClassDeclaration(StringIdentifier &ID, std::vector<std::unique_ptr<ClassMember>> &classMembers) :
+                         ID(ID), classMembers(std::move(classMembers)) { };
       
       void toString(PrettyPrinter &printer) const {
         // sort the classMembers
         // first methods then fields, each of them in alphabetical order
-        std::sort(classMembers.begin(), classMembers.end(), 
+        /*std::sort(classMembers.begin(), classMembers.end(), 
           [](const std::unique_ptr<ClassMember> &a, const std::unique_ptr<ClassMember> &b) -> bool{
             Field* a_p;
             Field* b_p;
@@ -809,7 +807,7 @@ namespace cmpl
               // a and b are both Fields
               
               // get identifier strings and compare them
-              return a_p->ID.get()->getIdentifier().compare(b_p->ID.get()->getIdentifier());
+              return StringTable::lookupIdentifier(ap_ID).compare(StringTable::lookupIdentifier(b_pID));
             }
             else if ((dynamic_cast<Method*>(a.get()) || dynamic_cast<MainMethod*>(a.get())) && 
               (dynamic_cast<Method*>(b.get()) || dynamic_cast<MainMethod*>(b.get())))
@@ -823,21 +821,21 @@ namespace cmpl
               // get identifier string for a
               if (m = dynamic_cast<Method*>(a.get()))
               {
-                a_s = m->ID.get()->getIdentifier();
+                a_s = StringTable::lookupIdentifier(m->ID);
               }
               else if (mm = dynamic_cast<MainMethod*>(a.get()))
               {
-                a_s = mm->ID.get()->getIdentifier();
+                a_s = StringTable::lookupIdentifier(mm->ID);
               }
               
               // get identifier string for b
               if (m = dynamic_cast<Method*>(b.get()))
               {
-                b_s = m->ID.get()->getIdentifier();
+                b_s = StringTable::lookupIdentifier(m->ID);
               }
               else if (mm = dynamic_cast<MainMethod*>(b.get()))
               {
-                b_s = mm->ID.get()->getIdentifier();
+                b_s = StringTable::lookupIdentifier(mm->ID);
               }
               
               // compare strings
@@ -854,9 +852,9 @@ namespace cmpl
               // a is Method or MainMethod and b is Field
               return -1;
             }
-        });
+        });*/
         
-        printer.println("class "+ ID->getIdentifier() + " {");
+        printer.println("class "+ StringTable::lookupIdentifier(ID) + " {");
         printer.addIndent();
         for(auto const& classMember : classMembers) {
           classMember->toString(printer);

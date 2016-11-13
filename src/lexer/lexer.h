@@ -23,7 +23,6 @@ namespace cmpl
     private:
       inline void insertToken(std::unique_ptr<Token> token);
       
-      StringTable stringTable;
       std::queue<std::unique_ptr<Token>> tokenArray;
   };
   

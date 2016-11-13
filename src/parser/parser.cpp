@@ -15,17 +15,17 @@ inline void Parser::nextToken()
   }
 }
 
-inline std::unique_ptr<IdentifierToken> Parser::getIdentifierFromCurrent() {
+inline StringIdentifier Parser::getIdentifierFromCurrent() {
 
   IdentifierToken* id_t;
   if (id_t = dynamic_cast<IdentifierToken*>(currentToken.get())) {
-    return std::unique_ptr<IdentifierToken>(id_t);
+    return id_t->id;
   } else {
     throw SemanticError();
   }
 }
 
-inline std::unique_ptr<IdentifierToken> Parser::getIdentifierFromNext() {
+inline StringIdentifier Parser::getIdentifierFromNext() {
   nextToken();
   return std::move(getIdentifierFromCurrent());
 }
@@ -131,7 +131,7 @@ std::unique_ptr<Program> Parser::parseProgram()
 std::unique_ptr<ClassDeclaration> Parser::parseClassDeclaration()
 {
   std::vector<std::unique_ptr<ClassMember>> classMembers;
-  std::unique_ptr<IdentifierToken> ID;
+  StringIdentifier ID;
   
   ID = getIdentifierFromNext();
   assureNextIsOSKTokenWithType(T_O_LBRACE);
@@ -149,8 +149,8 @@ std::unique_ptr<ClassMember> Parser::parseClassMember()
   
   if(isNextTokenOSKTokenOfType(T_K_STATIC)) {
     // MainMethod
-    std::unique_ptr<IdentifierToken> ID;
-    std::unique_ptr<IdentifierToken> parameterID;
+    StringIdentifier ID;
+    StringIdentifier parameterID;
     std::unique_ptr<Block> block;
     
     assureNextIsOSKTokenWithType(T_K_VOID);
@@ -169,7 +169,7 @@ std::unique_ptr<ClassMember> Parser::parseClassMember()
     return std::make_unique<MainMethod>(ID, parameterID, block);
   } else {
     std::unique_ptr<Type> type = parseType();
-    std::unique_ptr<IdentifierToken> ID = getIdentifierFromNext();
+    StringIdentifier ID = getIdentifierFromNext();
     if(isNextTokenOSKTokenOfType(T_O_SEMICOLON)) {
       // Field
       return std::make_unique<Field>(type, ID);
@@ -212,7 +212,7 @@ std::unique_ptr<BasicType> Parser::parseBasicType()
   } else if(isCurrentTokenOSKTokenOfType(T_K_VOID)) {
     return std::make_unique<TypeVoid>();
   } else {
-    std::unique_ptr<IdentifierToken> ID = getIdentifierFromCurrent();
+    StringIdentifier ID = getIdentifierFromCurrent();
     return std::make_unique<UserType>(ID);
   }
 }
@@ -220,7 +220,7 @@ std::unique_ptr<BasicType> Parser::parseBasicType()
 std::unique_ptr<Parameter> Parser::parseParameter()
 {
   std::unique_ptr<Type> type = parseType();
-  std::unique_ptr<IdentifierToken> ID = getIdentifierFromCurrent();
+  StringIdentifier ID = getIdentifierFromCurrent();
   
   return std::make_unique<Parameter>(type, ID);
 }

@@ -38,8 +38,8 @@ namespace cmpl
 
       inline void nextToken();
       
-      inline std::unique_ptr<IdentifierToken> getIdentifierFromCurrent();
-      inline std::unique_ptr<IdentifierToken> getIdentifierFromNext();
+      inline StringIdentifier getIdentifierFromCurrent();
+      inline StringIdentifier getIdentifierFromNext();
       
       template<typename T>
       inline void assureCurrentTokenTypeIs();
