@@ -766,6 +766,7 @@ namespace cmpl
       };
   };
   
+  /** The MainMethod is a ClassMember and therefore part of a ClassDeclaration. The MainMethod element contains two IDs (Method-identifier and parameter-identifier) and a Block (Representation of the method body) */
   class MainMethod : public ClassMember
   {
     public:
@@ -783,6 +784,7 @@ namespace cmpl
       };
   };
   
+  /** A ClassDeclaration consists of an ID, which is the identifier for this class and various ClassMembers, like Methods and Fields.  */
   class ClassDeclaration : public Node
   {
     public:
@@ -804,6 +806,7 @@ namespace cmpl
       };
   };
   
+  /** Always the first element in the AST. Can contain multiple ClassDeclarations. */	
   class Program : public Node
   {
     public:
