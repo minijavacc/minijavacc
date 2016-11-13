@@ -1,5 +1,6 @@
 #include "compiler.h"
 #include "lexer.h"
+#include "parser.h"
 #include "stringtable.h"
 #include "token.h"
 
@@ -46,7 +47,31 @@ int Compiler::lextest(std::ifstream &file)
 
 int Compiler::parsetest(std::ifstream &file)
 {
-  return 0;
+  try {
+    Lexer l = Lexer();
+    l.run(file);
+  
+    Parser p = Parser(l);
+    p.run();
+    
+    std::unique_ptr<Node> n;
+    p.getAST(n);
+    
+    PrettyPrinter r = PrettyPrinter(std::cout);
+    n->toString(r);
+  
+    return 0;
+  }
+  catch (SyntaxError &e) 
+  {
+    std::cerr << "syntax error\n";
+    return 1;
+  }
+  catch (SemanticError &e) 
+  {
+    std::cerr << "semantic error\n";
+    return 1;
+  }
 }
 
 void Compiler::output(std::string msg)

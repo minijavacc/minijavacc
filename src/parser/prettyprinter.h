@@ -11,15 +11,15 @@ namespace cmpl
   {
     private:
       const std::string indent = "   ";
-      std::unique_ptr<std::ostream> printStream;
+      std::ostream& printStream;
       std::string indents;
     public:
-      PrettyPrinter(std::unique_ptr<std::ostream> &printStream) : printStream(std::move(printStream)) { };
+      PrettyPrinter(std::ostream& printStream) : printStream(printStream) { };
       void print(const std::string &s);
       void println(const std::string &s);
       void addIndent();
       void removeIndent();
       
-      std::unique_ptr<std::ostream> getStream();
+      std::ostream& getStream();
   };
 }
