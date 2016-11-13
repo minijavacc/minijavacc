@@ -23,11 +23,12 @@ namespace cmpl
   class Expression   : public Node { public: virtual void toString(PrettyPrinter &printer) const = 0; };
   class Statement    : public Node { public: virtual void toString(PrettyPrinter &printer) const = 0; };
 
-  class EqualityOp   : public Node { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class RelationalOp : public Node { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class AddOp        : public Node { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class MultOp       : public Node { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class UnaryOp      : public Node { public: virtual void toString(PrettyPrinter &printer) const = 0; };
+  class Op           : public Node { public: virtual void toString(PrettyPrinter &printer) const = 0; };
+  class EqualityOp   : public Op   { public: virtual void toString(PrettyPrinter &printer) const = 0; };
+  class RelationalOp : public Op   { public: virtual void toString(PrettyPrinter &printer) const = 0; };
+  class AddOp        : public Op   { public: virtual void toString(PrettyPrinter &printer) const = 0; };
+  class MultOp       : public Op   { public: virtual void toString(PrettyPrinter &printer) const = 0; };
+  class UnaryOp      : public Op   { public: virtual void toString(PrettyPrinter &printer) const = 0; };
   
   class Type : public Node
   {
@@ -38,7 +39,7 @@ namespace cmpl
       Type(std::unique_ptr<BasicType> &type, int &arrayDepth) : type(std::move(type)), arrayDepth(arrayDepth) { };
       
       void toString(PrettyPrinter &printer) const {
-        (*type).toString(printer);
+        type->toString(printer);
         for(int i=0; i<arrayDepth; i++) {
           printer.print("[]");
         }
@@ -78,12 +79,12 @@ namespace cmpl
   class UserType : public BasicType
   {
     public:
-      std::unique_ptr<IdentifierTokenId> ID;
+      std::unique_ptr<IdentifierToken> ID;
       
-      UserType(std::unique_ptr<IdentifierTokenId> &ID) : ID(std::move(ID)) { }
+      UserType(std::unique_ptr<IdentifierToken> &ID) : ID(std::move(ID)) { }
       
       void toString(PrettyPrinter &printer) const {
-        printer.print(""); //TODO
+        printer.print(ID->getIdentifier());
       };
   };
 
@@ -220,26 +221,37 @@ namespace cmpl
   class MethodInvocation : public UnaryOp
   {
     public:
-      std::unique_ptr<IdentifierTokenId> ID;
+      std::unique_ptr<IdentifierToken> ID;
       std::vector<std::unique_ptr<Expression>> expressions;
       
-      MethodInvocation(std::unique_ptr<IdentifierTokenId> &ID, std::vector<std::unique_ptr<Expression>> &expressions) :
+      MethodInvocation(std::unique_ptr<IdentifierToken> &ID, std::vector<std::unique_ptr<Expression>> &expressions) :
                          ID(std::move(ID)), expressions(std::move(expressions)) { };
         
       void toString(PrettyPrinter &printer) const {
-        printer.print("");//TODO
+        printer.print("." + ID->getIdentifier() + "(");
+        
+        bool continous = false;
+        for(auto const& expression:expressions) {
+          if(continous) {
+            printer.print(", ");
+          }
+          expression->toString(printer);
+          continous = true;
+        }
+        
+        printer.print(")");
       };
   };
 
   class FieldAccess : public UnaryOp
   {
     public:
-      std::unique_ptr<IdentifierTokenId> ID;
+      std::unique_ptr<IdentifierToken> ID;
       
-      FieldAccess(std::unique_ptr<IdentifierTokenId> &ID) : ID(std::move(ID)) { };
+      FieldAccess(std::unique_ptr<IdentifierToken> &ID) : ID(std::move(ID)) { };
     
       void toString(PrettyPrinter &printer) const {
-        printer.print(".");//TODO
+        printer.print("." + ID->getIdentifier());
       };
   };
 
@@ -252,7 +264,7 @@ namespace cmpl
     
       void toString(PrettyPrinter &printer) const {
         printer.print("[");
-        (*expression).toString(printer);
+        expression->toString(printer);
         printer.print("]");
       };
   };
@@ -260,6 +272,24 @@ namespace cmpl
   
 /*********************** Expressions ***********************/
   
+  class OpExpression : public Expression
+  {
+    protected:
+      OpExpression(std::unique_ptr<Op> op, std::unique_ptr<Expression> expression1,
+                   std::unique_ptr<Expression> expression2) :
+                     op(std::move(op)), expression1(std::move(expression1)), expression2(std::move(expression2)) { };
+    public:
+      std::unique_ptr<Op> op;
+      std::unique_ptr<Expression> expression1;
+      std::unique_ptr<Expression> expression2;
+      
+      
+      void toString(PrettyPrinter &printer) const {
+        expression1->toString(printer);
+        op->toString(printer);
+        expression2->toString(printer);
+      };
+  };
   
   class AssignmentExpression : public Expression
   {
@@ -271,9 +301,9 @@ namespace cmpl
                              expression1(std::move(expression1)), expression2(std::move(expression2)) { };
     
       void toString(PrettyPrinter &printer) const {
-        (*expression1).toString(printer);
+        expression1->toString(printer);
         printer.print(" = ");
-        (*expression2).toString(printer);
+        expression2->toString(printer);
       };
   };
   
@@ -287,9 +317,9 @@ namespace cmpl
                             expression1(std::move(expression1)), expression2(std::move(expression2)) { };
     
       void toString(PrettyPrinter &printer) const {
-        (*expression1).toString(printer);
+        expression1->toString(printer);
         printer.print(" || ");
-        (*expression2).toString(printer);
+        expression2->toString(printer);
       };
   };
   
@@ -303,96 +333,63 @@ namespace cmpl
                              expression1(std::move(expression1)), expression2(std::move(expression2)) { };
     
       void toString(PrettyPrinter &printer) const {
-        (*expression1).toString(printer);
+        expression1->toString(printer);
         printer.print(" && ");
-        (*expression2).toString(printer);
+        expression2->toString(printer);
       };
   };
   
-  class EqualityExpression : public Expression
+  class EqualityExpression : public OpExpression
   {
     public:
-      std::unique_ptr<EqualityOp> op;
-      std::unique_ptr<Expression> expression1;
-      std::unique_ptr<Expression> expression2;
-      
       EqualityExpression(std::unique_ptr<EqualityOp> &op, std::unique_ptr<Expression> &expression1,
-                         std::unique_ptr<Expression> &expression2) :
-                           op(std::move(op)), expression1(std::move(expression1)), expression2(std::move(expression2))
-                         { };
-    
-      void toString(PrettyPrinter &printer) const {
-        (*expression1).toString(printer);
-        (*op).toString(printer);
-        (*expression2).toString(printer);
-      };
+                         std::unique_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
   };
-  
-  class RelationalExpression : public Expression
+
+  class RelationalExpression : public OpExpression
   {
     public:
-      std::unique_ptr<RelationalOp> op;
-      std::unique_ptr<Expression> expression1;
-      std::unique_ptr<Expression> expression2;
-      
       RelationalExpression(std::unique_ptr<RelationalOp> &op, std::unique_ptr<Expression> &expression1,
-                           std::unique_ptr<Expression> &expression2) :
-                             op(std::move(op)), expression1(std::move(expression1)), expression2(std::move(expression2))
-                           { };
-    
-      void toString(PrettyPrinter &printer) const {
-        printer.print("");
-      };
+                           std::unique_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
   };
   
-  class AdditiveExpression : public Expression
+  class AdditiveExpression : public OpExpression
   {
     public:
-      std::unique_ptr<AddOp> op;
-      std::unique_ptr<Expression> expression1;
-      std::unique_ptr<Expression> expression2;
-      
       AdditiveExpression(std::unique_ptr<AddOp> &op, std::unique_ptr<Expression> &expression1,
-                         std::unique_ptr<Expression> &expression2) :
-                           op(std::move(op)), expression1(std::move(expression1)), expression2(std::move(expression2))
-                         { };
-    
-      void toString(PrettyPrinter &printer) const {
-        (*expression1).toString(printer);
-        (*op).toString(printer);
-        (*expression2).toString(printer);
-      };
+                         std::unique_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)){ };
   };
   
-  class MultiplicativeExpression : public Expression
+  class MultiplicativeExpression : public OpExpression
   {
     public:
-      std::unique_ptr<MultOp> op;
-      std::unique_ptr<Expression> expression1;
-      std::unique_ptr<Expression> expression2;
-      
       MultiplicativeExpression(std::unique_ptr<MultOp> &op, std::unique_ptr<Expression> &expression1,
-                               std::unique_ptr<Expression> &expression2) :
-                                 op(std::move(op)), expression1(std::move(expression1)), expression2(std::move(expression2)) { };
-    
-      void toString(PrettyPrinter &printer) const {
-        (*expression1).toString(printer);
-        (*op).toString(printer);
-        (*expression2).toString(printer);
-      };
+                               std::unique_ptr<Expression> &expression2) : 
+                                 OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
   };
   
   class CallExpression : public Expression
   {
     public:
-      std::unique_ptr<IdentifierTokenId> ID;
+      std::unique_ptr<IdentifierToken> ID;
       std::vector<std::unique_ptr<Expression>> expressions;
       
-      CallExpression(std::unique_ptr<IdentifierTokenId> &ID, std::vector<std::unique_ptr<Expression>> &expressions) :
+      CallExpression(std::unique_ptr<IdentifierToken> &ID, std::vector<std::unique_ptr<Expression>> &expressions) :
                        ID(std::move(ID)), expressions(std::move(expressions)) { };
     
       void toString(PrettyPrinter &printer) const {
-        printer.print(""); //TODO
+        printer.print(ID->getIdentifier() + "(");
+        
+        bool continous = false;
+        for(auto const& expression:expressions) {
+          if(continous) {
+            printer.print(", ");
+          }
+          expression->toString(printer);
+          continous = true;
+        }
+        
+        printer.print(")");
       };
   };
   
@@ -406,8 +403,8 @@ namespace cmpl
                         op(std::move(op)), expression(std::move(expression)) { };
     
       void toString(PrettyPrinter &printer) const {
-        (*op).toString(printer);
-        (*expression).toString(printer);
+        op->toString(printer);
+        expression->toString(printer);
       };
   };
   
@@ -459,31 +456,31 @@ namespace cmpl
       CIntegerLiteral(std::unique_ptr<std::string> &integer) : integer(std::move(integer)) { };
     
       void toString(PrettyPrinter &printer) const {
-        printer.print(""); //TODO
+        printer.print(*integer);
       };
   };
   
   class CRef : public Expression
   {
     public:
-      std::unique_ptr<IdentifierTokenId> ID;
+      std::unique_ptr<IdentifierToken> ID;
       
-      CRef(std::unique_ptr<IdentifierTokenId> &ID) : ID(std::move(ID)) { };
+      CRef(std::unique_ptr<IdentifierToken> &ID) : ID(std::move(ID)) { };
     
       void toString(PrettyPrinter &printer) const {
-        printer.print(""); //TODO
+        printer.print(ID->getIdentifier());
       };
   };
   
   class NewObject : public Expression
   {
     public:
-      std::unique_ptr<IdentifierTokenId> ID;
+      std::unique_ptr<IdentifierToken> ID;
       
-      NewObject(std::unique_ptr<IdentifierTokenId> &ID) : ID(std::move(ID)) { };
+      NewObject(std::unique_ptr<IdentifierToken> &ID) : ID(std::move(ID)) { };
     
       void toString(PrettyPrinter &printer) const {
-        printer.print(""); //TODO
+        printer.print("new " + ID->getIdentifier() + "()");
       };
   };
   
@@ -492,19 +489,20 @@ namespace cmpl
     public:
       std::unique_ptr<BasicType>  type;
       std::unique_ptr<Expression> expression;
-      int                         integer;
+      int                         arrayDepth;
       
       NewArray(std::unique_ptr<BasicType>  &type, std::unique_ptr<Expression> &expression,
-               int &integer) :
-                 type(std::move(type)), expression(std::move(expression)), integer(integer) { };
+               int &arrayDepth) :
+                 type(std::move(type)), expression(std::move(expression)), arrayDepth(arrayDepth) { };
     
       void toString(PrettyPrinter &printer) const {
         printer.print("new ");
-        (*type).toString(printer);
+        type->toString(printer);
         printer.print("[");
-        (*expression).toString(printer);
+        expression->toString(printer);
         printer.print("]");
-        for(int i=0; i<integer; i++) {
+        
+        for(int i=0; i<arrayDepth; i++) {
           printer.print("[]");
         }
       };
@@ -513,15 +511,15 @@ namespace cmpl
   class Parameter : public Node
   {
     public:
-      std::unique_ptr<Type>              type;
-      std::unique_ptr<IdentifierTokenId> ID;
+      std::unique_ptr<Type>            type;
+      std::unique_ptr<IdentifierToken> ID;
       
-      Parameter(std::unique_ptr<Type> &type, std::unique_ptr<IdentifierTokenId> &ID) :
+      Parameter(std::unique_ptr<Type> &type, std::unique_ptr<IdentifierToken> &ID) :
             type(std::move(type)), ID(std::move(ID)) { };
       
       void toString(PrettyPrinter &printer) const {
-        (*type).toString(printer);
-        printer.println(" "); //TODO
+        type->toString(printer);
+        printer.println(" " + ID->getIdentifier());
       };
   };
   
@@ -540,7 +538,7 @@ namespace cmpl
         printer.println("{");
         printer.addIndent();
         for(auto const& statement : statements) {
-          (*statement).toString(printer);
+          statement->toString(printer);
         }
         printer.removeIndent();
         printer.println("}");
@@ -558,15 +556,15 @@ namespace cmpl
       
       void toString(PrettyPrinter &printer) const {
         printer.print("if (");
-        (*expression).toString(printer);
+        expression->toString(printer);
         
-        /*if(dynamic_cast<Block>(ifStatement)) {
+        /*if(dynamic_cast<Block>(ifStatement)) { TODO
           printer.print(") ");
-          (*ifStatement).toString(printer);
+          ifStatement->toString(printer);
         } else {
           printer.println(")");
           printer.addIndent();
-          (*ifStatement).toString(printer);
+          ifStatement->toString(printer);
           printer.removeIndent();
         }*/
       };
@@ -586,25 +584,25 @@ namespace cmpl
       
       void toString(PrettyPrinter &printer) const {
         printer.print("if (");
-        (*expression).toString(printer);
+        expression->toString(printer);
         
-        /*if(dynamic_cast<Block>(ifStatement)) {
+        /*if(dynamic_cast<Block>(ifStatement)) { TODO
           printer.print(") ");
-          (*ifStatement).toString(printer);
+          ifStatement->toString(printer);
         } else {
           printer.println(")");
           printer.addIndent();
-          (*ifStatement).toString(printer);
+          ifStatement->toString(printer);
           printer.removeIndent();
         }
         
         if(dynamic_cast<Block>(elseStatement)) {
           printer.print("else ");
-          (*elseStatement).toString(printer);
+          elseStatement->toString(printer);
         } else {
           printer.println("else");
           printer.addIndent();
-          (*elseStatement).toString(printer);
+          elseStatement->toString(printer);
           printer.removeIndent();
         }*/
       };
@@ -619,7 +617,7 @@ namespace cmpl
                             expression(std::move(expression)) { };
       
       void toString(PrettyPrinter &printer) const {
-        (*expression).toString(printer);
+        expression->toString(printer);
         printer.println(";");
       };
   };
@@ -635,14 +633,14 @@ namespace cmpl
       
       void toString(PrettyPrinter &printer) const {
         printer.print("while (");
-        (*expression).toString(printer);
-/*        if(dynamic_cast<Block>(statement)) {
+        expression->toString(printer);
+/*        if(dynamic_cast<Block>(statement)) { TODO
           printer.print(") ");
-          (*statement).toString(printer);
+          statement->toString(printer);
         } else {
           printer.println(") ");
           printer.addIndent();
-          (*statement).toString(printer);
+          statement->toString(printer);
           printer.removeIndent();
         }*/
       };
@@ -658,7 +656,7 @@ namespace cmpl
       
       void toString(PrettyPrinter &printer) const {
         printer.print("return ");
-        (*expression).toString(printer);
+        expression->toString(printer);
         printer.println(";");
       };
   };
@@ -686,32 +684,35 @@ namespace cmpl
   class LocalVariableDeclaration : public Statement
   {
     public:
-      std::unique_ptr<Type>              type;
-      std::unique_ptr<IdentifierTokenId> ID;
+      std::unique_ptr<Type>            type;
+      std::unique_ptr<IdentifierToken> ID;
       
-      LocalVariableDeclaration(std::unique_ptr<Type> &type, std::unique_ptr<IdentifierTokenId> &ID) :
+      LocalVariableDeclaration(std::unique_ptr<Type> &type, std::unique_ptr<IdentifierToken> &ID) :
                                  type(std::move(type)), ID(std::move(ID)) { };
       
       void toString(PrettyPrinter &printer) const {
-        (*type).toString(printer);
-        printer.println(";"); //TODO
+        type->toString(printer);
+        printer.println(" " + ID->getIdentifier() + ";");
       };
   };
   
   class LocalVariableExpressionDeclaration : public Statement
   {
     public:
-      std::unique_ptr<Type>              type;
-      std::unique_ptr<IdentifierTokenId> ID;
-      std::unique_ptr<Expression>        expression;
+      std::unique_ptr<Type>            type;
+      std::unique_ptr<IdentifierToken> ID;
+      std::unique_ptr<Expression>      expression;
       
-      LocalVariableExpressionDeclaration(std::unique_ptr<Type> &type, std::unique_ptr<IdentifierTokenId> &ID,
+      LocalVariableExpressionDeclaration(std::unique_ptr<Type> &type, std::unique_ptr<IdentifierToken> &ID,
                                          std::unique_ptr<Expression> &expression) :
                                            type(std::move(type)), ID(std::move(ID)), expression(std::move(expression)) { };
       
       void toString(PrettyPrinter &printer) const {
-        (*type).toString(printer);
-        printer.println("ID;"); //TODO
+        type->toString(printer);
+        printer.println(" " + ID->getIdentifier());
+        printer.println(" = ");
+        expression->toString(printer);
+        printer.println(";");
       };
   };
   
@@ -722,15 +723,15 @@ namespace cmpl
   class Field : public ClassMember
   {
     public:
-      std::unique_ptr<IdentifierTokenId> ID;
       std::unique_ptr<Type> type;
+      std::unique_ptr<IdentifierToken> ID;
       
-      Field(std::unique_ptr<Type> &type, std::unique_ptr<IdentifierTokenId> &ID) :
+      Field(std::unique_ptr<Type> &type, std::unique_ptr<IdentifierToken> &ID) :
             type(std::move(type)), ID(std::move(ID)) { };
       
       void toString(PrettyPrinter &printer) const {
-        (*type).toString(printer);
-        printer.println("ID ;"); //TODO
+        type->toString(printer);
+        printer.println(" " + ID->getIdentifier() + ";");
       };
   };
   
@@ -738,62 +739,65 @@ namespace cmpl
   {
     public:
       std::unique_ptr<Type> type;
-      std::unique_ptr<IdentifierTokenId> ID;
+      std::unique_ptr<IdentifierToken> ID;
       std::vector<std::unique_ptr<Parameter>> parameters;
       std::unique_ptr<Block> block;
       
-      Method(std::unique_ptr<Type> &type, std::unique_ptr<IdentifierTokenId> &ID, std::vector<std::unique_ptr<Parameter>> &parameters,
-             std::unique_ptr<Block> &block) :
+      Method(std::unique_ptr<Type> &type, std::unique_ptr<IdentifierToken> &ID,
+             std::vector<std::unique_ptr<Parameter>> &parameters, std::unique_ptr<Block> &block) :
                type(std::move(type)), ID(std::move(ID)), parameters(std::move(parameters)), block(std::move(block)) { };
       
       void toString(PrettyPrinter &printer) const {
         printer.print("public ");
-        (*type).toString(printer);
-        printer.print(" ("); //TODO
-        if(parameters.size() >= 1) {
-          (*parameters[0]).toString(printer);
+        type->toString(printer);
+        printer.print(ID->getIdentifier() + "(");
+
+        bool continous = false;
+        for(auto const& parameter:parameters) {
+          if(continous) {
+            printer.print(", ");
+          }
+          parameter->toString(printer);
+          continous = true;
         }
-        for(int i=1; i < parameters.size(); i++) {
-          printer.print(", ");
-          (*parameters[i]).toString(printer);
-        }
+
         printer.print(")");
-        (*block).toString(printer);
+        block->toString(printer);
       };
   };
   
   class MainMethod : public ClassMember
   {
     public:
-      std::unique_ptr<IdentifierTokenId> ID;
-      std::unique_ptr<IdentifierTokenId> parameterID;
+      std::unique_ptr<IdentifierToken> ID;
+      std::unique_ptr<IdentifierToken> parameterID;
       std::unique_ptr<Block>             block;
       
-      MainMethod(std::unique_ptr<IdentifierTokenId> &ID, std::unique_ptr<Block> &block,
-                 std::unique_ptr<IdentifierTokenId> &parameterID) :
-                   ID(std::move(ID)), block(std::move(block)), parameterID(std::move(parameterID)) { };
+      MainMethod(std::unique_ptr<IdentifierToken> &ID, std::unique_ptr<IdentifierToken> &parameterID,
+                 std::unique_ptr<Block> &block) :
+                   ID(std::move(ID)), parameterID(std::move(parameterID)), block(std::move(block)) { };
       
       void toString(PrettyPrinter &printer) const {
-        printer.print("public static void ID (String[] + parameterID + )"); //TODO
-        (*block).toString(printer);
+        printer.print("public static void " + ID->getIdentifier() + "(String[] " + parameterID->getIdentifier() + ")");
+        block->toString(printer);
       };
   };
   
   class ClassDeclaration : public Node
   {
     public:
-      std::unique_ptr<IdentifierTokenId> ID;
+      std::unique_ptr<IdentifierToken> ID;
       std::vector<std::unique_ptr<ClassMember>> classMembers;
       
-      ClassDeclaration(std::unique_ptr<IdentifierTokenId> &ID,
+      ClassDeclaration(std::unique_ptr<IdentifierToken> &ID,
                        std::vector<std::unique_ptr<ClassMember>> &classMembers) :
                          ID(std::move(ID)), classMembers(std::move(classMembers)) { };
       
       void toString(PrettyPrinter &printer) const {
-        printer.println("class ID {");
+        printer.println("class "+ ID->getIdentifier() + " {");
         printer.addIndent();
         for(auto const& classMember : classMembers) {
-          (*classMember).toString(printer);
+          classMember->toString(printer);
         }
         printer.removeIndent();
         printer.println("}");
@@ -810,7 +814,7 @@ namespace cmpl
 
       void toString(PrettyPrinter &printer) const {
         for(auto const& classDeclaration : classDeclarations) {
-          (*classDeclaration).toString(printer);
+          classDeclaration->toString(printer);
         }
       };
   };
