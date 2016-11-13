@@ -95,7 +95,7 @@ inline bool Parser::isCurrentTokenOSKTokenOfCategory(const TokenCategory& tokenC
   
   tokenTypeOut = osk_t->type;
   
-  return (Token::tokenAttribues[osk_t->type] == binaryOperator);
+  return (Token::tokenAttribues[osk_t->type].category == binaryOperator);
 }
 
 // combines isNextTokenOfType with checking for specialized sub-type of operator/seperator tokens
