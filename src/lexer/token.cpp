@@ -133,6 +133,11 @@ std::string IdentifierToken::getStringValue()
 	return "identifier " + identifierString;
 }
 
+std::string IdentifierToken::getIdentifier()
+{
+  return stringTable.lookupIdentifier(id);
+}
+
 std::string IntegerLiteralToken::getStringValue()
 {
   return "integer literal " + value;

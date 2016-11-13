@@ -180,6 +180,7 @@ namespace cmpl
       StringTable &stringTable;
       IdentifierTokenId id;
       std::string getStringValue();
+      std::string getIdentifier();
   };
   
   class IntegerLiteralToken : public Token
@@ -192,3 +193,4 @@ namespace cmpl
   };
 
 }
+
