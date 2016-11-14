@@ -1,5 +1,6 @@
 #include "compiler.h"
 #include "lexer.h"
+#include "parser.h"
 #include "stringtable.h"
 #include "token.h"
 
@@ -39,14 +40,61 @@ int Compiler::lextest(std::ifstream &file)
   }
   catch (SyntaxError &e) 
   {
-    std::cerr << "error\n";
+    std::cerr << "syntax error: " << e.what() << "\n";
     return 1;
   }
 }
 
 int Compiler::parsetest(std::ifstream &file)
 {
-  return 0;
+  try {
+    Lexer l = Lexer();
+    l.run(file);
+  
+    Parser p = Parser(l);
+    p.run();
+  
+    return 0;
+  }
+  catch (SyntaxError &e) 
+  {
+    std::cerr << "syntax error: " << e.what() << "\n";
+    return 1;
+  }
+  catch (SemanticError &e) 
+  {
+    std::cerr << "semantic error: " << e.what() << "\n";
+    return 1;
+  }
+}
+
+int Compiler::printast(std::ifstream &file)
+{
+  try {
+    Lexer l = Lexer();
+    l.run(file);
+  
+    Parser p = Parser(l);
+    p.run();
+    
+    std::unique_ptr<Node> n;
+    p.getAST(n);
+    
+    PrettyPrinter r = PrettyPrinter(std::cout);
+    n->toString(r);
+  
+    return 0;
+  }
+  catch (SyntaxError &e) 
+  {
+    std::cerr << "syntax error: " << e.what() << "\n";
+    return 1;
+  }
+  catch (SemanticError &e) 
+  {
+    std::cerr << "semantic error: " << e.what() << "\n";
+    return 1;
+  }
 }
 
 void Compiler::output(std::string msg)

@@ -1,5 +1,11 @@
 #pragma once
 
+// forward declarations
+namespace cmpl
+{
+  class StringTable;
+}
+
 #include "token.h"
 
 #include <map>
@@ -15,7 +21,7 @@ namespace cmpl
     // entry is either string or keyword, so the IDs can share their memory
     union
     {
-      IdentifierTokenId identifierTokenId; // if entry is a string
+      StringIdentifier stringIdentifier; // if entry is a string
       TokenType tokenType;                 // if entry is a keyword
     };
   }
@@ -24,12 +30,16 @@ namespace cmpl
   class StringTable
   {
     public:
-      std::unique_ptr<Token> insertString(std::string string);
-      void insertKeyword(std::string string, TokenType type);
+      static std::unique_ptr<Token> insertString(std::string string, unsigned int line, unsigned int column);
+      static void insertKeyword(std::string string, TokenType type);
+      static std::string lookupIdentifier(StringIdentifier id);
       
     private:
-      std::map<std::string, StringTableContainer> map;
-      IdentifierTokenId nextIdentifierTokenId = 0;
+      StringTable() { };
+      static std::map<std::string, StringTableContainer> map;
+;
   };
+  
+  class StringTableNotFound : public std::exception { };
 
 }

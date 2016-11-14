@@ -1,63 +1,65 @@
 #pragma once
 
+// include file "stringtable.h" has been moved down to avoid cyclic dependencies
+
 #include <stdint.h>
 #include <string>
 
+// forward declarations
 namespace cmpl
 {
-  
   // operators,seperators T_O_*
-  // keywords (only the ones used by MiniJava) T_K_*
+  // keywords T_K_*
   // all information from "MiniJava Sprachbericht"
   typedef enum
   {
-    T_O_EXCLM_EQUAL, 
-    T_O_EXCLM, 
-    T_O_LPAREN,     // (
-    T_O_RPAREN,     // )
-    T_O_STAR_EQUAL, 
-    T_O_STAR, 
-    T_O_PLUS_PLUS, 
-    T_O_PLUS_EQUAL, 
-    T_O_PLUS, 
-    T_O_KOMMA, 
-    T_O_MINUS_EQUAL, 
-    T_O_MINUS_MINUS, 
-    T_O_MINUS, 
-    T_O_DOT, 
-    T_O_SLASH_EQUAL, 
-    T_O_SLASH, 
-    T_O_COLON, 
-    T_O_SEMICOLON,  // ;
-    T_O_LESS_LESS_EQUAL, 
-    T_O_LESS_LESS, 
-    T_O_LESS_EQUAL, 
-    T_O_LESS, 
-    T_O_EQUAL_EQUAL, 
-    T_O_EQUAL, 
-    T_O_MORE_EQUAL, 
-    T_O_MORE_MORE_EQUAL, 
-    T_O_MORE_MORE_MORE_EQUAL, 
-    T_O_MORE_MORE_MORE, 
-    T_O_MORE_MORE, 
-    T_O_MORE, 
-    T_O_QUESTM, 
-    T_O_PERCENT_EQUAL, 
-    T_O_PERCENT, 
-    T_O_AND_EQUAL, 
-    T_O_AND_AND, 
-    T_O_AND, 
-    T_O_LBRACK,     // [
-    T_O_RBRACK,     // ]
-    T_O_CARET_EQUAL, 
-    T_O_CARET, 
-    T_O_LBRACE,     // {
-    T_O_RBRACE,     // }
-    T_O_TILDE, 
-    T_O_PIPE_EQUAL, 
-    T_O_PIPE_PIPE, 
-    T_O_PIPE, 
-    
+    T_O_EQUAL,
+    T_O_PIPE_PIPE,
+    T_O_AND_AND,
+    T_O_EXCLM_EQUAL,
+    T_O_EQUAL_EQUAL,
+    T_O_LESS,
+    T_O_MORE,
+    T_O_LESS_EQUAL,
+    T_O_MORE_EQUAL,
+    T_O_PLUS,
+    T_O_MINUS,
+    T_O_SLASH,
+    T_O_STAR,
+    T_O_PERCENT,
+    T_O_EXCLM,
+    T_O_PLUS_EQUAL,
+    T_O_MINUS_EQUAL,
+    T_O_STAR_EQUAL,
+    T_O_SLASH_EQUAL,
+    T_O_LESS_LESS_EQUAL,
+    T_O_MORE_MORE_EQUAL,
+    T_O_MORE_MORE_MORE_EQUAL,
+    T_O_PERCENT_EQUAL,
+    T_O_AND_EQUAL,
+    T_O_CARET_EQUAL,
+    T_O_PIPE_EQUAL,
+    T_O_PIPE,
+    T_O_CARET,
+    T_O_AND,
+    T_O_LESS_LESS,
+    T_O_MORE_MORE_MORE,
+    T_O_MORE_MORE,
+    T_O_TILDE,
+    T_O_PLUS_PLUS,
+    T_O_MINUS_MINUS,
+    T_O_QUESTM,
+    T_O_LPAREN,
+    T_O_RPAREN,
+    T_O_COMMA,
+    T_O_DOT,
+    T_O_COLON,
+    T_O_SEMICOLON,
+    T_O_LBRACK,
+    T_O_RBRACK,
+    T_O_LBRACE,
+    T_O_RBRACE,
+  
     T_K_ABSTRACT,
     T_K_ASSERT,
     T_K_BOOLEAN,
@@ -114,21 +116,58 @@ namespace cmpl
   }
   TokenType;
   
-  typedef int IdentifierTokenId;
+  typedef enum
+  {
+    left,
+    right,
+    none
+  }
+  OperatorAssociativity;
+  
+  typedef enum
+  {
+    unaryOperator,
+    binaryOperator,
+    unusedOperator,
+    seperator,
+    keyword
+  }
+  TokenCategory;
+  
+  struct OperatorSeperatorKeywordContainer
+  {
+      const TokenCategory category;
+      const std::string stringRepresentation;
+      const unsigned int precedence;
+      const OperatorAssociativity associativity;
+  };
+  
+  typedef int StringIdentifier;
+  
+  class Token;
+}
 
+#include "stringtable.h"
+
+namespace cmpl
+{
   class Token
-  {      
+  {
     public:
+      Token(unsigned int line, unsigned int column) 
+        : line(line), column(column) {};
       virtual std::string getStringValue() = 0;
-      const static std::string stringRepresentations[99];
+      const static OperatorSeperatorKeywordContainer tokenAttribues[99];
       
-    // TODO: add information about token position in source code
+      unsigned int line;
+      unsigned int column;
   };
   
   class OperatorSeperatorKeywordToken : public Token
-  {      
+  {
     public:
-      OperatorSeperatorKeywordToken(TokenType type) : type(type) {};
+      OperatorSeperatorKeywordToken(TokenType type, unsigned int line, unsigned int column)
+        : Token(line, column), type(type) {};
       TokenType type;
       std::string getStringValue();
   };
@@ -136,21 +175,20 @@ namespace cmpl
   class IdentifierToken : public Token
   {
     public:
-      IdentifierToken(IdentifierTokenId id, std::string idString)
-        : id(id)
-        , identifierString(idString) {};
-      IdentifierTokenId id;
-      std::string identifierString;
+      IdentifierToken(StringIdentifier id, unsigned int line, unsigned int column)
+        : Token(line, column), id(id) {};
+      StringIdentifier id;
       std::string getStringValue();
   };
-  
   
   class IntegerLiteralToken : public Token
   {
     public:
-      IntegerLiteralToken(std::string value) : value(value) {};
+      IntegerLiteralToken(std::string value, unsigned int line, unsigned int column)
+        : Token(line, column), value(value) {};
       std::string value;
       std::string getStringValue();
   };
 
 }
+

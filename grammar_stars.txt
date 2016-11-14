@@ -1,0 +1,77 @@
+Program -> ClassDeclaration*
+
+ClassDeclaration -> class IDENT { ClassMember* }
+
+ClassMember -> FieldMethod | MainMethod
+
+MainMethod -> public static void IDENT \( String [] IDENT \) Block
+
+FieldMethod -> public Type IDENT FieldMethod'
+FieldMethod' -> \( Parameters \) Block | ;
+
+Parameters -> (Parameter (, Parameter)* )?
+Parameter -> Type IDENT
+
+Type -> BasicType ([])*
+
+BasicType -> int | boolean | void | IDENT
+
+Statement -> Block | IfStatement | EmptyStatement | ExpressionStatement | WhileStatement | ReturnStatement
+
+Block -> { BlockStatement* }
+
+BlockStatement -> Statement | LocalVariableDeclarationStatement
+
+LocalVariableDeclarationStatement -> Type IDENT LVDS' ;
+LVDS' -> = Expression | e
+
+EmptyStatement -> ;
+
+WhileStatement -> while (Expression) Statement
+
+IfStatement -> if ( Expression ) Statement IfStatement'
+IfStatement' -> else Statement | e
+
+ExpressionStatement -> Expression ;
+
+ReturnStatement -> return ; | return Expression ;
+
+
+
+Expression -> AssignmentExpression
+
+AssignmentExpression -> LogicalOrExpression (= AssignmentExpression)*
+
+LogicalOrExpression -> LogicalAndExpression (|| LogicalAndExpression)*
+
+LogicalAndExpression -> EqualityExpression (&& EqualityExpression)*
+
+EqualityExpression -> RelationalExpression ((==|!=) RelationalExpression)*
+
+RelationalExpression -> AdditiveExpression ((<|<=|>|>=) AdditiveExpression)*
+                      
+AdditiveExpression -> MultiplicativeExpression ((+|-) MultiplicativeExpression)*
+                     
+MultiplicativeExpression -> UnaryExpression ((*|/|%)* UnaryExpression)*
+
+UnaryExpression -> PostfixExpression | ! UnaryExpression | - UnaryExpression
+
+PostfixExpression -> PrimaryExpression PostFixOp*
+PostfixOp -> MethodInvocation | FieldAccess | ArrayAccess
+
+MethodInvocation -> . IDENT ( Arguments )
+
+FieldAccess -> . IDENT
+
+ArrayAccess -> [ Expression ]
+
+Arguments -> (Expression (, Expression)* )?
+
+PrimaryExpression -> null | false | true | INTEGER_LITERAL | IDENT | IDENT ( Arguments ) | this | ( Expression ) | NewObjectExpression | NewArrayExpression
+
+NewObjectExpression -> new IDENT ()
+  # First = { new IDENT ( }
+
+NewArrayExpression -> new BasicType [ Expression ] Brackets
+  # First = { new IDENT [, new void [, ... }
+  

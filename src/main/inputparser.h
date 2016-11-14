@@ -32,16 +32,17 @@ namespace cmpl
       const std::vector<Option> knownOptions = {
         Option("--echo", Compiler::echo),
         Option("--lextest", Compiler::lextest),
-        Option("--parsetest", Compiler::parsetest)
+        Option("--parsetest", Compiler::parsetest),
+        Option("--print-ast", Compiler::printast)
       };
 
       std::vector<Option> givenOptions;
   };
   
-  class ParameterError : public std::invalid_argument
+  class ParameterError : public std::logic_error
   {
     public:
-      ParameterError(std::string& err) : std::invalid_argument(err) { }
+      ParameterError(const std::string& err) : std::logic_error(err) { }
   };
 
 }

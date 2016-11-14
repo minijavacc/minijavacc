@@ -1,0 +1,86 @@
+Type :: BasicType Int
+
+BasicType = TypeInt | TypeBoolean | TypeVoid | UserType
+
+UserType :: Ident
+
+
+Program :: [ClassDeclaration]
+
+ClassDeclaration :: Ident [ClassMember]
+    
+ClassMember = Field | Method | MainMethod
+                 
+Field :: Ident Type
+Method :: Ident Type [Parameter] Block
+MainMethod :: Ident Ident Block
+
+Parameter :: Ident Type
+
+Statement = Block
+          | IfStatement | IfElseStatement 
+          | ExpressionStatement 
+          | WhileStatement
+          | ReturnExpressionStatement | ReturnStatement
+          | EmptyStatement
+          | LocalVariableDeclaration
+          | LocalVariableExpressionDeclaration
+                
+Block :: [Statement]
+IfStatement :: Expression Statement
+IfElseStatement :: Expression Statement Statement 
+ExpressionStatement :: Expression 
+WhileStatement :: Expression Statement
+ReturnExpressionStatement :: Expression
+LocalVariableDeclaration :: Ident Type
+LocalVariableExpressionDeclaration :: Ident Type Expression
+               
+               
+               
+EqualityOp = NotEquals | Equals
+
+RelationalOp = LessThan | LessThanOrEqual | GreaterThan | GreaterThanOrEqual
+
+AddOp = Add | Subtract
+
+MultOp = Multiply | Divide | Modulo
+
+UnaryOp = Negate | Minus | MethodInvocation | FieldAccess | ArrayAccess
+
+MethodInvocation :: Ident [Expression]
+
+FieldAccess :: Ident
+
+ArrayAccess :: Expression
+
+Expression = AssignmentExpression 
+           | LogicalOrExpression 
+           | LogicalAndExpression 
+           | EqualityExpression
+           | RelationalExpression
+           | AdditiveExpression 
+           | MultiplicativeExpression
+           | CallExpression
+           | UnaryExpression
+           | CNull
+           | CFalse
+           | CTrue
+           | CIntegerLiteral
+           | CRef
+           | CThis
+           | NewObject
+           | NewArray
+           
+AssignmentExpression :: Expression Expression
+LogicalOrExpression :: Expression Expression
+LogicalAndExpression :: Expression Expression
+EqualityExpression :: EqualityOp Expression Expression
+RelationalExpression :: RelationalOp Expression Expression
+AdditiveExpression :: AddOp Expression Expression
+MultiplicativeExpression :: MultOp Expression Expression
+CallExpression :: Ident [Expression]
+UnaryExpression :: UnaryOp Expression
+CIntegerLiteral :: Int
+CRef :: Ident
+NewObject :: Ident
+NewArray :: Int BasicType Expression

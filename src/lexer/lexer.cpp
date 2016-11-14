@@ -1,62 +1,10 @@
 #include "lexer.h"
-#include "token.h"
-#include "compiler.h"
 
 #include <iostream>
 #include <fstream>
 #include <memory>
 
 using namespace cmpl;
-
-/*
- * following operators/seperator have to be implemented in state machine:
-  != (done)
-  !  (done)
-  (  (done)
-  )  (done)
-  *= (done)
-  *  (done)
-  ++ (done)
-  += (done)
-  +  (done)
-  ,  (done)
-  -= (done)
-  -- (done)
-  -  (done)
-  .  (done)
-  /= (done)
-  /  (done)
-  :  (done)
-  ;  (done)
-  <<=(done)
-  << (done)
-  <= (done)
-  <  (done)
-  == (done)
-  =  (done)
-  >= (done)
-  >>=(done)
-  >>>=(done)
-  >>>(done)
-  >> (done)
-  >  (done)
-  ?  (done)
-  %= (done)
-  %  (done)
-  &= (done)
-  && (done)
-  &  (done)
-  [  (done)
-  ]  (done)
-  ^= (done)
-  ^  (done)
-  {  (done)
-  }  (done)
-  ~  (done)
-  |= (done)
-  || (done)
-  |  (done)
- */
 
 /*
  * - currentChar: contains the character, that is currently processed
@@ -68,6 +16,8 @@ void Lexer::run(std::ifstream &inputFile)
 {
   char currentChar;
   std::string currentTokenString = "";
+  int line = 1;    // lines start with 1
+  int column = 0;  // columns start with 0
   
   if (!inputFile) {
     throw std::invalid_argument("no valid input file given");
@@ -79,6 +29,7 @@ void Lexer::run(std::ifstream &inputFile)
     // states of the state machine have labels starting with 's_'
     
     s_0:
+    ++column;
     switch (currentChar)
     {
       // integer
@@ -86,14 +37,14 @@ void Lexer::run(std::ifstream &inputFile)
         // continue in state machine
         currentTokenString += currentChar;
         if (!inputFile.get(currentChar)) {
-          insertToken(std::make_unique<IntegerLiteralToken>(currentTokenString));
+          insertToken(std::make_unique<IntegerLiteralToken>(currentTokenString, line, column));
           goto s_eof;
         }
         goto s_int;
       
       // integer
       case '0':
-        insertToken(std::make_unique<IntegerLiteralToken>("0"));
+        insertToken(std::make_unique<IntegerLiteralToken>("0", line, column));
         
         // begin next token
         currentTokenString = "";
@@ -107,13 +58,13 @@ void Lexer::run(std::ifstream &inputFile)
         // continue in state machine
         currentTokenString += currentChar;
         if (!inputFile.get(currentChar)) {
-          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_EXCLM));
+          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_EXCLM, line, column));
           goto s_eof;
         }
         goto s_excl;
       
       case '(':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LPAREN));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LPAREN, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -123,7 +74,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
         
       case ')':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_RPAREN));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_RPAREN, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -136,7 +87,7 @@ void Lexer::run(std::ifstream &inputFile)
         // continue in state machine
         currentTokenString += currentChar;
         if (!inputFile.get(currentChar)) {
-          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_SLASH));
+          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_SLASH, line, column));
           goto s_eof;
         }
         goto s_slash;
@@ -145,7 +96,7 @@ void Lexer::run(std::ifstream &inputFile)
         // continue in state machine
         currentTokenString += currentChar;
         if (!inputFile.get(currentChar)) {
-          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_STAR));
+          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_STAR, line, column));
           goto s_eof;
         }
         goto s_star; 
@@ -154,13 +105,13 @@ void Lexer::run(std::ifstream &inputFile)
         // continue in state machine
         currentTokenString += currentChar;
         if (!inputFile.get(currentChar)) {
-          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PLUS));
+          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PLUS, line, column));
           goto s_eof;
         }
         goto s_plus; 
       
       case ',':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_KOMMA));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_COMMA, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -173,13 +124,13 @@ void Lexer::run(std::ifstream &inputFile)
         // continue in state machine
         currentTokenString += currentChar;
         if (!inputFile.get(currentChar)) {
-          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MINUS));
+          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MINUS, line, column));
           goto s_eof;
         }
         goto s_minus; 
       
       case '.':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_DOT));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_DOT, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -189,7 +140,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       case ':':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_COLON));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_COLON, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -199,7 +150,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       case ';':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_SEMICOLON));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_SEMICOLON, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -212,7 +163,7 @@ void Lexer::run(std::ifstream &inputFile)
         // continue in state machine
         currentTokenString += currentChar;
         if (!inputFile.get(currentChar)) {
-          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LESS));
+          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LESS, line, column));
           goto s_eof;
         }
         goto s_less_1;
@@ -221,7 +172,7 @@ void Lexer::run(std::ifstream &inputFile)
         // continue in state machine
         currentTokenString += currentChar;
         if (!inputFile.get(currentChar)) {
-          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_EQUAL));
+          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_EQUAL, line, column));
           goto s_eof;
         }
         goto s_equal; 
@@ -235,7 +186,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_more_1;
       
       case '?':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_QUESTM));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_QUESTM, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -248,7 +199,7 @@ void Lexer::run(std::ifstream &inputFile)
         // continue in state machine
         currentTokenString += currentChar;
         if (!inputFile.get(currentChar)) {
-          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PERCENT));
+          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PERCENT, line, column));
           goto s_eof;
         }
         goto s_percent;
@@ -257,13 +208,13 @@ void Lexer::run(std::ifstream &inputFile)
         // continue in state machine
         currentTokenString += currentChar;
         if (!inputFile.get(currentChar)) {
-          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_AND));
+          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_AND, line, column));
           goto s_eof;
         }
         goto s_and;
       
       case '[':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LBRACK));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LBRACK, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -273,7 +224,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       case ']':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_RBRACK));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_RBRACK, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -286,13 +237,13 @@ void Lexer::run(std::ifstream &inputFile)
         // continue in state machine
         currentTokenString += currentChar;
         if (!inputFile.get(currentChar)) {
-          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_CARET));
+          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_CARET, line, column));
           goto s_eof;
         }
         goto s_caret;
       
       case '{':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LBRACE));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LBRACE, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -302,7 +253,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       case '}':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_RBRACE));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_RBRACE, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -312,7 +263,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       case '~':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_TILDE));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_TILDE, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -325,16 +276,18 @@ void Lexer::run(std::ifstream &inputFile)
         // continue in state machine
         currentTokenString += currentChar;
         if (!inputFile.get(currentChar)) {
-          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PIPE));
+          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PIPE, line, column));
           goto s_eof;
         }
         goto s_pipe;
       
       // white spaces
+      case '\n':
+        line++;
+        column = 0;
       case ' ':
       case '\r':
       case '\t':
-      case '\n':
         // skip this character
         if (!inputFile.get(currentChar)) {
           goto s_eof;
@@ -348,7 +301,7 @@ void Lexer::run(std::ifstream &inputFile)
         // continue in state machine
         currentTokenString += currentChar;
         if (!inputFile.get(currentChar)) {
-          auto token = stringTable.insertString(currentTokenString);
+          auto token = StringTable::insertString(currentTokenString, line, column);
           insertToken(std::move(token));
           goto s_eof;
         }
@@ -359,6 +312,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_int:
+    ++column;
     switch (currentChar)
     {
       // integer
@@ -371,7 +325,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_int;
       
       default:
-        insertToken(std::make_unique<IntegerLiteralToken>(currentTokenString));
+        insertToken(std::make_unique<IntegerLiteralToken>(currentTokenString, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -379,6 +333,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_str:
+    ++column;
     switch (currentChar)
     {
       case 'a'...'z':
@@ -388,7 +343,7 @@ void Lexer::run(std::ifstream &inputFile)
         // continue in state machine
         currentTokenString += currentChar;
         if (!inputFile.get(currentChar)) {
-          auto token = stringTable.insertString(currentTokenString);
+          auto token = StringTable::insertString(currentTokenString, line, column);
           insertToken(std::move(token));
           goto s_eof;
         }
@@ -397,7 +352,7 @@ void Lexer::run(std::ifstream &inputFile)
       default:
         // lookup in string table and add the returning token
         // string table automatically checks if token is keyword
-        auto token = stringTable.insertString(currentTokenString);
+        auto token = StringTable::insertString(currentTokenString, line, column);
         insertToken(std::move(token));
         
         // begin next token
@@ -406,10 +361,11 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_excl:
+    ++column;
     switch (currentChar)
     {
       case '=':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_EXCLM_EQUAL));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_EXCLM_EQUAL, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -420,7 +376,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       default:
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_EXCLM));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_EXCLM, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -429,10 +385,11 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_star:
+    ++column;
     switch (currentChar)
     {
       case '=':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_STAR_EQUAL));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_STAR_EQUAL, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -443,7 +400,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       default:
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_STAR));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_STAR, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -452,10 +409,11 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_plus:
+    ++column;
     switch (currentChar)
     {
       case '=':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PLUS_EQUAL));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PLUS_EQUAL, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -466,7 +424,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       case '+':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PLUS_PLUS));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PLUS_PLUS, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -477,7 +435,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       default:
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PLUS));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PLUS, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -486,10 +444,11 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_minus:
+    ++column;
     switch (currentChar)
     {
       case '=':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MINUS_EQUAL));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MINUS_EQUAL, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -500,7 +459,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       case '-':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MINUS_MINUS));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MINUS_MINUS, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -511,7 +470,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       default:
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MINUS));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MINUS, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -520,19 +479,20 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_less_1:
+    ++column;
     switch (currentChar)
     {
       case '<':
         // continue in state machine
         currentTokenString += currentChar;
         if (!inputFile.get(currentChar)) {
-          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LESS_LESS));
+          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LESS_LESS, line, column));
           goto s_eof;
         }
         goto s_less_2;
       
       case '=':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LESS_EQUAL));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LESS_EQUAL, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -543,7 +503,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       default:
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LESS));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LESS, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -552,10 +512,11 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_less_2:
+    ++column;
     switch (currentChar)
     {
       case '=':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LESS_LESS_EQUAL));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LESS_LESS_EQUAL, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -566,7 +527,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       default:
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LESS_LESS));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LESS_LESS, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -575,10 +536,11 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_equal:
+    ++column;
     switch (currentChar)
     {
       case '=':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_EQUAL_EQUAL));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_EQUAL_EQUAL, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -589,7 +551,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       default:
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_EQUAL));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_EQUAL, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -598,19 +560,20 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_more_1:
+    ++column;
     switch (currentChar)
     {
       case '>':
         // continue in state machine
         currentTokenString += currentChar;
         if (!inputFile.get(currentChar)) {
-          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_MORE));
+          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_MORE, line, column));
           goto s_eof;
         }
         goto s_more_2;
       
       case '=':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_EQUAL));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_EQUAL, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -621,7 +584,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       default:
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -630,19 +593,20 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_more_2:
+    ++column;
     switch (currentChar)
     {
       case '>':
         // continue in state machine
         currentTokenString += currentChar;
         if (!inputFile.get(currentChar)) {
-          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_MORE_MORE));
+          insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_MORE_MORE, line, column));
           goto s_eof;
         }
         goto s_more_3;
       
       case '=':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_MORE_EQUAL));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_MORE_EQUAL, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -653,7 +617,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       default:
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_MORE));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_MORE, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -662,10 +626,11 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_more_3:
+    ++column;
     switch (currentChar)
     {
       case '=':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_MORE_MORE_EQUAL));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_MORE_MORE_EQUAL, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -676,7 +641,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       default:
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_MORE_MORE));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_MORE_MORE, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -685,10 +650,11 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_slash:
+    ++column;
     switch (currentChar)
     {
       case '=':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_SLASH_EQUAL));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_SLASH_EQUAL, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -707,7 +673,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_comment_1;
       
       default:
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_SLASH));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_SLASH, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -716,6 +682,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_comment_1:
+    ++column;
     switch (currentChar)
     {
       case '*':
@@ -734,6 +701,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_comment_2:
+    ++column;
     switch (currentChar)
     {
       case '/':
@@ -764,10 +732,11 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_percent:
+    ++column;
     switch (currentChar)
     {
       case '=':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PERCENT_EQUAL));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PERCENT_EQUAL, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -778,7 +747,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       default:
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PERCENT));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PERCENT, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -787,10 +756,11 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_and:
+    ++column;
     switch (currentChar)
     {
       case '=':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_AND_EQUAL));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_AND_EQUAL, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -801,7 +771,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       case '&':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_AND_AND));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_AND_AND, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -812,7 +782,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       default:
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_AND));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_AND, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -821,10 +791,11 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_caret:
+    ++column;
     switch (currentChar)
     {
       case '=':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_CARET_EQUAL));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_CARET_EQUAL, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -835,7 +806,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       default:
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_CARET));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_CARET, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -844,10 +815,11 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_pipe:
+    ++column;
     switch (currentChar)
     {
       case '=':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PIPE_EQUAL));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PIPE_EQUAL, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -858,7 +830,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       case '|':
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PIPE_PIPE));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PIPE_PIPE, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -869,7 +841,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_0;
       
       default:
-        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PIPE));
+        insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PIPE, line, column));
         
         // begin next token
         currentTokenString = "";
@@ -881,21 +853,25 @@ void Lexer::run(std::ifstream &inputFile)
     return;
   }
 }
-Lexer::Lexer() : stringTable(StringTable())
+
+Lexer::Lexer()
 {
-  // Set default string table
-  // this.stringTable = StringTable();
-  
   for (int i = T_K_ABSTRACT; i <= T_K_WHILE; i++)
   {
-    stringTable.insertKeyword(Token::stringRepresentations[i], (TokenType)i);
-  }      
+    StringTable::insertKeyword(Token::tokenAttribues[i].stringRepresentation, (TokenType)i);
+  }
 }
+
 
 inline void Lexer::insertToken(std::unique_ptr<Token> token)
 {
   // later this maybe can be used for callbacks etc.
-  tokenArray.push(std::move(token));
+  tokenArray.push_back(std::move(token));
+}
+
+bool Lexer::putBackToken(std::unique_ptr<Token> &t)
+{
+  tokenArray.push_front(std::move(t));
 }
 
 bool Lexer::getNextToken(std::unique_ptr<Token> &t)
@@ -906,7 +882,7 @@ bool Lexer::getNextToken(std::unique_ptr<Token> &t)
   }
   
   std::unique_ptr<Token> token = std::move(tokenArray.front());
-  tokenArray.pop();
+  tokenArray.pop_front();
   t = std::move(token);
   
   return true;

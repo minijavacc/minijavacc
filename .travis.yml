@@ -1,4 +1,4 @@
-script: ./build_and_test
+script: ./travis
 
 # Force use modern cpp environment, see http://stackoverflow.com/questions/35110123/travis-ci-with-c14-and-linux
 
@@ -24,11 +24,19 @@ matrix:
           sources:
             - llvm-toolchain-precise-3.8
             - ubuntu-toolchain-r-test
-    - env: CPPCHECK=RUN
+    - env: BUILDSCRIPT=CPPCHECK
       os: linux
       addons:
         apt:
           packages:
             - cppcheck
+    - env: BUILDSCRIPT=TEST
+      os: linux
+      addons:
+        apt:
+          packages:
+            - python3
+            - java
   allow_failures:
-    - env: CPPCHECK=RUN
+    - env: BUILDSCRIPT=CPPCHECK
+    - env: BUILDSCRIPT=TEST
