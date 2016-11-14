@@ -25,13 +25,13 @@ int Compiler::echo(std::ifstream &file)
 int Compiler::lextest(std::ifstream &file)
 {
   try {
-    Lexer l = Lexer();
-    l.run(file);
+    Lexer lexer;
+    lexer.run(file);
   
-    std::unique_ptr<Token> t;
-    while (l.getNextToken(t))
+    std::unique_ptr<Token> token;
+    while (lexer.getNextToken(token))
     {
-      std::cout << t->getStringValue() << "\n";
+      std::cout << token->getStringValue() << "\n";
     }
   
     std::cout << "EOF" << "\n";
@@ -48,11 +48,11 @@ int Compiler::lextest(std::ifstream &file)
 int Compiler::parsetest(std::ifstream &file)
 {
   try {
-    Lexer l = Lexer();
-    l.run(file);
+    Lexer lexer;
+    lexer.run(file);
   
-    Parser p = Parser(l);
-    p.run();
+    Parser parser(lexer);
+    parser.run();
   
     return 0;
   }
@@ -71,18 +71,47 @@ int Compiler::parsetest(std::ifstream &file)
 int Compiler::printast(std::ifstream &file)
 {
   try {
-    Lexer l = Lexer();
-    l.run(file);
+    Lexer lexer;
+    lexer.run(file);
   
-    Parser p = Parser(l);
-    p.run();
+    Parser parser(lexer);
+    parser.run();
     
-    std::unique_ptr<Node> n;
-    p.getAST(n);
+    std::unique_ptr<Node> ast;
+    parser.getAST(ast);
     
-    PrettyPrinter r = PrettyPrinter(std::cout);
-    n->toString(r);
+    PrettyPrinter printer(std::cout);
+    ast->toString(printer);
   
+    return 0;
+  }
+  catch (SyntaxError &e) 
+  {
+    std::cerr << "syntax error: " << e.what() << "\n";
+    return 1;
+  }
+  catch (SemanticError &e) 
+  {
+    std::cerr << "semantic error: " << e.what() << "\n";
+    return 1;
+  }
+}
+
+int Compiler::semcheck(std::ifstream &file)
+{
+  try {
+    Lexer lexer;
+    lexer.run(file);
+  
+    Parser parser(lexer);
+    parser.run();
+    
+    std::unique_ptr<Node> ast;
+    parser.getAST(ast);
+    
+    // TODO SemChecker semChecker(ast);
+    // TODO semChecker.run();
+    
     return 0;
   }
   catch (SyntaxError &e) 
