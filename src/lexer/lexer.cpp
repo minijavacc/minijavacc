@@ -29,6 +29,7 @@ void Lexer::run(std::ifstream &inputFile)
     // states of the state machine have labels starting with 's_'
     
     s_0:
+    ++column;
     switch (currentChar)
     {
       // integer
@@ -311,6 +312,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_int:
+    ++column;
     switch (currentChar)
     {
       // integer
@@ -331,6 +333,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_str:
+    ++column;
     switch (currentChar)
     {
       case 'a'...'z':
@@ -358,6 +361,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_excl:
+    ++column;
     switch (currentChar)
     {
       case '=':
@@ -381,6 +385,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_star:
+    ++column;
     switch (currentChar)
     {
       case '=':
@@ -404,6 +409,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_plus:
+    ++column;
     switch (currentChar)
     {
       case '=':
@@ -438,6 +444,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_minus:
+    ++column;
     switch (currentChar)
     {
       case '=':
@@ -472,6 +479,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_less_1:
+    ++column;
     switch (currentChar)
     {
       case '<':
@@ -504,6 +512,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_less_2:
+    ++column;
     switch (currentChar)
     {
       case '=':
@@ -527,6 +536,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_equal:
+    ++column;
     switch (currentChar)
     {
       case '=':
@@ -550,6 +560,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_more_1:
+    ++column;
     switch (currentChar)
     {
       case '>':
@@ -582,6 +593,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_more_2:
+    ++column;
     switch (currentChar)
     {
       case '>':
@@ -614,6 +626,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_more_3:
+    ++column;
     switch (currentChar)
     {
       case '=':
@@ -637,6 +650,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_slash:
+    ++column;
     switch (currentChar)
     {
       case '=':
@@ -668,6 +682,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_comment_1:
+    ++column;
     switch (currentChar)
     {
       case '*':
@@ -686,6 +701,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_comment_2:
+    ++column;
     switch (currentChar)
     {
       case '/':
@@ -716,6 +732,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_percent:
+    ++column;
     switch (currentChar)
     {
       case '=':
@@ -739,6 +756,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_and:
+    ++column;
     switch (currentChar)
     {
       case '=':
@@ -773,6 +791,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_caret:
+    ++column;
     switch (currentChar)
     {
       case '=':
@@ -796,6 +815,7 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_pipe:
+    ++column;
     switch (currentChar)
     {
       case '=':
