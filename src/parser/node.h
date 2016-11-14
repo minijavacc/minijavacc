@@ -222,21 +222,21 @@ namespace cmpl
   class MethodInvocation : public UnaryOp
   {
     public:
-      StringIdentifier ID;
-      std::vector<std::unique_ptr<Expression>> expressions;
+      StringIdentifier                         ID;
+      std::vector<std::unique_ptr<Expression>> arguments;
       
-      MethodInvocation(StringIdentifier &ID, std::vector<std::unique_ptr<Expression>> &expressions) :
-                         ID(ID), expressions(std::move(expressions)) { };
+      MethodInvocation(StringIdentifier &ID, std::vector<std::unique_ptr<Expression>> &arguments) :
+                         ID(ID), arguments(std::move(arguments)) { };
         
       void toString(PrettyPrinter &printer) const {
         printer.print("." + StringTable::lookupIdentifier(ID) + "(");
         
         bool continous = false;
-        for(auto const& expression:expressions) {
+        for(auto const& argument:arguments) {
           if(continous) {
             printer.print(", ");
           }
-          expression->toString(printer);
+          argument->toString(printer);
           continous = true;
         }
         
@@ -280,7 +280,7 @@ namespace cmpl
                    std::unique_ptr<Expression> expression2) :
                      op(std::move(op)), expression1(std::move(expression1)), expression2(std::move(expression2)) { };
     public:
-      std::unique_ptr<Op> op;
+      std::unique_ptr<Op>         op;
       std::unique_ptr<Expression> expression1;
       std::unique_ptr<Expression> expression2;
       
@@ -372,21 +372,21 @@ namespace cmpl
   class CallExpression : public Expression
   {
     public:
-      StringIdentifier ID;
-      std::vector<std::unique_ptr<Expression>> expressions;
+      StringIdentifier                         ID;
+      std::vector<std::unique_ptr<Expression>> arguments;
       
-      CallExpression(StringIdentifier &ID, std::vector<std::unique_ptr<Expression>> &expressions) :
-                       ID(ID), expressions(std::move(expressions)) { };
+      CallExpression(StringIdentifier &ID, std::vector<std::unique_ptr<Expression>> &arguments) :
+                       ID(ID), arguments(std::move(arguments)) { };
     
       void toString(PrettyPrinter &printer) const {
         printer.print(StringTable::lookupIdentifier(ID) + "(");
         
         bool continous = false;
-        for(auto const& expression:expressions) {
+        for(auto const& argument:arguments) {
           if(continous) {
             printer.print(", ");
           }
-          expression->toString(printer);
+          argument->toString(printer);
           continous = true;
         }
         
@@ -394,18 +394,33 @@ namespace cmpl
       };
   };
   
-  class UnaryExpression : public Expression
+  class UnaryLeftExpression : public Expression
   {
     public:
-      std::unique_ptr<UnaryOp> op;
+      std::unique_ptr<UnaryOp>    op;
       std::unique_ptr<Expression> expression;
       
-      UnaryExpression(std::unique_ptr<UnaryOp> &op, std::unique_ptr<Expression> &expression) :
-                        op(std::move(op)), expression(std::move(expression)) { };
+      UnaryLeftExpression(std::unique_ptr<UnaryOp> &op, std::unique_ptr<Expression> &expression) :
+                            op(std::move(op)), expression(std::move(expression)) { };
     
       void toString(PrettyPrinter &printer) const {
         op->toString(printer);
         expression->toString(printer);
+      };
+  };
+  
+  class UnaryRightExpression : public Expression
+  {
+    public:
+      std::unique_ptr<UnaryOp>    op;
+      std::unique_ptr<Expression> expression;
+      
+      UnaryRightExpression(std::unique_ptr<Expression> &expression, std::unique_ptr<UnaryOp> &op) :
+                             expression(std::move(expression)), op(std::move(op)) { };
+    
+      void toString(PrettyPrinter &printer) const {
+        expression->toString(printer);
+        op->toString(printer);
       };
   };
   
@@ -452,12 +467,12 @@ namespace cmpl
   class CIntegerLiteral : public Expression
   {
     public:
-      std::unique_ptr<std::string> integer;
+      std::string integer;
       
-      CIntegerLiteral(std::unique_ptr<std::string> &integer) : integer(std::move(integer)) { };
+      CIntegerLiteral(std::string &integer) : integer(integer) { };
     
       void toString(PrettyPrinter &printer) const {
-        printer.print(*integer);
+        printer.print(integer);
       };
   };
   
@@ -512,8 +527,8 @@ namespace cmpl
   class Parameter : public Node
   {
     public:
-      std::unique_ptr<Type>            type;
-      StringIdentifier ID;
+      std::unique_ptr<Type> type;
+      StringIdentifier      ID;
       
       Parameter(std::unique_ptr<Type> &type, StringIdentifier &ID) :
             type(std::move(type)), ID(ID) { };
@@ -685,8 +700,8 @@ namespace cmpl
   class LocalVariableDeclaration : public Statement
   {
     public:
-      std::unique_ptr<Type>             type;
-      StringIdentifier ID;
+      std::unique_ptr<Type> type;
+      StringIdentifier      ID;
       
       LocalVariableDeclaration(std::unique_ptr<Type> &type, StringIdentifier &ID) :
                                  type(std::move(type)), ID(ID) { };
@@ -700,9 +715,9 @@ namespace cmpl
   class LocalVariableExpressionDeclaration : public Statement
   {
     public:
-      std::unique_ptr<Type>             type;
-      StringIdentifier ID;
-      std::unique_ptr<Expression>       expression;
+      std::unique_ptr<Type>       type;
+      StringIdentifier            ID;
+      std::unique_ptr<Expression> expression;
       
       LocalVariableExpressionDeclaration(std::unique_ptr<Type> &type, StringIdentifier &ID,
                                          std::unique_ptr<Expression> &expression) :
@@ -725,7 +740,7 @@ namespace cmpl
   {
     public:
       std::unique_ptr<Type> type;
-      StringIdentifier ID;
+      StringIdentifier      ID;
       
       Field(std::unique_ptr<Type> &type, StringIdentifier &ID) :
             type(std::move(type)), ID(ID) { };
@@ -739,10 +754,10 @@ namespace cmpl
   class Method : public ClassMember
   {
     public:
-      std::unique_ptr<Type> type;
-      StringIdentifier ID;
+      std::unique_ptr<Type>                   type;
+      StringIdentifier                        ID;
       std::vector<std::unique_ptr<Parameter>> parameters;
-      std::unique_ptr<Block> block;
+      std::unique_ptr<Block>                  block;
       
       Method(std::unique_ptr<Type> &type, StringIdentifier &ID, std::vector<std::unique_ptr<Parameter>> &parameters,
              std::unique_ptr<Block> &block) :
@@ -771,9 +786,9 @@ namespace cmpl
   class MainMethod : public ClassMember
   {
     public:
-      StringIdentifier ID;
-      StringIdentifier parameterID;
-      std::unique_ptr<Block>             block;
+      StringIdentifier       ID;
+      StringIdentifier       parameterID;
+      std::unique_ptr<Block> block;
       
       MainMethod(StringIdentifier &ID, StringIdentifier &parameterID, std::unique_ptr<Block> &block) :
                    ID(ID), parameterID(std::move(parameterID)), block(std::move(block)) { };
@@ -788,7 +803,7 @@ namespace cmpl
   class ClassDeclaration : public Node
   {
     public:
-      StringIdentifier ID;
+      StringIdentifier                          ID;
       std::vector<std::unique_ptr<ClassMember>> classMembers;
       
       ClassDeclaration(StringIdentifier &ID, std::vector<std::unique_ptr<ClassMember>> &classMembers) :
