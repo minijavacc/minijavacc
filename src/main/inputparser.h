@@ -39,10 +39,10 @@ namespace cmpl
       std::vector<Option> givenOptions;
   };
   
-  class ParameterError : public std::invalid_argument
+  class ParameterError : public std::logic_error
   {
     public:
-      ParameterError(std::string& err) : std::invalid_argument(err) { }
+      ParameterError(const std::string& err) : std::logic_error(err) { }
   };
 
 }
