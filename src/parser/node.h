@@ -19,17 +19,17 @@ namespace cmpl
   
 /**************** actual nodes ****************/
 
-  class BasicType    : public Node { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class ClassMember  : public Node { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class Expression   : public Node { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class Statement    : public Node { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-
-  class Op           : public Node { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class EqualityOp   : public Op   { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class RelationalOp : public Op   { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class AddOp        : public Op   { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class MultOp       : public Op   { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class UnaryOp      : public Op   { public: virtual void toString(PrettyPrinter &printer) const = 0; };
+  class BasicType      : public Node           { public: virtual void toString(PrettyPrinter &printer) const = 0; };
+  class ClassMember    : public Node           { public: virtual void toString(PrettyPrinter &printer) const = 0; };
+  class Expression     : public Node           { public: virtual void toString(PrettyPrinter &printer) const = 0; };
+  class BlockStatement : public Node           { public: virtual void toString(PrettyPrinter &printer) const = 0; };
+  class Statement      : public BlockStatement { public: virtual void toString(PrettyPrinter &printer) const = 0; };
+  class Op             : public Node           { public: virtual void toString(PrettyPrinter &printer) const = 0; };
+  class EqualityOp     : public Op             { public: virtual void toString(PrettyPrinter &printer) const = 0; };
+  class RelationalOp   : public Op             { public: virtual void toString(PrettyPrinter &printer) const = 0; };
+  class AddOp          : public Op             { public: virtual void toString(PrettyPrinter &printer) const = 0; };
+  class MultOp         : public Op             { public: virtual void toString(PrettyPrinter &printer) const = 0; };
+  class UnaryOp        : public Op             { public: virtual void toString(PrettyPrinter &printer) const = 0; };
   
   class Type : public Node
   {
@@ -546,9 +546,9 @@ namespace cmpl
   class Block : public Statement
   {
     public:
-      std::vector<std::unique_ptr<Statement>> statements;
+      std::vector<std::unique_ptr<BlockStatement>> statements;
       
-      Block(std::vector<std::unique_ptr<Statement>> &statements) : statements(std::move(statements)) { };
+      Block(std::vector<std::unique_ptr<BlockStatement>> &statements) : statements(std::move(statements)) { };
       
       void toString(PrettyPrinter &printer) const {
         printer.println("{");
@@ -697,7 +697,7 @@ namespace cmpl
       };
   };
   
-  class LocalVariableDeclaration : public Statement
+  class LocalVariableDeclaration : public BlockStatement
   {
     public:
       std::unique_ptr<Type> type;
@@ -712,7 +712,7 @@ namespace cmpl
       };
   };
   
-  class LocalVariableExpressionDeclaration : public Statement
+  class LocalVariableExpressionDeclaration : public BlockStatement
   {
     public:
       std::unique_ptr<Type>       type;

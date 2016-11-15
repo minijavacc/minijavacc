@@ -164,10 +164,9 @@ std::unique_ptr<ClassMember> Parser::parseClassMember()
     assureNextIsOSKTokenWithType(T_K_VOID);
     
     ID = getIdentifierFromNext();
-    if(StringTable::lookupIdentifier(ID) != "main") {
+    /* if(StringTable::lookupIdentifier(ID) != "main") {
       error("Only method allowed to be static is main method!");
-    }
-
+    }*/
     assureNextIsOSKTokenWithType(T_O_LPAREN);
     StringIdentifier stringID = getIdentifierFromNext();
     if(StringTable::lookupIdentifier(stringID) != "String") {
@@ -252,26 +251,9 @@ std::unique_ptr<Parameter> Parser::parseParameter()
   return std::make_unique<Parameter>(type, ID);
 }
 
-std::unique_ptr<Statement> Parser::parseStatement()
+std::unique_ptr<BlockStatement> Parser::parseBlockStatement()
 {
-  if(isCurrentTokenOSKTokenOfType(T_O_LBRACK)) {
-    // Block
-    return parseBlock(); // for thrills
-  } else if(isCurrentTokenOSKTokenOfType(T_K_IF)) {
-    // if (else)
-    return parseIfElseStatement();
-  } else if(isCurrentTokenOSKTokenOfType(T_K_WHILE)) {
-    // while
-    return parseWhileStatement();
-  } else if(isCurrentTokenOSKTokenOfType(T_K_RETURN)) {
-    // return
-    return parseReturnStatement();
-  } else if(isCurrentTokenOSKTokenOfType(T_O_SEMICOLON)) {
-    // empty
-    nextToken();
-    return std::make_unique<EmptyStatement>();
-  } else {
-    // Expression/LocVarDecl
+    // check for possible LocVarDecl
     if(isCurrentTokenOSKTokenOfType(T_K_INT)     ||
        isCurrentTokenOSKTokenOfType(T_K_BOOLEAN) ||
        isCurrentTokenOSKTokenOfType(T_K_VOID)) {
@@ -300,30 +282,74 @@ std::unique_ptr<Statement> Parser::parseStatement()
           lexer.putBackToken(currentToken);
           lexer.putBackToken(token2);
           currentToken = std::move(token1);
-          return parseExpressionStatement();
+          return parseStatement();
         }
       } else {
         // expression
         lexer.putBackToken(currentToken);
         currentToken = std::move(token1);
-        return parseExpressionStatement();
+        return parseStatement();
       }
     } else {
       // expression
-      return parseExpressionStatement();
+      return parseStatement();
     }
+}
+
+/* start: current = Type */
+std::unique_ptr<BlockStatement> Parser::parseLocalVarDecl()
+{
+  std::unique_ptr<Type> type;
+  StringIdentifier ID;
+  
+  type = parseType();
+  ID = getIdentifierFromCurrent();
+  if(isNextTokenOSKTokenOfType(T_O_SEMICOLON)) {
+    return std::make_unique<LocalVariableDeclaration>(type, ID);
+  } else {
+    assureCurrentIsOSKTokenWithType(T_O_EQUAL);
+    nextToken();
+    std::unique_ptr<Expression> expression = parseExpression();
+    assureCurrentIsOSKTokenWithType(T_O_SEMICOLON);
+    nextToken();
+    
+    return std::make_unique<LocalVariableExpressionDeclaration>(type, ID, expression);
+  }
+};
+
+std::unique_ptr<Statement> Parser::parseStatement()
+{
+  if(isCurrentTokenOSKTokenOfType(T_O_LBRACK)) {
+    // Block
+    return parseBlock(); // for thrills
+  } else if(isCurrentTokenOSKTokenOfType(T_K_IF)) {
+    // if (else)
+    return parseIfElseStatement();
+  } else if(isCurrentTokenOSKTokenOfType(T_K_WHILE)) {
+    // while
+    return parseWhileStatement();
+  } else if(isCurrentTokenOSKTokenOfType(T_K_RETURN)) {
+    // return
+    return parseReturnStatement();
+  } else if(isCurrentTokenOSKTokenOfType(T_O_SEMICOLON)) {
+    // empty
+    nextToken();
+    return std::make_unique<EmptyStatement>();
+  } else {
+    // probably an expression
+    return parseExpressionStatement();
   }
 }
 
 /* start: current = "{" */
 std::unique_ptr<Block> Parser::parseBlock()
 {
-  std::vector<std::unique_ptr<Statement>> statements;
+  std::vector<std::unique_ptr<BlockStatement>> statements;
   
   assureCurrentIsOSKTokenWithType(T_O_LBRACE);
   nextToken();
   while(!isCurrentTokenOSKTokenOfType(T_O_RBRACE)) {
-    statements.push_back(std::move(parseStatement()));
+    statements.push_back(std::move(parseBlockStatement()));
   }
   nextToken();
   
@@ -379,27 +405,6 @@ std::unique_ptr<Statement> Parser::parseReturnStatement()
     assureCurrentIsOSKTokenWithType(T_O_SEMICOLON);
     nextToken();
     return std::make_unique<ReturnExpressionStatement>(expression);
-  }
-};
-
-/* start: current = Type */
-std::unique_ptr<Statement> Parser::parseLocalVarDecl()
-{
-  std::unique_ptr<Type> type;
-  StringIdentifier ID;
-  
-  type = parseType();
-  ID = getIdentifierFromCurrent();
-  if(isNextTokenOSKTokenOfType(T_O_SEMICOLON)) {
-    return std::make_unique<LocalVariableDeclaration>(type, ID);
-  } else {
-    assureCurrentIsOSKTokenWithType(T_O_EQUAL);
-    nextToken();
-    std::unique_ptr<Expression> expression = parseExpression();
-    assureCurrentIsOSKTokenWithType(T_O_SEMICOLON);
-    nextToken();
-    
-    return std::make_unique<LocalVariableExpressionDeclaration>(type, ID, expression);
   }
 };
 
