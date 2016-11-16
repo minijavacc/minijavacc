@@ -606,7 +606,7 @@ std::unique_ptr<Expression> Parser::parsePostfixExpression()
   while(isCurrentTokenOSKTokenOfType(T_O_DOT) || isCurrentTokenOSKTokenOfType(T_O_LBRACK)) {
     // post fix expression
     std::unique_ptr<UnaryOp> op;
-    
+
     if(isCurrentTokenOSKTokenOfType(T_O_DOT)) {
       // method invocation / field access
       StringIdentifier ID = getIdentifierFromNext();
@@ -641,7 +641,6 @@ std::unique_ptr<Expression> Parser::parsePostfixExpression()
       
       op = std::make_unique<ArrayAccess>(accessExpression);
     }
-    
     expression = std::make_unique<UnaryRightExpression>(expression, op);
   }
   
@@ -673,8 +672,12 @@ std::unique_ptr<Expression> Parser::parsePrimaryExpression()
     nextToken();
     return std::make_unique<CIntegerLiteral>(integer);
   } else if(isCurrentTokenOSKTokenOfType(T_O_LPAREN)) {
-    // can't happen, already taken care of in parseExpression()
-    error("spontaneous combustion"); // for thrills
+    // nested "real" expression
+    nextToken(); // (
+    std::unique_ptr<Expression> expression = std::move(parseExpression());
+    assureCurrentIsOSKTokenWithType(T_O_RPAREN);
+    nextToken(); // )
+    return expression;
   } else if(isCurrentTokenOSKTokenOfType(T_K_NEW)) {
     // new array/object
     nextToken();
