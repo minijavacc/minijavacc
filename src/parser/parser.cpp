@@ -25,7 +25,7 @@ inline StringIdentifier Parser::getIdentifierFromCurrent() {
   if (id_t = dynamic_cast<IdentifierToken*>(currentToken.get())) {
     return id_t->id;
   } else {
-    error("Expected identifier");
+    error("Expected identifier, current token is " + currentToken->getStringValue());
   }
 }
 
@@ -40,7 +40,7 @@ inline void Parser::assureCurrentTokenTypeIs()
 {
   if (!isCurrentTokenOfType<T>())
   {
-    error("expected a " + *typeid(T).name());
+    error(currentToken->getStringValue() + ", but expected a " + *typeid(T).name());
   }
 }
 
@@ -251,6 +251,21 @@ std::unique_ptr<Parameter> Parser::parseParameter()
   return std::make_unique<Parameter>(type, ID);
 }
 
+/* start: current = "{" */
+std::unique_ptr<Block> Parser::parseBlock()
+{
+  std::vector<std::unique_ptr<BlockStatement>> statements;
+  
+  assureCurrentIsOSKTokenWithType(T_O_LBRACE);
+  nextToken();
+  while(!isCurrentTokenOSKTokenOfType(T_O_RBRACE)) {
+    statements.push_back(std::move(parseBlockStatement()));
+  }
+  nextToken();
+  
+  return std::make_unique<Block>(statements);
+}
+
 std::unique_ptr<BlockStatement> Parser::parseBlockStatement()
 {
     // check for possible LocVarDecl
@@ -319,7 +334,7 @@ std::unique_ptr<BlockStatement> Parser::parseLocalVarDecl()
 
 std::unique_ptr<Statement> Parser::parseStatement()
 {
-  if(isCurrentTokenOSKTokenOfType(T_O_LBRACK)) {
+  if(isCurrentTokenOSKTokenOfType(T_O_LBRACE)) {
     // Block
     return parseBlock(); // for thrills
   } else if(isCurrentTokenOSKTokenOfType(T_K_IF)) {
@@ -339,21 +354,6 @@ std::unique_ptr<Statement> Parser::parseStatement()
     // probably an expression
     return parseExpressionStatement();
   }
-}
-
-/* start: current = "{" */
-std::unique_ptr<Block> Parser::parseBlock()
-{
-  std::vector<std::unique_ptr<BlockStatement>> statements;
-  
-  assureCurrentIsOSKTokenWithType(T_O_LBRACE);
-  nextToken();
-  while(!isCurrentTokenOSKTokenOfType(T_O_RBRACE)) {
-    statements.push_back(std::move(parseBlockStatement()));
-  }
-  nextToken();
-  
-  return std::make_unique<Block>(statements);
 }
 
 /* start: current = "if" */
