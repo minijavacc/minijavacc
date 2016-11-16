@@ -8,14 +8,19 @@ UserType :: Ident
 Program :: [ClassDeclaration]
 
 ClassDeclaration :: Ident [ClassMember]
-    
+
 ClassMember = Field | Method | MainMethod
-                 
+
 Field :: Ident Type
 Method :: Ident Type [Parameter] Block
 MainMethod :: Ident Ident Block
 
 Parameter :: Ident Type
+
+Block :: [BlockStatement]
+
+BlockStatement = Statement
+               | LocalVariableDeclaration | LocalVariableExpressionDeclaration
 
 Statement = Block
           | IfStatement | IfElseStatement 
@@ -23,20 +28,16 @@ Statement = Block
           | WhileStatement
           | ReturnExpressionStatement | ReturnStatement
           | EmptyStatement
-          | LocalVariableDeclaration
-          | LocalVariableExpressionDeclaration
-                
-Block :: [Statement]
+
 IfStatement :: Expression Statement
 IfElseStatement :: Expression Statement Statement 
 ExpressionStatement :: Expression 
 WhileStatement :: Expression Statement
 ReturnExpressionStatement :: Expression
+
 LocalVariableDeclaration :: Ident Type
 LocalVariableExpressionDeclaration :: Ident Type Expression
-               
-               
-               
+
 EqualityOp = NotEquals | Equals
 
 RelationalOp = LessThan | LessThanOrEqual | GreaterThan | GreaterThanOrEqual
@@ -62,15 +63,8 @@ Expression = AssignmentExpression
            | MultiplicativeExpression
            | CallExpression
            | UnaryExpression
-           | CNull
-           | CFalse
-           | CTrue
-           | CIntegerLiteral
-           | CRef
-           | CThis
-           | NewObject
-           | NewArray
-           
+           | PrimaryExpression
+
 AssignmentExpression :: Expression Expression
 LogicalOrExpression :: Expression Expression
 LogicalAndExpression :: Expression Expression
@@ -79,8 +73,23 @@ RelationalExpression :: RelationalOp Expression Expression
 AdditiveExpression :: AddOp Expression Expression
 MultiplicativeExpression :: MultOp Expression Expression
 CallExpression :: Ident [Expression]
-UnaryExpression :: UnaryOp Expression
+UnaryExpression :: UnaryOp PrimaryExpression
+
+PrimaryExpression = CFalse
+                  | CNull
+                  | CThis
+                  | CTrue
+                  | CIntegerLiteral
+                  | CRef
+                  | CMethRef
+                  | NewObject
+                  | NewArray
+                  | NestedExpression
+
 CIntegerLiteral :: Int
 CRef :: Ident
+CMethRef :: Ident [Expression]
 NewObject :: Ident
 NewArray :: Int BasicType Expression
+NestedExpression :: Expression
+
