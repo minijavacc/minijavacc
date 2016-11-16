@@ -766,6 +766,7 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("public ");
         type->toString(printer);
+        printer.print(" ");
         printer.print(StringTable::lookupIdentifier(ID) + "(");
 
         bool continous = false;
