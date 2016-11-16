@@ -4,12 +4,18 @@ using namespace cmpl;
 
 void PrettyPrinter::print(const std::string &s)
 {
-  printStream << indents << s;
+  if(indentsPrinted) {
+    printStream << s;
+  } else {
+    printStream << indents << s;
+    indentsPrinted = true;
+  }
 }
 
 void PrettyPrinter::println(const std::string &s)
 {
   printStream << indents << s << '\n';
+  indentsPrinted = false;
 }
 
 void PrettyPrinter::addIndent()
