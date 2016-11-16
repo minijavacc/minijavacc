@@ -61,7 +61,6 @@ Expression = AssignmentExpression
            | RelationalExpression
            | AdditiveExpression 
            | MultiplicativeExpression
-           | CallExpression
            | UnaryExpression
            | PrimaryExpression
 
@@ -72,7 +71,6 @@ EqualityExpression :: EqualityOp Expression Expression
 RelationalExpression :: RelationalOp Expression Expression
 AdditiveExpression :: AddOp Expression Expression
 MultiplicativeExpression :: MultOp Expression Expression
-CallExpression :: Ident [Expression]
 UnaryExpression :: UnaryOp PrimaryExpression
 
 PrimaryExpression = CFalse
@@ -84,6 +82,7 @@ PrimaryExpression = CFalse
                   | CMethRef
                   | NewObject
                   | NewArray
+                  | CallExpression
                   | NestedExpression
 
 CIntegerLiteral :: Int
@@ -91,5 +90,6 @@ CRef :: Ident
 CMethRef :: Ident [Expression]
 NewObject :: Ident
 NewArray :: Int BasicType Expression
+CallExpression :: Ident [Expression]
 NestedExpression :: Expression
 
