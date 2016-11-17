@@ -11,18 +11,150 @@
 namespace cmpl
 {
   // abstract classes for categorization
+  
+  class Dispatcher;
+  
+  class Type;
+  class UserType;
+  class TypeInt;
+  class TypeBoolean;
+  class TypeVoid;
+  class Program;
+  class ClassDeclaration;
+  class Field;
+  class Method;
+  class MainMethod;
+  class Parameter;
+  class Block;
+  class IfStatement;
+  class IfElseStatement;
+  class ExpressionStatement;
+  class WhileStatement;
+  class LocalVariableDeclaration;
+  class LocalVariableExpressionDeclaration;
+  class ReturnStatement;
+  class ReturnExpressionStatement;
+  class EmptyStatement;
+  class MethodInvocation;
+  class ArrayAccess;
+  class FieldAccess;
+  class AssignmentExpression;
+  class LogicalOrExpression;
+  class LogicalAndExpression;
+  class EqualityExpression;
+  class RelationalExpression;
+  class AdditiveExpression;
+  class MultiplicativeExpression;
+  class CallExpression;
+  class UnaryLeftExpression;
+  class UnaryRightExpression;
+  class CNull;
+  class CThis;
+  class CTrue;
+  class CFalse;
+  class CRef;
+  class CIntegerLiteral;
+  class NewObject;
+  class NewArray;
+  class Equals;
+  class NotEquals;
+  class LessThan;
+  class LessThanOrEqual;
+  class GreaterThan;
+  class GreaterThanOrEqual;
+  class Add;
+  class Subtract;
+  class Multiply;
+  class Divide;
+  class Modulo;
+  class Negate;
+  class Minus;
+  
+  // ------ Visitor pattern ------ //
+  class Dispatcher {
+  public:
+    virtual void dispatch(Type &n) = 0;
+    virtual void dispatch(UserType &n) = 0;
+    virtual void dispatch(TypeInt &n) = 0;
+    virtual void dispatch(TypeBoolean &n) = 0;
+    virtual void dispatch(TypeVoid &n) = 0;
+  
+    virtual void dispatch(Program &n) = 0;
+  
+    virtual void dispatch(ClassDeclaration &n) = 0;
+  
+    virtual void dispatch(Field &n) = 0;
+    virtual void dispatch(Method &n) = 0;
+    virtual void dispatch(MainMethod &n) = 0;
+  
+    virtual void dispatch(Parameter &n) = 0;
+  
+    virtual void dispatch(Block &n) = 0;
+  
+    virtual void dispatch(IfStatement &n) = 0;
+    virtual void dispatch(IfElseStatement &n) = 0;
+    virtual void dispatch(ExpressionStatement &n) = 0;
+    virtual void dispatch(WhileStatement &n) = 0;
+    virtual void dispatch(LocalVariableDeclaration &n) = 0;
+    virtual void dispatch(LocalVariableExpressionDeclaration &n) = 0;
+    virtual void dispatch(ReturnStatement &n) = 0;
+    virtual void dispatch(ReturnExpressionStatement &n) = 0;
+    virtual void dispatch(EmptyStatement &n) = 0;
+  
+    virtual void dispatch(MethodInvocation &n) = 0;
+    virtual void dispatch(ArrayAccess &n) = 0;
+    virtual void dispatch(FieldAccess &n) = 0;
+  
+    virtual void dispatch(AssignmentExpression &n) = 0;
+    virtual void dispatch(LogicalOrExpression &n) = 0;
+    virtual void dispatch(LogicalAndExpression &n) = 0;
+    virtual void dispatch(EqualityExpression &n) = 0;
+    virtual void dispatch(RelationalExpression &n) = 0;
+    virtual void dispatch(AdditiveExpression &n) = 0;
+    virtual void dispatch(MultiplicativeExpression &n) = 0;
+    virtual void dispatch(CallExpression &n) = 0;
+    virtual void dispatch(UnaryLeftExpression &n) = 0;
+    virtual void dispatch(UnaryRightExpression &n) = 0;
+  
+    virtual void dispatch(CNull &n) = 0;
+    virtual void dispatch(CThis &n) = 0;
+    virtual void dispatch(CTrue &n) = 0;
+    virtual void dispatch(CFalse &n) = 0;
+    virtual void dispatch(CRef &n) = 0;
+    virtual void dispatch(CIntegerLiteral &n) = 0;
+    virtual void dispatch(NewObject &n) = 0;
+    virtual void dispatch(NewArray &n) = 0;
+    
+    virtual void dispatch(Equals &n) = 0;
+    virtual void dispatch(NotEquals &n) = 0;
+    virtual void dispatch(LessThan &n) = 0;
+    virtual void dispatch(LessThanOrEqual &n) = 0;
+    virtual void dispatch(GreaterThan &n) = 0;
+    virtual void dispatch(GreaterThanOrEqual &n) = 0;
+    virtual void dispatch(Add &n) = 0;
+    virtual void dispatch(Subtract &n) = 0;
+    
+    virtual void dispatch(Multiply &n) = 0;
+    virtual void dispatch(Divide &n) = 0;
+    virtual void dispatch(Modulo &n) = 0;
+    
+    virtual void dispatch(Negate &n) = 0;
+    virtual void dispatch(Minus &n) = 0;
+  };
+  
   class Node
   {
     public:
       virtual void toString(PrettyPrinter &printer) const = 0; // must be implemented by subclasses
+      virtual void accept(Dispatcher &d) = 0;
   };
   
 /**************** actual nodes ****************/
 
-  class BasicType      : public Node           { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class ClassMember    : public Node           { public: virtual void toString(PrettyPrinter &printer) const = 0; };
+  class BasicType      : public Node           { public: virtual void toString(PrettyPrinter &printer) const = 0; bool isVoid = false; };
+  class ClassMember    : public Node           { public: virtual void toString(PrettyPrinter &printer) const = 0; bool returns = false; };
   class Expression     : public Node           { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class BlockStatement : public Node           { public: virtual void toString(PrettyPrinter &printer) const = 0; };
+  class BlockStatement : public Node           { public: virtual void toString(PrettyPrinter &printer) const = 0; bool returns = false; };
   class Statement      : public BlockStatement { public: virtual void toString(PrettyPrinter &printer) const = 0; };
   class Op             : public Node           { public: virtual void toString(PrettyPrinter &printer) const = 0; };
   class EqualityOp     : public Op             { public: virtual void toString(PrettyPrinter &printer) const = 0; };
@@ -45,6 +177,12 @@ namespace cmpl
           printer.print("[]");
         }
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
+    
+      bool isVoid = false;
   };
   
   class TypeInt : public BasicType
@@ -55,6 +193,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("int");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class TypeBoolean : public BasicType
@@ -65,6 +207,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("boolean");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class TypeVoid : public BasicType
@@ -75,6 +221,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("void");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class UserType : public BasicType
@@ -87,6 +237,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print(StringTable::lookupIdentifier(ID));
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
 
   class NotEquals : public EqualityOp
@@ -97,6 +251,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("!=");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
 
   class Equals : public EqualityOp
@@ -107,6 +265,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("==");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
 
   class LessThan : public RelationalOp
@@ -117,6 +279,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("<");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
 
   class LessThanOrEqual : public RelationalOp
@@ -127,6 +293,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("<=");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
 
   class GreaterThan : public RelationalOp
@@ -137,6 +307,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print(">");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
 
   class GreaterThanOrEqual : public RelationalOp
@@ -147,6 +321,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print(">=");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
 
   class Add : public AddOp
@@ -157,6 +335,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("+");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
 
   class Subtract : public AddOp
@@ -167,6 +349,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("-");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
 
   class Multiply : public MultOp
@@ -177,6 +363,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("*");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
 
   class Divide : public MultOp
@@ -187,6 +377,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("/");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
 
   class Modulo : public MultOp
@@ -197,6 +391,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("%");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
 
   class Negate : public UnaryOp
@@ -207,6 +405,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("!");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
 
   class Minus : public UnaryOp
@@ -217,6 +419,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("-");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
 
   class MethodInvocation : public UnaryOp
@@ -242,6 +448,10 @@ namespace cmpl
         
         printer.print(")");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
 
   class FieldAccess : public UnaryOp
@@ -254,6 +464,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("." + StringTable::lookupIdentifier(ID));
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
 
   class ArrayAccess : public UnaryOp
@@ -268,6 +482,10 @@ namespace cmpl
         expression->toString(printer);
         printer.print("]");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   
@@ -306,6 +524,10 @@ namespace cmpl
         printer.print(" = ");
         expression2->toString(printer);
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class LogicalOrExpression : public Expression
@@ -322,6 +544,10 @@ namespace cmpl
         printer.print(" || ");
         expression2->toString(printer);
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class LogicalAndExpression : public Expression
@@ -338,6 +564,10 @@ namespace cmpl
         printer.print(" && ");
         expression2->toString(printer);
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class EqualityExpression : public OpExpression
@@ -345,6 +575,10 @@ namespace cmpl
     public:
       EqualityExpression(std::unique_ptr<EqualityOp> &op, std::unique_ptr<Expression> &expression1,
                          std::unique_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
 
   class RelationalExpression : public OpExpression
@@ -352,6 +586,10 @@ namespace cmpl
     public:
       RelationalExpression(std::unique_ptr<RelationalOp> &op, std::unique_ptr<Expression> &expression1,
                            std::unique_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class AdditiveExpression : public OpExpression
@@ -359,6 +597,10 @@ namespace cmpl
     public:
       AdditiveExpression(std::unique_ptr<AddOp> &op, std::unique_ptr<Expression> &expression1,
                          std::unique_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)){ };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class MultiplicativeExpression : public OpExpression
@@ -367,6 +609,10 @@ namespace cmpl
       MultiplicativeExpression(std::unique_ptr<MultOp> &op, std::unique_ptr<Expression> &expression1,
                                std::unique_ptr<Expression> &expression2) : 
                                  OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class CallExpression : public Expression
@@ -392,6 +638,10 @@ namespace cmpl
         
         printer.print(")");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class UnaryLeftExpression : public Expression
@@ -407,6 +657,10 @@ namespace cmpl
         op->toString(printer);
         expression->toString(printer);
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class UnaryRightExpression : public Expression
@@ -422,6 +676,10 @@ namespace cmpl
         expression->toString(printer);
         op->toString(printer);
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class CNull : public Expression
@@ -432,6 +690,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("null");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class CFalse : public Expression
@@ -442,6 +704,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("false");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class CTrue : public Expression
@@ -452,6 +718,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("true");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class CThis : public Expression
@@ -462,6 +732,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("this");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class CIntegerLiteral : public Expression
@@ -474,6 +748,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print(integer);
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class CRef : public Expression
@@ -486,6 +764,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print(StringTable::lookupIdentifier(ID));
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class NewObject : public Expression
@@ -498,6 +780,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.print("new " + StringTable::lookupIdentifier(ID) + "()");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class NewArray : public Expression
@@ -522,6 +808,10 @@ namespace cmpl
           printer.print("[]");
         }
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class Parameter : public Node
@@ -537,6 +827,10 @@ namespace cmpl
         type->toString(printer);
         printer.println(" " + StringTable::lookupIdentifier(ID));
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   
@@ -559,6 +853,10 @@ namespace cmpl
         printer.removeIndent();
         printer.println("}");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class IfStatement : public Statement
@@ -584,6 +882,10 @@ namespace cmpl
           printer.removeIndent();
         }
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class IfElseStatement : public Statement
@@ -622,6 +924,10 @@ namespace cmpl
           printer.removeIndent();
         }
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class ExpressionStatement : public Statement
@@ -636,6 +942,10 @@ namespace cmpl
         expression->toString(printer);
         printer.println(";");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class WhileStatement : public Statement
@@ -660,6 +970,10 @@ namespace cmpl
           printer.removeIndent();
         }
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class ReturnExpressionStatement : public Statement
@@ -675,6 +989,10 @@ namespace cmpl
         expression->toString(printer);
         printer.println(";");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class ReturnStatement : public Statement
@@ -685,6 +1003,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.println("return;");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class EmptyStatement : public Statement
@@ -695,6 +1017,10 @@ namespace cmpl
       void toString(PrettyPrinter &printer) const {
         printer.println(";");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class LocalVariableDeclaration : public BlockStatement
@@ -710,6 +1036,10 @@ namespace cmpl
         type->toString(printer);
         printer.println(" " + StringTable::lookupIdentifier(ID) + ";");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class LocalVariableExpressionDeclaration : public BlockStatement
@@ -730,6 +1060,10 @@ namespace cmpl
         expression->toString(printer);
         printer.println(";");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   
@@ -749,6 +1083,10 @@ namespace cmpl
         type->toString(printer);
         printer.println(" " + StringTable::lookupIdentifier(ID) + ";");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   class Method : public ClassMember
@@ -781,6 +1119,10 @@ namespace cmpl
         printer.print(")");
         block->toString(printer);
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   /** The MainMethod is a ClassMember and therefore part of a ClassDeclaration. The MainMethod element contains two IDs (Method-identifier and parameter-identifier) and a Block (Representation of the method body) */
@@ -798,6 +1140,10 @@ namespace cmpl
         printer.print("public static void " + StringTable::lookupIdentifier(ID) + "(String[] " + StringTable::lookupIdentifier(parameterID) + ")");
         block->toString(printer);
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   /** A ClassDeclaration consists of an ID, which is the identifier for this class and various ClassMembers, like Methods and Fields.  */
@@ -806,7 +1152,11 @@ namespace cmpl
     public:
       StringIdentifier                          ID;
       std::vector<std::unique_ptr<ClassMember>> classMembers;
-      
+      std::map<StringIdentifier, std::weak_ptr<Method>> methods;
+      std::map<StringIdentifier, std::weak_ptr<Field>> fields;
+    
+      bool returns = false;
+    
       ClassDeclaration(StringIdentifier &ID, std::vector<std::unique_ptr<ClassMember>> &classMembers) :
                          ID(ID), classMembers(std::move(classMembers)) { };
       
@@ -880,6 +1230,10 @@ namespace cmpl
         printer.removeIndent();
         printer.println("}");
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
   
   /** Always the first element in the AST. Can contain multiple ClassDeclarations. */	
@@ -904,5 +1258,11 @@ namespace cmpl
           classDeclaration->toString(printer);
         }
       };
+    
+      void accept (Dispatcher& d) override {
+        d.dispatch(*this);
+      }
   };
+  
+  
 }

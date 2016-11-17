@@ -3,6 +3,7 @@
 #include "parser.h"
 #include "stringtable.h"
 #include "token.h"
+#include "checker.h"
 
 #include <iostream>
 #include <fstream>
@@ -106,11 +107,8 @@ int Compiler::semcheck(std::ifstream &file)
     Parser parser(lexer);
     parser.run();
     
-    std::unique_ptr<Node> ast;
-    parser.getAST(ast);
-    
-    // TODO SemChecker semChecker(ast);
-    // TODO semChecker.run();
+    Checker checker(parser);
+    checker.run();
     
     return 0;
   }
