@@ -7,7 +7,7 @@ using namespace cmpl;
 
 void printException(const std::exception e)
 {
-  std::cerr << e.what();
+  std::cerr << "Exception occured: " << e.what();
 }
 
 int main(int argc, char* argv[])

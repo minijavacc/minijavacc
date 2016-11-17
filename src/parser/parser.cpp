@@ -402,6 +402,7 @@ std::unique_ptr<Statement> Parser::parseReturnStatement()
     return std::make_unique<ReturnStatement>();
   } else {
     std::unique_ptr<Expression> expression = parseExpression();
+    
     assureCurrentIsOSKTokenWithType(T_O_SEMICOLON);
     nextToken();
     return std::make_unique<ReturnExpressionStatement>(expression);
@@ -426,22 +427,7 @@ std::unique_ptr<Expression> Parser::parseExpression(unsigned int minPrecedence)
   TokenType tokenType;
   unsigned int currentPrecedence;
   
-  // check for "(" determining subexpression
-  if(isCurrentTokenOSKTokenOfType(T_O_LPAREN))
-  {
-    // parse subexpression
-    nextToken(); // (
-    node = parseExpression();
-    
-    // and check for closing parensis
-    assureCurrentIsOSKTokenWithType(T_O_RPAREN);
-    nextToken();
-  }
-  // otherwise it has to be an UnaryExpression
-  else
-  {
-    node = parseUnaryExpression();
-  }
+  node = parseUnaryExpression();
   
   // precedence climbing
   while (isCurrentTokenOSKTokenOfCategory(binaryOperator, tokenType) && 

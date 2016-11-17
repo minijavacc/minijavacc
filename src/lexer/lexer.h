@@ -23,6 +23,7 @@ namespace cmpl
       
     private:
       inline void insertToken(std::unique_ptr<Token> token);
+      inline std::istream& getNextChar(std::ifstream &inputFile, char& currentChar, unsigned int& line, unsigned int& column);
       inline void error(char currentChar, unsigned int line, unsigned int column);
       
       std::deque<std::unique_ptr<Token>> tokenArray;

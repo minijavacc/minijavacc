@@ -137,7 +137,6 @@ int Compiler::semcheck(std::ifstream &file)
 std::string Compiler::sourcePreview(std::ifstream &file, unsigned int line, unsigned int column)
 {
   std::string src;
-  std::string ptr;
   
   // reset ifstream to start at beginning again
   file.clear();
@@ -147,17 +146,18 @@ std::string Compiler::sourcePreview(std::ifstream &file, unsigned int line, unsi
   {
     getline(file, src);
   }
-  ptr = src;
   
+  /* TODO: implement marker that points to column X
+   * be careful with \t and \r!
   for (unsigned int i = 0; i < src.size(); i++)
   {
     // idea is to take the original string and keep characters like \t and \r
     // otherwise the position would be wrong
     if (i + 1 == column)
       ptr[i] = '^';
-    else
+    else if (ptr[i] > 31 && ptr[i] < 127)
       ptr[i] = ' ';
   }
-  
-  return src + "\n" + ptr;
+  */
+  return std::to_string(line) + ":" + std::to_string(column) + ": " + src;
 }

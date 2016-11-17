@@ -16,27 +16,28 @@ void Lexer::run(std::ifstream &inputFile)
 {
   char currentChar;
   std::string currentTokenString = "";
-  int line = 1;    // lines start with 1
-  int column = -1;  // columns start with 0 (starting with -1 to be at 0 after first get()
+  
+  // line + column get incremented in getNextChar() automatically
+  unsigned int line = 1;    // lines start with 1
+  unsigned int column = 0;  // columns start with 1 (starting with 0 to be at 1 after first get()
   
   if (!inputFile) {
     throw std::invalid_argument("no valid input file given");
   }
   
   // process each character of the stream
-  while(inputFile.get(currentChar))
+  while(getNextChar(inputFile, currentChar, line, column))
   {
     // states of the state machine have labels starting with 's_'
     
     s_0:
-    ++column;
     switch (currentChar)
     {
       // integer
       case '1'...'9':
         // continue in state machine
         currentTokenString += currentChar;
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           insertToken(std::make_unique<IntegerLiteralToken>(currentTokenString, line, column));
           goto s_eof;
         }
@@ -49,7 +50,7 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -57,7 +58,7 @@ void Lexer::run(std::ifstream &inputFile)
       case '!':
         // continue in state machine
         currentTokenString += currentChar;
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_EXCLM, line, column));
           goto s_eof;
         }
@@ -68,7 +69,7 @@ void Lexer::run(std::ifstream &inputFile)
         
         // begin next token
         currentTokenString = "";
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -78,7 +79,7 @@ void Lexer::run(std::ifstream &inputFile)
         
         // begin next token
         currentTokenString = "";
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -86,7 +87,7 @@ void Lexer::run(std::ifstream &inputFile)
       case '/':
         // continue in state machine
         currentTokenString += currentChar;
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_SLASH, line, column));
           goto s_eof;
         }
@@ -95,7 +96,7 @@ void Lexer::run(std::ifstream &inputFile)
       case '*':
         // continue in state machine
         currentTokenString += currentChar;
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_STAR, line, column));
           goto s_eof;
         }
@@ -104,7 +105,7 @@ void Lexer::run(std::ifstream &inputFile)
       case '+':
         // continue in state machine
         currentTokenString += currentChar;
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PLUS, line, column));
           goto s_eof;
         }
@@ -115,7 +116,7 @@ void Lexer::run(std::ifstream &inputFile)
         
         // begin next token
         currentTokenString = "";
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -123,7 +124,7 @@ void Lexer::run(std::ifstream &inputFile)
       case '-':
         // continue in state machine
         currentTokenString += currentChar;
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MINUS, line, column));
           goto s_eof;
         }
@@ -134,7 +135,7 @@ void Lexer::run(std::ifstream &inputFile)
         
         // begin next token
         currentTokenString = "";
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -144,7 +145,7 @@ void Lexer::run(std::ifstream &inputFile)
         
         // begin next token
         currentTokenString = "";
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -154,7 +155,7 @@ void Lexer::run(std::ifstream &inputFile)
         
         // begin next token
         currentTokenString = "";
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -162,7 +163,7 @@ void Lexer::run(std::ifstream &inputFile)
       case '<':
         // continue in state machine
         currentTokenString += currentChar;
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LESS, line, column));
           goto s_eof;
         }
@@ -171,7 +172,7 @@ void Lexer::run(std::ifstream &inputFile)
       case '=':
         // continue in state machine
         currentTokenString += currentChar;
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_EQUAL, line, column));
           goto s_eof;
         }
@@ -180,7 +181,7 @@ void Lexer::run(std::ifstream &inputFile)
       case '>':
         // continue in state machine
         currentTokenString += currentChar;
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_more_1;
@@ -190,7 +191,7 @@ void Lexer::run(std::ifstream &inputFile)
         
         // begin next token
         currentTokenString = "";
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -198,7 +199,7 @@ void Lexer::run(std::ifstream &inputFile)
       case '%':
         // continue in state machine
         currentTokenString += currentChar;
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PERCENT, line, column));
           goto s_eof;
         }
@@ -207,7 +208,7 @@ void Lexer::run(std::ifstream &inputFile)
       case '&':
         // continue in state machine
         currentTokenString += currentChar;
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_AND, line, column));
           goto s_eof;
         }
@@ -218,7 +219,7 @@ void Lexer::run(std::ifstream &inputFile)
         
         // begin next token
         currentTokenString = "";
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -228,7 +229,7 @@ void Lexer::run(std::ifstream &inputFile)
         
         // begin next token
         currentTokenString = "";
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -236,7 +237,7 @@ void Lexer::run(std::ifstream &inputFile)
       case '^':
         // continue in state machine
         currentTokenString += currentChar;
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_CARET, line, column));
           goto s_eof;
         }
@@ -247,7 +248,7 @@ void Lexer::run(std::ifstream &inputFile)
         
         // begin next token
         currentTokenString = "";
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -257,7 +258,7 @@ void Lexer::run(std::ifstream &inputFile)
         
         // begin next token
         currentTokenString = "";
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -267,7 +268,7 @@ void Lexer::run(std::ifstream &inputFile)
         
         // begin next token
         currentTokenString = "";
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -275,7 +276,7 @@ void Lexer::run(std::ifstream &inputFile)
       case '|':
         // continue in state machine
         currentTokenString += currentChar;
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_PIPE, line, column));
           goto s_eof;
         }
@@ -283,14 +284,12 @@ void Lexer::run(std::ifstream &inputFile)
       
       // white spaces
       case '\n':
-        line++;
-        column = 0;
       case ' ':
       case '\0':
       case '\r':
       case '\t':
         // skip this character
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -301,7 +300,7 @@ void Lexer::run(std::ifstream &inputFile)
       case '_':
         // continue in state machine
         currentTokenString += currentChar;
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           auto token = StringTable::insertString(currentTokenString, line, column);
           insertToken(std::move(token));
           goto s_eof;
@@ -313,14 +312,13 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_int:
-    ++column;
     switch (currentChar)
     {
       // integer
       case '0'...'9':
         // continue in state machine
         currentTokenString += currentChar;
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_int;
@@ -334,7 +332,6 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_str:
-    ++column;
     switch (currentChar)
     {
       case 'a'...'z':
@@ -343,7 +340,7 @@ void Lexer::run(std::ifstream &inputFile)
       case '0'...'9':
         // continue in state machine
         currentTokenString += currentChar;
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           auto token = StringTable::insertString(currentTokenString, line, column);
           insertToken(std::move(token));
           goto s_eof;
@@ -362,7 +359,6 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_excl:
-    ++column;
     switch (currentChar)
     {
       case '=':
@@ -371,7 +367,7 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -386,7 +382,6 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_star:
-    ++column;
     switch (currentChar)
     {
       case '=':
@@ -395,7 +390,7 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -410,7 +405,6 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_plus:
-    ++column;
     switch (currentChar)
     {
       case '=':
@@ -419,7 +413,7 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -430,7 +424,7 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -445,7 +439,6 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_minus:
-    ++column;
     switch (currentChar)
     {
       case '=':
@@ -454,7 +447,7 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -465,7 +458,7 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -480,13 +473,12 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_less_1:
-    ++column;
     switch (currentChar)
     {
       case '<':
         // continue in state machine
         currentTokenString += currentChar;
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_LESS_LESS, line, column));
           goto s_eof;
         }
@@ -498,7 +490,7 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -513,7 +505,6 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_less_2:
-    ++column;
     switch (currentChar)
     {
       case '=':
@@ -522,7 +513,7 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -537,7 +528,6 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_equal:
-    ++column;
     switch (currentChar)
     {
       case '=':
@@ -546,7 +536,7 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -561,13 +551,12 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_more_1:
-    ++column;
     switch (currentChar)
     {
       case '>':
         // continue in state machine
         currentTokenString += currentChar;
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_MORE, line, column));
           goto s_eof;
         }
@@ -579,7 +568,7 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -594,13 +583,12 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_more_2:
-    ++column;
     switch (currentChar)
     {
       case '>':
         // continue in state machine
         currentTokenString += currentChar;
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           insertToken(std::make_unique<OperatorSeperatorKeywordToken>(T_O_MORE_MORE_MORE, line, column));
           goto s_eof;
         }
@@ -612,7 +600,7 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -627,7 +615,6 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_more_3:
-    ++column;
     switch (currentChar)
     {
       case '=':
@@ -636,7 +623,7 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -651,7 +638,6 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_slash:
-    ++column;
     switch (currentChar)
     {
       case '=':
@@ -660,7 +646,7 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -668,7 +654,7 @@ void Lexer::run(std::ifstream &inputFile)
       // found begin of comment
       case '*':
         // continue in state machine
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           error(currentChar, line, column);
         }
         goto s_comment_1;
@@ -683,26 +669,24 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_comment_1:
-    ++column;
     switch (currentChar)
     {
       case '*':
         // continue in state machine
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           error(currentChar, line, column);
         }
         goto s_comment_2;
       
       default:
         // continue in state machine
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           error(currentChar, line, column);
         }
         goto s_comment_1;
     }
     
     s_comment_2:
-    ++column;
     switch (currentChar)
     {
       case '/':
@@ -711,14 +695,14 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
       
       case '*':
         // continue in state machine
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           error(currentChar, line, column);
         }
         goto s_comment_2;
@@ -726,14 +710,13 @@ void Lexer::run(std::ifstream &inputFile)
       // comment did not end -> continue as comment
       default:
         // continue in state machine
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           error(currentChar, line, column);
         }
         goto s_comment_1;
     }
     
     s_percent:
-    ++column;
     switch (currentChar)
     {
       case '=':
@@ -742,7 +725,7 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -757,7 +740,6 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_and:
-    ++column;
     switch (currentChar)
     {
       case '=':
@@ -766,7 +748,7 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -777,7 +759,7 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -792,7 +774,6 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_caret:
-    ++column;
     switch (currentChar)
     {
       case '=':
@@ -801,7 +782,7 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -816,7 +797,6 @@ void Lexer::run(std::ifstream &inputFile)
     }
     
     s_pipe:
-    ++column;
     switch (currentChar)
     {
       case '=':
@@ -825,7 +805,7 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -836,7 +816,7 @@ void Lexer::run(std::ifstream &inputFile)
         // begin next token
         currentTokenString = "";
         
-        if (!inputFile.get(currentChar)) {
+        if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
         }
         goto s_0;
@@ -912,4 +892,19 @@ inline void Lexer::error(char currentChar, unsigned int line, unsigned int colum
   }
   
   throw SyntaxError(msg.c_str(), line, column);
+}
+
+inline std::istream& Lexer::getNextChar(std::ifstream &inputFile, char& currentChar, unsigned int& line, unsigned int& column)
+{
+  std::istream& ret = inputFile.get(currentChar);
+  
+  if (currentChar == '\n')
+  {
+    column = 1;
+    line++;
+  }
+  else
+    column++;
+  
+  return ret;
 }
