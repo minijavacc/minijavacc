@@ -4,6 +4,7 @@
 #include "stringtable.h"
 #include "token.h"
 #include "checker.h"
+#include "prettyprinter.h"
 
 #include <iostream>
 #include <fstream>
@@ -82,7 +83,7 @@ int Compiler::printast(std::ifstream &file)
     parser.getAST(ast);
     
     PrettyPrinter printer(std::cout);
-    ast->toString(printer);
+    ast->accept(printer);
   
     return 0;
   }
