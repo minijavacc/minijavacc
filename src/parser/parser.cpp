@@ -7,7 +7,7 @@ using namespace cmpl;
 
 inline void Parser::error(const std::string &err)
 {
-  throw SemanticError(std::to_string(currentToken->line) + " " + std::to_string(currentToken->column) + ": " + err);
+  throw ParserError(err, currentToken->line, currentToken->column);
 }
 
 // if token array of lexer is empty (method returns false) throw semanticError for now,

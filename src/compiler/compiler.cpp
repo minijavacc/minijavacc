@@ -5,6 +5,7 @@
 #include "token.h"
 
 #include <iostream>
+#include <istream>
 #include <fstream>
 #include <string>
 
@@ -41,6 +42,7 @@ int Compiler::lextest(std::ifstream &file)
   catch (SyntaxError &e) 
   {
     std::cerr << "syntax error: " << e.what() << "\n";
+    std::cerr << sourcePreview(file, e.line, e.column) << "\n";
     return 1;
   }
 }
@@ -59,11 +61,13 @@ int Compiler::parsetest(std::ifstream &file)
   catch (SyntaxError &e) 
   {
     std::cerr << "syntax error: " << e.what() << "\n";
+    std::cerr << sourcePreview(file, e.line, e.column) << "\n";
     return 1;
   }
-  catch (SemanticError &e) 
+  catch (ParserError &e) 
   {
-    std::cerr << "semantic error: " << e.what() << "\n";
+    std::cerr << "parser error: " << e.what() << "\n";
+    std::cerr << sourcePreview(file, e.line, e.column) << "\n";
     return 1;
   }
 }
@@ -88,11 +92,13 @@ int Compiler::printast(std::ifstream &file)
   catch (SyntaxError &e) 
   {
     std::cerr << "syntax error: " << e.what() << "\n";
+    std::cerr << sourcePreview(file, e.line, e.column) << "\n";
     return 1;
   }
-  catch (SemanticError &e) 
+  catch (ParserError &e) 
   {
-    std::cerr << "semantic error: " << e.what() << "\n";
+    std::cerr << "parser error: " << e.what() << "\n";
+    std::cerr << sourcePreview(file, e.line, e.column) << "\n";
     return 1;
   }
 }
@@ -117,21 +123,41 @@ int Compiler::semcheck(std::ifstream &file)
   catch (SyntaxError &e) 
   {
     std::cerr << "syntax error: " << e.what() << "\n";
+    std::cerr << sourcePreview(file, e.line, e.column) << "\n";
     return 1;
   }
-  catch (SemanticError &e) 
+  catch (ParserError &e) 
   {
-    std::cerr << "semantic error: " << e.what() << "\n";
+    std::cerr << "parser error: " << e.what() << "\n";
+    std::cerr << sourcePreview(file, e.line, e.column) << "\n";
     return 1;
   }
 }
 
-void Compiler::output(std::string msg)
+std::string Compiler::sourcePreview(std::ifstream &file, unsigned int line, unsigned int column)
 {
-  std::cout << msg << "\n";
-}
-
-void Compiler::error(std::string msg)
-{
-  std::cerr << msg << "\n";
+  std::string src;
+  std::string ptr;
+  
+  // reset ifstream to start at beginning again
+  file.clear();
+  file.seekg(0, std::ios::beg);
+  
+  for (unsigned int i = 0; i < line; i++)
+  {
+    getline(file, src);
+  }
+  ptr = src;
+  
+  for (unsigned int i = 0; i < src.size(); i++)
+  {
+    // idea is to take the original string and keep characters like \t and \r
+    // otherwise the position would be wrong
+    if (i + 1 == column)
+      ptr[i] = '^';
+    else
+      ptr[i] = ' ';
+  }
+  
+  return src + "\n" + ptr;
 }

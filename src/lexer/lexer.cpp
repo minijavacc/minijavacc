@@ -17,7 +17,7 @@ void Lexer::run(std::ifstream &inputFile)
   char currentChar;
   std::string currentTokenString = "";
   int line = 1;    // lines start with 1
-  int column = 0;  // columns start with 0
+  int column = -1;  // columns start with 0 (starting with -1 to be at 0 after first get()
   
   if (!inputFile) {
     throw std::invalid_argument("no valid input file given");
@@ -286,6 +286,7 @@ void Lexer::run(std::ifstream &inputFile)
         line++;
         column = 0;
       case ' ':
+      case '\0':
       case '\r':
       case '\t':
         // skip this character
@@ -308,7 +309,7 @@ void Lexer::run(std::ifstream &inputFile)
         goto s_str;
       
       default:
-        throw SyntaxError();
+        error(currentChar, line, column);
     }
     
     s_int:
@@ -668,7 +669,7 @@ void Lexer::run(std::ifstream &inputFile)
       case '*':
         // continue in state machine
         if (!inputFile.get(currentChar)) {
-          throw SyntaxError();
+          error(currentChar, line, column);
         }
         goto s_comment_1;
       
@@ -688,14 +689,14 @@ void Lexer::run(std::ifstream &inputFile)
       case '*':
         // continue in state machine
         if (!inputFile.get(currentChar)) {
-          throw SyntaxError();
+          error(currentChar, line, column);
         }
         goto s_comment_2;
       
       default:
         // continue in state machine
         if (!inputFile.get(currentChar)) {
-          throw SyntaxError();
+          error(currentChar, line, column);
         }
         goto s_comment_1;
     }
@@ -718,7 +719,7 @@ void Lexer::run(std::ifstream &inputFile)
       case '*':
         // continue in state machine
         if (!inputFile.get(currentChar)) {
-          throw SyntaxError();
+          error(currentChar, line, column);
         }
         goto s_comment_2;
       
@@ -726,7 +727,7 @@ void Lexer::run(std::ifstream &inputFile)
       default:
         // continue in state machine
         if (!inputFile.get(currentChar)) {
-          throw SyntaxError();
+          error(currentChar, line, column);
         }
         goto s_comment_1;
     }
@@ -893,3 +894,22 @@ bool Lexer:: hasNextToken() const
   return !tokenArray.empty();
 }
 
+inline void Lexer::error(char currentChar, unsigned int line, unsigned int column)
+{
+  std::string msg = "at character ";
+  
+  if (currentChar > 31 && currentChar < 127)
+  {
+    msg += "'";
+    msg += currentChar;
+    msg += "'";
+  }
+  else
+  {
+    msg += "[ASCII ";
+    msg += std::to_string((int) currentChar);
+    msg += "]";
+  }
+  
+  throw SyntaxError(msg.c_str(), line, column);
+}

@@ -23,10 +23,18 @@ namespace cmpl
       
     private:
       inline void insertToken(std::unique_ptr<Token> token);
+      inline void error(char currentChar, unsigned int line, unsigned int column);
       
       std::deque<std::unique_ptr<Token>> tokenArray;
   };
   
-  class SyntaxError : public std::exception {};
+  class SyntaxError : public std::runtime_error
+  {
+    public:
+      SyntaxError(const std::string& err, unsigned int line, unsigned int column)
+        : std::runtime_error(err), line(line), column(column) { }
+      unsigned int line;
+      unsigned int column;
+  };
 
 }

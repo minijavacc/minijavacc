@@ -70,10 +70,13 @@ namespace cmpl
 
   };
   
-  class SemanticError : public std::runtime_error
+  class ParserError : public std::runtime_error
   {
     public:
-      SemanticError(const std::string& err) : std::runtime_error(err) { }
+      ParserError(const std::string& err, unsigned int line, unsigned int column)
+        : std::runtime_error(err), line(line), column(column) { }
+      unsigned int line;
+      unsigned int column;
   };
 
 }
