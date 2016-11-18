@@ -21,13 +21,10 @@ void MethodFieldCollector::dispatch(std::shared_ptr<Program> n) {
 };
 
 void MethodFieldCollector::dispatch(std::shared_ptr<ClassDeclaration> n) {
+  currentClassDeclaration = n;
   for (auto const& c : n->classMembers) {
-    currentClassDeclaration = n;
     c->accept(shared_from_this());
   }
-  
-  std::cout << "num fields: " << n->fields.size();
-  std::cout << "num methods: " << n->methods.size();
 };
 
 void MethodFieldCollector::dispatch(std::shared_ptr<Field> n) {
