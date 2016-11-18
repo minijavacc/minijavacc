@@ -64,6 +64,7 @@ void PrettyPrinter::dispatch(std::shared_ptr<MainMethod> n) {
 };
 
 void PrettyPrinter::dispatch(std::shared_ptr<Field> n) {
+  print("public ");
   n->type->accept(shared_from_this());
   println(" " + StringTable::lookupIdentifier(n->ID) + ";");
 };
