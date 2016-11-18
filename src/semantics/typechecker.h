@@ -1,9 +1,14 @@
 //
-//  typechecker.hpp
-//  mjcc
-//
-//  Created by Markus Schlegel on 18/11/16.
-//  Copyright © 2016 Markus Schlegel. All rights reserved.
+//  Type Checker
+//  Der Type Checker macht die komplette Typanalyse. Das ist möglich, weil der
+//  Static Resolver vorher alle UserTypes aufgelöst hat. Der Type Checker muss
+//  jeder auftretenden Expression einen Typ zuweisen. Danach wird geschaut, ob
+//  die entsprechenden Typen im jeweiligen Kontext (z.B. "if (e) {...}", hier darf
+//  e nur vom Typ boolean sein) gültig sind. Beachtenswert sind AssignmentExpression,
+//  weil hier auf der linken Seite nur LValues stehen dürfen. LValues sind:
+//  * CRef
+//  * ArrayAccess
+//  * FieldAccess
 //
 
 #pragma once

@@ -1,9 +1,13 @@
 //
-//  staticresolver.h
-//  mjcc
-//
-//  Created by Markus Schlegel on 17/11/16.
-//  Copyright © 2016 Markus Schlegel. All rights reserved.
+//  Static Resolver
+//  Der Static Resolver löst alle Verwender vom AST-Typ CRef und UserType auf
+//  "Static" deshalb, weil für CRef und UserType keine vorhergehende Typanalyse notwendig ist
+//  Benötigt einen Durchlauf des Static Declarations Collector als Voraussetzung.
+//  Ist Voraussetzung für eine ausführliche Typanalyse, weil für diese alle UserTypes
+//  aufgelöst sein müssen.
+//  Es wäre möglich, hier auch CallExpression zu behandeln. Wegen Konsistenz würde ich das
+//  aber erst in einem späteren Schritt zusammen mit MethodInvocation und FieldAccess
+//  (die beide eine vorhergehende Typanalyse brauchen) erledigen.
 //
 
 #pragma once

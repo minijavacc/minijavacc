@@ -1,9 +1,9 @@
 //
-//  returnchecker.hpp
-//  mjcc
+//  Return Checker
+//  Einfachste semantische Überprüfung und gut als Einstieg:
+//  Es wird für jede Methode, die nicht void zurückgibt
+//  geprüft, ob auf allen Pfaden durch den Code ein return steht.
 //
-//  Created by Markus Schlegel on 17/11/16.
-//  Copyright © 2016 Markus Schlegel. All rights reserved.
 //
 
 #pragma once

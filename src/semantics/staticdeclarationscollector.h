@@ -1,9 +1,12 @@
 //
-//  staticdeclarationscollector.h
-//  mjcc
-//
-//  Created by Markus Schlegel on 17/11/16.
-//  Copyright © 2016 Markus Schlegel. All rights reserved.
+//  Static Declarations Collector
+//  Sammelt alle statisch bekannten Deklarationen
+//  Methoden werden im ClassDeclarations node in einen Vektor methods zusammengefasst
+//  Felder werden im ClassDeclarations node in einen Vektor fields zusammengefasst
+//  Methodenparameter werden im Method node in einen Vektor parameterMap zusammengefasst
+//  Insbesondere der letzte Punkte ließe sich auch gut während des AST-Aufbaus umsetzen.
+//  Das kann gerne geändert werden.
+//  Ein Durchlauf des Static Declarations Collector ist Vorraussetzung für den Static Resolver
 //
 
 #pragma once
