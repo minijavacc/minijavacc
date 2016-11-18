@@ -4,6 +4,8 @@
 #include <string>
 #include <memory>
 
+#include "token.h"
+
 namespace cmpl
 {
   
@@ -13,11 +15,11 @@ namespace cmpl
   
   class Scope {
     public:
-      std::unique_ptr<std::map<std::string, std::weak_ptr<Declaration> > > declarations;
+      std::unique_ptr<std::map<StringIdentifier, std::weak_ptr<Declaration> > > declarations;
       std::shared_ptr<Scope> parent;
       Scope(std::shared_ptr<Scope> p);
-      std::weak_ptr<Declaration> lookup(std::string name);
-      void insert(std::string name, std::weak_ptr<Declaration> decl);
+      std::weak_ptr<Declaration> lookup(StringIdentifier name);
+      void insert(StringIdentifier name, std::weak_ptr<Declaration> decl);
   };
   
   
@@ -26,9 +28,9 @@ namespace cmpl
     public:
       void enterScope();
       void leaveScope();
-      void insert(std::string name, std::weak_ptr<Declaration> decl);
-      std::weak_ptr<Declaration> lookup(std::string name);
-      bool isDefinedInCurrentScope(std::string name);
+      void insert(StringIdentifier name, std::weak_ptr<Declaration> decl);
+      std::weak_ptr<Declaration> lookup(StringIdentifier name);
+      bool isDefinedInCurrentScope(StringIdentifier name);
       SymbolTable() : current(nullptr) {}
       
     private:

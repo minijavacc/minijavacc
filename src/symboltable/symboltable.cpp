@@ -15,7 +15,7 @@ using namespace cmpl;
 
 // --- Scope ---
 
-std::weak_ptr<Declaration> Scope::lookup(std::string name) {
+std::weak_ptr<Declaration> Scope::lookup(StringIdentifier name) {
   if (declarations->count(name) > 0) {
     return declarations->at(name);
   } else {
@@ -28,9 +28,9 @@ std::weak_ptr<Declaration> Scope::lookup(std::string name) {
 }
 
 Scope::Scope(std::shared_ptr<Scope> p) : parent(p), 
-                                         declarations(new std::map<std::string, std::weak_ptr<Declaration> >()) { }
+                                         declarations(new std::map<StringIdentifier, std::weak_ptr<Declaration> >()) { }
 
-void Scope::insert(std::string name, std::weak_ptr<Declaration> decl) {
+void Scope::insert(StringIdentifier name, std::weak_ptr<Declaration> decl) {
   (*declarations)[name] = decl;
 }
 
@@ -49,7 +49,7 @@ void SymbolTable::leaveScope() {
   }
 }
 
-std::weak_ptr<Declaration> SymbolTable::lookup(std::string name) {
+std::weak_ptr<Declaration> SymbolTable::lookup(StringIdentifier name) {
   if (current) {
     return current->lookup(name);
   } else {
@@ -57,11 +57,11 @@ std::weak_ptr<Declaration> SymbolTable::lookup(std::string name) {
   }
 }
 
-bool SymbolTable::isDefinedInCurrentScope(std::string name) {
+bool SymbolTable::isDefinedInCurrentScope(StringIdentifier name) {
   return current->declarations->count(name) > 0;
 }
 
-void SymbolTable::insert(std::string name, std::weak_ptr<Declaration> decl) {
+void SymbolTable::insert(StringIdentifier name, std::weak_ptr<Declaration> decl) {
   if (current) {
     current->insert(name, decl);
   }
