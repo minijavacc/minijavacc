@@ -1,23 +1,22 @@
 #pragma once
 
-// forward declarations
-namespace cmpl
-{
-  class SemanticType;
-}
+#include "node.h"
 
-#include <map>
-#include <memory>
+
 
 namespace cmpl
 {
   
   class SemanticType
   {
-    public:
-      
-    private:
-      SemanticType() { };
+  public:
+    bool isLValue = false;
+    std::shared_ptr<Type> astType;
+    bool isValidSemanticType(); // Semantic types type expressions, expressions cannot be void
+    
+    
+  private:
+    SemanticType(std::weak_ptr<Type> t) : astType(t) { };
   };
 
 }

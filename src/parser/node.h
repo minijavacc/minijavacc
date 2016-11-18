@@ -13,6 +13,8 @@ namespace cmpl
   
   class Dispatcher;
   
+  class SemanticType;
+  
   class Type;
   class UserType;
   class TypeInt;
@@ -137,9 +139,9 @@ namespace cmpl
   
 /**************** actual nodes ****************/
 
-  class BasicType      : public Node           { public: bool isVoid = false; };
+  class BasicType      : public Node           { public: bool virtual equals(std::shared_ptr<BasicType> t) = 0; };
   class ClassMember    : public Node           { public: bool returns = false; };
-  class Expression     : public Node           { public: };
+  class Expression     : public Node           { public: std::shared_ptr<SemanticType> type; };
   class BlockStatement : public Node           { public: bool returns = false; };
   class Statement      : public BlockStatement { public: };
   class Op             : public Node           { public: };
@@ -155,13 +157,15 @@ namespace cmpl
       std::shared_ptr<BasicType> type;
       int                        arrayDepth;
       
-      Type(std::shared_ptr<BasicType> &type, int &arrayDepth) : type(std::move(type)), arrayDepth(arrayDepth) { };
+      Type(std::shared_ptr<BasicType> const& type, int const& arrayDepth) : type(std::move(type)), arrayDepth(arrayDepth) { };
     
       void accept (std::shared_ptr<Dispatcher> d) override {
         d->dispatch(shared_from_this());
       }
     
-      bool isVoid = false;
+      bool equals(std::shared_ptr<Type> t) {
+        return shared_from_this()->arrayDepth == t->arrayDepth && shared_from_this()->type->equals(t->type);
+      }
   };
   
   class TypeInt : public BasicType, public std::enable_shared_from_this<TypeInt>
@@ -171,6 +175,14 @@ namespace cmpl
     
       void accept (std::shared_ptr<Dispatcher> d) override {
         d->dispatch(shared_from_this());
+      }
+    
+      bool equals(std::shared_ptr<BasicType> t) override {
+        if (dynamic_cast<TypeInt*>(t.get())) {
+          return true;
+        } else {
+          return false;
+        }
       }
   };
   
@@ -182,6 +194,14 @@ namespace cmpl
       void accept (std::shared_ptr<Dispatcher> d) override {
         d->dispatch(shared_from_this());
       }
+    
+    bool equals(std::shared_ptr<BasicType> t) override {
+      if (dynamic_cast<TypeBoolean*>(t.get())) {
+        return true;
+      } else {
+        return false;
+      }
+    }
   };
   
   class TypeVoid : public BasicType, public std::enable_shared_from_this<TypeVoid>
@@ -192,6 +212,14 @@ namespace cmpl
       void accept (std::shared_ptr<Dispatcher> d) override {
         d->dispatch(shared_from_this());
       }
+    
+    bool equals(std::shared_ptr<BasicType> t) override {
+      if (dynamic_cast<TypeVoid*>(t.get())) {
+        return true;
+      } else {
+        return false;
+      }
+    }
   };
   
   class UserType : public BasicType, public std::enable_shared_from_this<UserType>
@@ -205,6 +233,18 @@ namespace cmpl
       void accept (std::shared_ptr<Dispatcher> d) override {
         d->dispatch(shared_from_this());
       }
+    
+    bool equals(std::shared_ptr<BasicType> other) override {
+      if (UserType* ut = dynamic_cast<UserType*>(other.get())) {
+        return ID == ut->ID;
+      } else {
+        return false;
+      }
+    }
+    
+    bool operator!= (std::shared_ptr<UserType> t) {
+      return !(shared_from_this() == t);
+    }
   };
 
   class NotEquals : public EqualityOp, public std::enable_shared_from_this<NotEquals>

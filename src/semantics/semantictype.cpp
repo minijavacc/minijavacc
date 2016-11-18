@@ -1,7 +1,11 @@
 #include "SemanticType.h"
 
-#include <map>
-#include <string>
-#include <memory>
-
 using namespace cmpl;
+
+bool SemanticType::isValidSemanticType() {
+  if (TypeVoid *v = dynamic_cast<TypeVoid*>(astType->type.get())) {
+    return true;
+  } else {
+    return false;
+  }
+}

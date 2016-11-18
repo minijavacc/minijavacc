@@ -12,6 +12,11 @@
 using namespace cmpl;
 
 
+std::shared_ptr<Type> voidNode() {
+  return std::make_shared<Type>(std::make_shared<TypeVoid>(), 0);
+}
+
+
   
 void ReturnChecker::dispatch(std::shared_ptr<Program> n) {
   valid = true;
@@ -44,8 +49,8 @@ void ReturnChecker::dispatch(std::shared_ptr<Field> n) { n->returns = true; };
 // a) has return type void
 // b) the implementation block returns
 void ReturnChecker::dispatch(std::shared_ptr<Method> n) {
-  n->type->accept(shared_from_this()); // sets isVoid
-  if (!n->type->isVoid) {
+  n->type->accept(shared_from_this());
+  if (!n->type->equals(voidNode())) {
     n->block->accept(shared_from_this()); // sets returns
     n->returns = n->block->returns; // propagate upwards
   } else {
@@ -55,17 +60,12 @@ void ReturnChecker::dispatch(std::shared_ptr<Method> n) {
 
 void ReturnChecker::dispatch(std::shared_ptr<Type> n) {
   n->type->accept(shared_from_this());
-  n->isVoid = n->type->isVoid;
-  
 };
 
 void ReturnChecker::dispatch(std::shared_ptr<UserType> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<TypeInt> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<TypeBoolean> n) { };
-
-void ReturnChecker::dispatch(std::shared_ptr<TypeVoid> n) {
-  n->isVoid = true;
-};
+void ReturnChecker::dispatch(std::shared_ptr<TypeVoid> n) { };
 
 void ReturnChecker::dispatch(std::shared_ptr<Parameter> n) { };
 
