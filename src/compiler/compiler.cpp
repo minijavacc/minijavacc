@@ -79,10 +79,9 @@ int Compiler::printast(std::ifstream &file)
     Parser parser(lexer);
     parser.run();
     
-    std::unique_ptr<Node> ast;
-    parser.getAST(ast);
+    std::shared_ptr<Node> ast = parser.getAST();
     
-    PrettyPrinter printer(std::cout);
+    std::shared_ptr<PrettyPrinter> printer(new PrettyPrinter(std::cout));
     ast->accept(printer);
   
     return 0;

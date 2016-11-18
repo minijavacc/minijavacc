@@ -39,358 +39,358 @@ std::ostream& PrettyPrinter::getStream()
 
 
 
-void PrettyPrinter::dispatch(Program &n) {
-  for(auto const& classDeclaration : n.classDeclarations) {
-    classDeclaration->accept(*this);
+void PrettyPrinter::dispatch(std::shared_ptr<Program> n) {
+  for(auto const& classDeclaration : n->classDeclarations) {
+    classDeclaration->accept(shared_from_this());
   }
 };
 
-void PrettyPrinter::dispatch(ClassDeclaration &n) {
-  println("class "+ StringTable::lookupIdentifier(n.ID) + " {");
+void PrettyPrinter::dispatch(std::shared_ptr<ClassDeclaration> n) {
+  println("class "+ StringTable::lookupIdentifier(n->ID) + " {");
 
   addIndent();
   
-  for(auto const& classMember : n.classMembers) {
-    classMember->accept(*this);
+  for(auto const& classMember : n->classMembers) {
+    classMember->accept(shared_from_this());
   }
   
   removeIndent();
   println("}");
 };
 
-void PrettyPrinter::dispatch(MainMethod &n) {
-  print("public static void " + StringTable::lookupIdentifier(n.ID) + "(String[] " + StringTable::lookupIdentifier(n.parameterID) + ")");
-  n.block->accept(*this);
+void PrettyPrinter::dispatch(std::shared_ptr<MainMethod> n) {
+  print("public static void " + StringTable::lookupIdentifier(n->ID) + "(String[] " + StringTable::lookupIdentifier(n->parameterID) + ")");
+  n->block->accept(shared_from_this());
 };
 
-void PrettyPrinter::dispatch(Field &n) {
-  n.type->accept(*this);
-  println(" " + StringTable::lookupIdentifier(n.ID) + ";");
+void PrettyPrinter::dispatch(std::shared_ptr<Field> n) {
+  n->type->accept(shared_from_this());
+  println(" " + StringTable::lookupIdentifier(n->ID) + ";");
 };
 
-void PrettyPrinter::dispatch(Method &n) {
+void PrettyPrinter::dispatch(std::shared_ptr<Method> n) {
   print("public ");
-  n.type->accept(*this);
+  n->type->accept(shared_from_this());
   print(" ");
-  print(StringTable::lookupIdentifier(n.ID) + "(");
+  print(StringTable::lookupIdentifier(n->ID) + "(");
   
   bool continous = false;
-  for(auto const& parameter:n.parameters) {
+  for(auto const& parameter:n->parameters) {
     if(continous) {
       print(", ");
     }
-    parameter->accept(*this);
+    parameter->accept(shared_from_this());
     continous = true;
   }
   
   print(")");
-  n.block->accept(*this);
+  n->block->accept(shared_from_this());
 };
 
-void PrettyPrinter::dispatch(Type &n) {
-  n.type->accept(*this);
-  for(int i=0; i<n.arrayDepth; i++) {
+void PrettyPrinter::dispatch(std::shared_ptr<Type> n) {
+  n->type->accept(shared_from_this());
+  for(int i=0; i<n->arrayDepth; i++) {
     print("[]");
   }
 };
 
-void PrettyPrinter::dispatch(UserType &n) {
-  print(StringTable::lookupIdentifier(n.ID));
+void PrettyPrinter::dispatch(std::shared_ptr<UserType> n) {
+  print(StringTable::lookupIdentifier(n->ID));
 };
 
-void PrettyPrinter::dispatch(TypeInt &n) {
+void PrettyPrinter::dispatch(std::shared_ptr<TypeInt> n) {
   print("int");
 };
 
-void PrettyPrinter::dispatch(TypeBoolean &n) {
+void PrettyPrinter::dispatch(std::shared_ptr<TypeBoolean> n) {
   print("boolean");
 };
 
-void PrettyPrinter::dispatch(TypeVoid &n) {
+void PrettyPrinter::dispatch(std::shared_ptr<TypeVoid> n) {
   print("void");
 };
 
-void PrettyPrinter::dispatch(Parameter &n) {
-  n.type->accept(*this);
-  println(" " + StringTable::lookupIdentifier(n.ID));
+void PrettyPrinter::dispatch(std::shared_ptr<Parameter> n) {
+  n->type->accept(shared_from_this());
+  println(" " + StringTable::lookupIdentifier(n->ID));
 };
 
-void PrettyPrinter::dispatch(Block &n) {
+void PrettyPrinter::dispatch(std::shared_ptr<Block> n) {
   println("{");
   addIndent();
-  for(auto const& statement : n.statements) {
-    statement->accept(*this);
+  for(auto const& statement : n->statements) {
+    statement->accept(shared_from_this());
   }
   removeIndent();
   println("}");
 };
 
-void PrettyPrinter::dispatch(IfStatement &n) {
+void PrettyPrinter::dispatch(std::shared_ptr<IfStatement> n) {
   print("if (");
-  n.expression->accept(*this);
+  n->expression->accept(shared_from_this());
   
-  if(dynamic_cast<Block*>(n.ifStatement.get())) {
+  if(dynamic_cast<Block*>(n->ifStatement.get())) {
     print(") ");
-    n.ifStatement->accept(*this);
+    n->ifStatement->accept(shared_from_this());
   } else {
     println(")");
     addIndent();
-    n.ifStatement->accept(*this);
+    n->ifStatement->accept(shared_from_this());
     removeIndent();
   }
 };
 
-void PrettyPrinter::dispatch(IfElseStatement &n) {
+void PrettyPrinter::dispatch(std::shared_ptr<IfElseStatement> n) {
   print("if (");
-  n.expression->accept(*this);
+  n->expression->accept(shared_from_this());
   
-  if(dynamic_cast<Block*>(n.ifStatement.get())) {
+  if(dynamic_cast<Block*>(n->ifStatement.get())) {
     print(") ");
-    n.ifStatement->accept(*this);
+    n->ifStatement->accept(shared_from_this());
   } else {
     println(")");
     addIndent();
-    n.ifStatement->accept(*this);
+    n->ifStatement->accept(shared_from_this());
     removeIndent();
   }
   
-  if(dynamic_cast<Block*>(n.elseStatement.get())) {
+  if(dynamic_cast<Block*>(n->elseStatement.get())) {
     print("else ");
-    n.elseStatement->accept(*this);
+    n->elseStatement->accept(shared_from_this());
   } else {
     println("else");
     addIndent();
-    n.elseStatement->accept(*this);
+    n->elseStatement->accept(shared_from_this());
     removeIndent();
   }
 };
 
-void PrettyPrinter::dispatch(ExpressionStatement &n) {
-  n.expression->accept(*this);
+void PrettyPrinter::dispatch(std::shared_ptr<ExpressionStatement> n) {
+  n->expression->accept(shared_from_this());
   println(";");
 };
 
-void PrettyPrinter::dispatch(WhileStatement &n) {
+void PrettyPrinter::dispatch(std::shared_ptr<WhileStatement> n) {
   print("while (");
-  n.expression->accept(*this);
-  if(dynamic_cast<Block*>(n.statement.get())) {
+  n->expression->accept(shared_from_this());
+  if(dynamic_cast<Block*>(n->statement.get())) {
     print(") ");
-    n.statement->accept(*this);
+    n->statement->accept(shared_from_this());
   } else {
     println(") ");
     addIndent();
-    n.statement->accept(*this);
+    n->statement->accept(shared_from_this());
     removeIndent();
   }
 };
 
-void PrettyPrinter::dispatch(LocalVariableDeclaration &n) {
-  n.type->accept(*this);
-  println(" " + StringTable::lookupIdentifier(n.ID) + ";");
+void PrettyPrinter::dispatch(std::shared_ptr<LocalVariableDeclaration> n) {
+  n->type->accept(shared_from_this());
+  println(" " + StringTable::lookupIdentifier(n->ID) + ";");
 };
 
-void PrettyPrinter::dispatch(LocalVariableExpressionDeclaration &n) {
-  n.type->accept(*this);
-  println(" " + StringTable::lookupIdentifier(n.ID));
+void PrettyPrinter::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) {
+  n->type->accept(shared_from_this());
+  println(" " + StringTable::lookupIdentifier(n->ID));
   println(" = ");
-  n.expression->accept(*this);
+  n->expression->accept(shared_from_this());
   println(";");
 };
 
-void PrettyPrinter::dispatch(EmptyStatement &n) {
+void PrettyPrinter::dispatch(std::shared_ptr<EmptyStatement> n) {
   println(";");
 };
 
-void PrettyPrinter::dispatch(ReturnStatement &n) {
+void PrettyPrinter::dispatch(std::shared_ptr<ReturnStatement> n) {
   println("return;");
 };
 
-void PrettyPrinter::dispatch(ReturnExpressionStatement &n) {
+void PrettyPrinter::dispatch(std::shared_ptr<ReturnExpressionStatement> n) {
   print("return ");
-  n.expression->accept(*this);
+  n->expression->accept(shared_from_this());
   println(";");
 };
 
-void PrettyPrinter::dispatch(MethodInvocation &n) {
-  print("." + StringTable::lookupIdentifier(n.ID) + "(");
+void PrettyPrinter::dispatch(std::shared_ptr<MethodInvocation> n) {
+  print("." + StringTable::lookupIdentifier(n->ID) + "(");
   
   bool continous = false;
-  for(auto const& argument:n.arguments) {
+  for(auto const& argument:n->arguments) {
     if(continous) {
       print(", ");
     }
-    argument->accept(*this);
+    argument->accept(shared_from_this());
     continous = true;
   }
   
   print(")");
 };
 
-void PrettyPrinter::dispatch(ArrayAccess &n) {
+void PrettyPrinter::dispatch(std::shared_ptr<ArrayAccess> n) {
   print("[");
-  n.expression->accept(*this);
+  n->expression->accept(shared_from_this());
   print("]");
 };
 
-void PrettyPrinter::dispatch(FieldAccess &n) {
-  print("." + StringTable::lookupIdentifier(n.ID));
+void PrettyPrinter::dispatch(std::shared_ptr<FieldAccess> n) {
+  print("." + StringTable::lookupIdentifier(n->ID));
 };
 
-void PrettyPrinter::dispatch(AssignmentExpression &n) {
-  n.expression1->accept(*this);
+void PrettyPrinter::dispatch(std::shared_ptr<AssignmentExpression> n) {
+  n->expression1->accept(shared_from_this());
   print(" = ");
-  n.expression2->accept(*this);
+  n->expression2->accept(shared_from_this());
 };
 
-void PrettyPrinter::dispatch(LogicalOrExpression &n) {
-  n.expression1->accept(*this);
+void PrettyPrinter::dispatch(std::shared_ptr<LogicalOrExpression> n) {
+  n->expression1->accept(shared_from_this());
   print(" || ");
-  n.expression2->accept(*this);
+  n->expression2->accept(shared_from_this());
 };
 
-void PrettyPrinter::dispatch(LogicalAndExpression &n) {
-  n.expression1->accept(*this);
+void PrettyPrinter::dispatch(std::shared_ptr<LogicalAndExpression> n) {
+  n->expression1->accept(shared_from_this());
   print(" && ");
-  n.expression2->accept(*this);
+  n->expression2->accept(shared_from_this());
 };
 
-void PrettyPrinter::dispatch(EqualityExpression &n) {
-  n.expression1->accept(*this);
-  n.op->accept(*this);
-  n.expression2->accept(*this);
+void PrettyPrinter::dispatch(std::shared_ptr<EqualityExpression> n) {
+  n->expression1->accept(shared_from_this());
+  n->op->accept(shared_from_this());
+  n->expression2->accept(shared_from_this());
 };
 
-void PrettyPrinter::dispatch(RelationalExpression &n) {
-  n.expression1->accept(*this);
-  n.op->accept(*this);
-  n.expression2->accept(*this);
+void PrettyPrinter::dispatch(std::shared_ptr<RelationalExpression> n) {
+  n->expression1->accept(shared_from_this());
+  n->op->accept(shared_from_this());
+  n->expression2->accept(shared_from_this());
 };
 
-void PrettyPrinter::dispatch(AdditiveExpression &n) {
-  n.expression1->accept(*this);
-  n.op->accept(*this);
-  n.expression2->accept(*this);
+void PrettyPrinter::dispatch(std::shared_ptr<AdditiveExpression> n) {
+  n->expression1->accept(shared_from_this());
+  n->op->accept(shared_from_this());
+  n->expression2->accept(shared_from_this());
 };
 
-void PrettyPrinter::dispatch(MultiplicativeExpression &n) {
-  n.expression1->accept(*this);
-  n.op->accept(*this);
-  n.expression2->accept(*this);
+void PrettyPrinter::dispatch(std::shared_ptr<MultiplicativeExpression> n) {
+  n->expression1->accept(shared_from_this());
+  n->op->accept(shared_from_this());
+  n->expression2->accept(shared_from_this());
 };
 
-void PrettyPrinter::dispatch(CallExpression &n) {
-  print(StringTable::lookupIdentifier(n.ID) + "(");
+void PrettyPrinter::dispatch(std::shared_ptr<CallExpression> n) {
+  print(StringTable::lookupIdentifier(n->ID) + "(");
   
   bool continous = false;
-  for(auto const& argument:n.arguments) {
+  for(auto const& argument:n->arguments) {
     if(continous) {
       print(", ");
     }
-    argument->accept(*this);
+    argument->accept(shared_from_this());
     continous = true;
   }
   
   print(")");
 };
 
-void PrettyPrinter::dispatch(UnaryLeftExpression &n) {
-  n.op->accept(*this);
-  n.expression->accept(*this);
+void PrettyPrinter::dispatch(std::shared_ptr<UnaryLeftExpression> n) {
+  n->op->accept(shared_from_this());
+  n->expression->accept(shared_from_this());
 };
 
-void PrettyPrinter::dispatch(UnaryRightExpression &n) {
-  n.expression->accept(*this);
-  n.op->accept(*this);
+void PrettyPrinter::dispatch(std::shared_ptr<UnaryRightExpression> n) {
+  n->expression->accept(shared_from_this());
+  n->op->accept(shared_from_this());
 };
 
-void PrettyPrinter::dispatch(CNull &n) {
+void PrettyPrinter::dispatch(std::shared_ptr<CNull> n) {
   print("null");
 };
 
-void PrettyPrinter::dispatch(CThis &n) {
+void PrettyPrinter::dispatch(std::shared_ptr<CThis> n) {
   print("this");
 };
 
-void PrettyPrinter::dispatch(CTrue &n) {
+void PrettyPrinter::dispatch(std::shared_ptr<CTrue> n) {
   print("true");
 };
 
-void PrettyPrinter::dispatch(CFalse &n) {
+void PrettyPrinter::dispatch(std::shared_ptr<CFalse> n) {
   print("false");
 };
 
-void PrettyPrinter::dispatch(CRef &n) {
-  print(StringTable::lookupIdentifier(n.ID));
+void PrettyPrinter::dispatch(std::shared_ptr<CRef> n) {
+  print(StringTable::lookupIdentifier(n->ID));
 };
 
-void PrettyPrinter::dispatch(CIntegerLiteral &n) {
-  print(n.integer);
+void PrettyPrinter::dispatch(std::shared_ptr<CIntegerLiteral> n) {
+  print(n->integer);
 };
 
-void PrettyPrinter::dispatch(NewObject &n) {
-  print("new " + StringTable::lookupIdentifier(n.ID) + "()");
+void PrettyPrinter::dispatch(std::shared_ptr<NewObject> n) {
+  print("new " + StringTable::lookupIdentifier(n->ID) + "()");
 };
 
-void PrettyPrinter::dispatch(NewArray &n) {
+void PrettyPrinter::dispatch(std::shared_ptr<NewArray> n) {
   print("new ");
-  n.type->accept(*this);
+  n->type->accept(shared_from_this());
   print("[");
-  n.expression->accept(*this);
+  n->expression->accept(shared_from_this());
   print("]");
   
-  for(int i=0; i<n.arrayDepth; i++) {
+  for(int i=0; i<n->arrayDepth; i++) {
     print("[]");
   }
 };
 
-void PrettyPrinter::dispatch(Equals& n) {
+void PrettyPrinter::dispatch(std::shared_ptr<Equals> n) {
   print("==");
 };
 
-void PrettyPrinter::dispatch(NotEquals& n) {
+void PrettyPrinter::dispatch(std::shared_ptr<NotEquals> n) {
   print("!=");
 };
 
-void PrettyPrinter::dispatch(LessThan& n) {
+void PrettyPrinter::dispatch(std::shared_ptr<LessThan> n) {
   print("<");
 };
 
-void PrettyPrinter::dispatch(LessThanOrEqual& n) {
+void PrettyPrinter::dispatch(std::shared_ptr<LessThanOrEqual> n) {
   print("<=");
 };
 
-void PrettyPrinter::dispatch(GreaterThan& n) {
+void PrettyPrinter::dispatch(std::shared_ptr<GreaterThan> n) {
   print(">");
 };
 
-void PrettyPrinter::dispatch(GreaterThanOrEqual& n) {
+void PrettyPrinter::dispatch(std::shared_ptr<GreaterThanOrEqual> n) {
   print(">=");
 };
 
-void PrettyPrinter::dispatch(Add& n) {
+void PrettyPrinter::dispatch(std::shared_ptr<Add> n) {
   print("+");
 };
 
-void PrettyPrinter::dispatch(Subtract& n) {
+void PrettyPrinter::dispatch(std::shared_ptr<Subtract> n) {
   print("-");
 };
 
-void PrettyPrinter::dispatch(Multiply& n) {
+void PrettyPrinter::dispatch(std::shared_ptr<Multiply> n) {
   print("*");
 };
 
-void PrettyPrinter::dispatch(Divide& n) {
+void PrettyPrinter::dispatch(std::shared_ptr<Divide> n) {
   print("/");
 };
 
-void PrettyPrinter::dispatch(Modulo& n) {
+void PrettyPrinter::dispatch(std::shared_ptr<Modulo> n) {
   print("%");
 };
 
-void PrettyPrinter::dispatch(Negate& n) {
+void PrettyPrinter::dispatch(std::shared_ptr<Negate> n) {
   print("!");
 };
 
-void PrettyPrinter::dispatch(Minus& n) {
+void PrettyPrinter::dispatch(std::shared_ptr<Minus> n) {
   print("-");
 };

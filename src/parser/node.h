@@ -72,79 +72,67 @@ namespace cmpl
   // ------ Visitor pattern ------ //
   class Dispatcher {
   public:
-    virtual void dispatch(Type &n) = 0;
-    virtual void dispatch(UserType &n) = 0;
-    virtual void dispatch(TypeInt &n) = 0;
-    virtual void dispatch(TypeBoolean &n) = 0;
-    virtual void dispatch(TypeVoid &n) = 0;
-  
-    virtual void dispatch(Program &n) = 0;
-  
-    virtual void dispatch(ClassDeclaration &n) = 0;
-  
-    virtual void dispatch(Field &n) = 0;
-    virtual void dispatch(Method &n) = 0;
-    virtual void dispatch(MainMethod &n) = 0;
-  
-    virtual void dispatch(Parameter &n) = 0;
-  
-    virtual void dispatch(Block &n) = 0;
-  
-    virtual void dispatch(IfStatement &n) = 0;
-    virtual void dispatch(IfElseStatement &n) = 0;
-    virtual void dispatch(ExpressionStatement &n) = 0;
-    virtual void dispatch(WhileStatement &n) = 0;
-    virtual void dispatch(LocalVariableDeclaration &n) = 0;
-    virtual void dispatch(LocalVariableExpressionDeclaration &n) = 0;
-    virtual void dispatch(ReturnStatement &n) = 0;
-    virtual void dispatch(ReturnExpressionStatement &n) = 0;
-    virtual void dispatch(EmptyStatement &n) = 0;
-  
-    virtual void dispatch(MethodInvocation &n) = 0;
-    virtual void dispatch(ArrayAccess &n) = 0;
-    virtual void dispatch(FieldAccess &n) = 0;
-  
-    virtual void dispatch(AssignmentExpression &n) = 0;
-    virtual void dispatch(LogicalOrExpression &n) = 0;
-    virtual void dispatch(LogicalAndExpression &n) = 0;
-    virtual void dispatch(EqualityExpression &n) = 0;
-    virtual void dispatch(RelationalExpression &n) = 0;
-    virtual void dispatch(AdditiveExpression &n) = 0;
-    virtual void dispatch(MultiplicativeExpression &n) = 0;
-    virtual void dispatch(CallExpression &n) = 0;
-    virtual void dispatch(UnaryLeftExpression &n) = 0;
-    virtual void dispatch(UnaryRightExpression &n) = 0;
-  
-    virtual void dispatch(CNull &n) = 0;
-    virtual void dispatch(CThis &n) = 0;
-    virtual void dispatch(CTrue &n) = 0;
-    virtual void dispatch(CFalse &n) = 0;
-    virtual void dispatch(CRef &n) = 0;
-    virtual void dispatch(CIntegerLiteral &n) = 0;
-    virtual void dispatch(NewObject &n) = 0;
-    virtual void dispatch(NewArray &n) = 0;
-    
-    virtual void dispatch(Equals &n) = 0;
-    virtual void dispatch(NotEquals &n) = 0;
-    virtual void dispatch(LessThan &n) = 0;
-    virtual void dispatch(LessThanOrEqual &n) = 0;
-    virtual void dispatch(GreaterThan &n) = 0;
-    virtual void dispatch(GreaterThanOrEqual &n) = 0;
-    virtual void dispatch(Add &n) = 0;
-    virtual void dispatch(Subtract &n) = 0;
-    
-    virtual void dispatch(Multiply &n) = 0;
-    virtual void dispatch(Divide &n) = 0;
-    virtual void dispatch(Modulo &n) = 0;
-    
-    virtual void dispatch(Negate &n) = 0;
-    virtual void dispatch(Minus &n) = 0;
+    virtual void dispatch(std::shared_ptr<Type> n) = 0;
+    virtual void dispatch(std::shared_ptr<UserType> n) = 0;
+    virtual void dispatch(std::shared_ptr<TypeInt> n) = 0;
+    virtual void dispatch(std::shared_ptr<TypeBoolean> n) = 0;
+    virtual void dispatch(std::shared_ptr<TypeVoid> n) = 0;
+    virtual void dispatch(std::shared_ptr<Program> n) = 0;
+    virtual void dispatch(std::shared_ptr<ClassDeclaration> n) = 0;
+    virtual void dispatch(std::shared_ptr<Field> n) = 0;
+    virtual void dispatch(std::shared_ptr<Method> n) = 0;
+    virtual void dispatch(std::shared_ptr<MainMethod> n) = 0;
+    virtual void dispatch(std::shared_ptr<Parameter> n) = 0;
+    virtual void dispatch(std::shared_ptr<Block> n) = 0;
+    virtual void dispatch(std::shared_ptr<IfStatement> n) = 0;
+    virtual void dispatch(std::shared_ptr<IfElseStatement> n) = 0;
+    virtual void dispatch(std::shared_ptr<ExpressionStatement> n) = 0;
+    virtual void dispatch(std::shared_ptr<WhileStatement> n) = 0;
+    virtual void dispatch(std::shared_ptr<LocalVariableDeclaration> n) = 0;
+    virtual void dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) = 0;
+    virtual void dispatch(std::shared_ptr<ReturnStatement> n) = 0;
+    virtual void dispatch(std::shared_ptr<ReturnExpressionStatement> n) = 0;
+    virtual void dispatch(std::shared_ptr<EmptyStatement> n) = 0;
+    virtual void dispatch(std::shared_ptr<MethodInvocation> n) = 0;
+    virtual void dispatch(std::shared_ptr<ArrayAccess> n) = 0;
+    virtual void dispatch(std::shared_ptr<FieldAccess> n) = 0;
+    virtual void dispatch(std::shared_ptr<AssignmentExpression> n) = 0;
+    virtual void dispatch(std::shared_ptr<LogicalOrExpression> n) = 0;
+    virtual void dispatch(std::shared_ptr<LogicalAndExpression> n) = 0;
+    virtual void dispatch(std::shared_ptr<EqualityExpression> n) = 0;
+    virtual void dispatch(std::shared_ptr<RelationalExpression> n) = 0;
+    virtual void dispatch(std::shared_ptr<AdditiveExpression> n) = 0;
+    virtual void dispatch(std::shared_ptr<MultiplicativeExpression> n) = 0;
+    virtual void dispatch(std::shared_ptr<CallExpression> n) = 0;
+    virtual void dispatch(std::shared_ptr<UnaryLeftExpression> n) = 0;
+    virtual void dispatch(std::shared_ptr<UnaryRightExpression> n) = 0;
+    virtual void dispatch(std::shared_ptr<CNull> n) = 0;
+    virtual void dispatch(std::shared_ptr<CThis> n) = 0;
+    virtual void dispatch(std::shared_ptr<CTrue> n) = 0;
+    virtual void dispatch(std::shared_ptr<CFalse> n) = 0;
+    virtual void dispatch(std::shared_ptr<CRef> n) = 0;
+    virtual void dispatch(std::shared_ptr<CIntegerLiteral> n) = 0;
+    virtual void dispatch(std::shared_ptr<NewObject> n) = 0;
+    virtual void dispatch(std::shared_ptr<NewArray> n) = 0;
+    virtual void dispatch(std::shared_ptr<Equals> n) = 0;
+    virtual void dispatch(std::shared_ptr<NotEquals> n) = 0;
+    virtual void dispatch(std::shared_ptr<LessThan> n) = 0;
+    virtual void dispatch(std::shared_ptr<LessThanOrEqual> n) = 0;
+    virtual void dispatch(std::shared_ptr<GreaterThan> n) = 0;
+    virtual void dispatch(std::shared_ptr<GreaterThanOrEqual> n) = 0;
+    virtual void dispatch(std::shared_ptr<Add> n) = 0;
+    virtual void dispatch(std::shared_ptr<Subtract> n) = 0;
+    virtual void dispatch(std::shared_ptr<Multiply> n) = 0;
+    virtual void dispatch(std::shared_ptr<Divide> n) = 0;
+    virtual void dispatch(std::shared_ptr<Modulo> n) = 0;
+    virtual void dispatch(std::shared_ptr<Negate> n) = 0;
+    virtual void dispatch(std::shared_ptr<Minus> n) = 0;
   };
   
   class Node
   {
     public:
-      virtual void accept(Dispatcher &d) = 0;
+    virtual void accept(std::shared_ptr<Dispatcher> d) = 0;
   };
   
 /**************** actual nodes ****************/
@@ -161,228 +149,228 @@ namespace cmpl
   class MultOp         : public Op             { public: };
   class UnaryOp        : public Op             { public: };
   
-  class Type : public Node
+  class Type : public Node, public std::enable_shared_from_this<Type>
   {
     public:
-      std::unique_ptr<BasicType> type;
+      std::shared_ptr<BasicType> type;
       int                        arrayDepth;
       
-      Type(std::unique_ptr<BasicType> &type, int &arrayDepth) : type(std::move(type)), arrayDepth(arrayDepth) { };
+      Type(std::shared_ptr<BasicType> &type, int &arrayDepth) : type(std::move(type)), arrayDepth(arrayDepth) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
     
       bool isVoid = false;
   };
   
-  class TypeInt : public BasicType
+  class TypeInt : public BasicType, public std::enable_shared_from_this<TypeInt>
   {
     public:
       TypeInt() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class TypeBoolean : public BasicType
+  class TypeBoolean : public BasicType, public std::enable_shared_from_this<TypeBoolean>
   {
     public:
       TypeBoolean() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class TypeVoid : public BasicType
+  class TypeVoid : public BasicType, public std::enable_shared_from_this<TypeVoid>
   {
     public:
       TypeVoid() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class UserType : public BasicType
+  class UserType : public BasicType, public std::enable_shared_from_this<UserType>
   {
     public:
       StringIdentifier ID;
       
       UserType(StringIdentifier &ID) : ID(ID) { }
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
 
-  class NotEquals : public EqualityOp
+  class NotEquals : public EqualityOp, public std::enable_shared_from_this<NotEquals>
   {
     public:
       NotEquals() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
 
-  class Equals : public EqualityOp
+  class Equals : public EqualityOp, public std::enable_shared_from_this<Equals>
   {
     public:
       Equals() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
 
-  class LessThan : public RelationalOp
+  class LessThan : public RelationalOp, public std::enable_shared_from_this<LessThan>
   {
     public:
       LessThan() { }
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
 
-  class LessThanOrEqual : public RelationalOp
+  class LessThanOrEqual : public RelationalOp, public std::enable_shared_from_this<LessThanOrEqual>
   {
     public:
       LessThanOrEqual() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
 
-  class GreaterThan : public RelationalOp
+  class GreaterThan : public RelationalOp, public std::enable_shared_from_this<GreaterThan>
   {
     public:
       GreaterThan() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
 
-  class GreaterThanOrEqual : public RelationalOp
+  class GreaterThanOrEqual : public RelationalOp, public std::enable_shared_from_this<GreaterThanOrEqual>
   {
     public:
       GreaterThanOrEqual() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
 
-  class Add : public AddOp
+  class Add : public AddOp, public std::enable_shared_from_this<Add>
   {
     public:
       Add() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
 
-  class Subtract : public AddOp
+  class Subtract : public AddOp, public std::enable_shared_from_this<Subtract>
   {
     public:
       Subtract() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
 
-  class Multiply : public MultOp
+  class Multiply : public MultOp, public std::enable_shared_from_this<Multiply>
   {
     public:
       Multiply() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
 
-  class Divide : public MultOp
+  class Divide : public MultOp, public std::enable_shared_from_this<Divide>
   {
     public:
       Divide() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
 
-  class Modulo : public MultOp
+  class Modulo : public MultOp, public std::enable_shared_from_this<Modulo>
   {
     public:
       Modulo() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
 
-  class Negate : public UnaryOp
+  class Negate : public UnaryOp, public std::enable_shared_from_this<Negate>
   {
     public:
       Negate() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
 
-  class Minus : public UnaryOp
+  class Minus : public UnaryOp, public std::enable_shared_from_this<Minus>
   {
     public:
       Minus() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
 
-  class MethodInvocation : public UnaryOp
+  class MethodInvocation : public UnaryOp, public std::enable_shared_from_this<MethodInvocation>
   {
     public:
       StringIdentifier                         ID;
-      std::vector<std::unique_ptr<Expression>> arguments;
+      std::vector<std::shared_ptr<Expression>> arguments;
       
-      MethodInvocation(StringIdentifier &ID, std::vector<std::unique_ptr<Expression>> &arguments) :
+      MethodInvocation(StringIdentifier &ID, std::vector<std::shared_ptr<Expression>> &arguments) :
                          ID(ID), arguments(std::move(arguments)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
 
-  class FieldAccess : public UnaryOp
+  class FieldAccess : public UnaryOp, public std::enable_shared_from_this<FieldAccess>
   {
     public:
       StringIdentifier ID;
       
       FieldAccess(StringIdentifier &ID) : ID(ID) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
 
-  class ArrayAccess : public UnaryOp
+  class ArrayAccess : public UnaryOp, public std::enable_shared_from_this<ArrayAccess>
   {
     public:
-      std::unique_ptr<Expression> expression;
+      std::shared_ptr<Expression> expression;
       
-      ArrayAccess(std::unique_ptr<Expression> &expression) : expression(std::move(expression)) { };
+      ArrayAccess(std::shared_ptr<Expression> &expression) : expression(std::move(expression)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
@@ -392,247 +380,247 @@ namespace cmpl
   class OpExpression : public Expression
   {
     protected:
-      OpExpression(std::unique_ptr<Op> op, std::unique_ptr<Expression> expression1,
-                   std::unique_ptr<Expression> expression2) :
+      OpExpression(std::shared_ptr<Op> op, std::shared_ptr<Expression> expression1,
+                   std::shared_ptr<Expression> expression2) :
                      op(std::move(op)), expression1(std::move(expression1)), expression2(std::move(expression2)) { };
     public:
-      std::unique_ptr<Op>         op;
-      std::unique_ptr<Expression> expression1;
-      std::unique_ptr<Expression> expression2;
+      std::shared_ptr<Op>         op;
+      std::shared_ptr<Expression> expression1;
+      std::shared_ptr<Expression> expression2;
   };
   
-  class AssignmentExpression : public Expression
+  class AssignmentExpression : public Expression, public std::enable_shared_from_this<AssignmentExpression>
   {
     public:
-      std::unique_ptr<Expression> expression1;
-      std::unique_ptr<Expression> expression2;
+      std::shared_ptr<Expression> expression1;
+      std::shared_ptr<Expression> expression2;
       
-      AssignmentExpression(std::unique_ptr<Expression> &expression1, std::unique_ptr<Expression> &expression2) :
+      AssignmentExpression(std::shared_ptr<Expression> &expression1, std::shared_ptr<Expression> &expression2) :
                              expression1(std::move(expression1)), expression2(std::move(expression2)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class LogicalOrExpression : public Expression
+  class LogicalOrExpression : public Expression, public std::enable_shared_from_this<LogicalOrExpression>
   {
     public:
-      std::unique_ptr<Expression> expression1;
-      std::unique_ptr<Expression> expression2;
+      std::shared_ptr<Expression> expression1;
+      std::shared_ptr<Expression> expression2;
       
-      LogicalOrExpression(std::unique_ptr<Expression> &expression1, std::unique_ptr<Expression> &expression2) :
+      LogicalOrExpression(std::shared_ptr<Expression> &expression1, std::shared_ptr<Expression> &expression2) :
                             expression1(std::move(expression1)), expression2(std::move(expression2)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class LogicalAndExpression : public Expression
+  class LogicalAndExpression : public Expression, public std::enable_shared_from_this<LogicalAndExpression>
   {
     public:
-      std::unique_ptr<Expression> expression1;
-      std::unique_ptr<Expression> expression2;
+      std::shared_ptr<Expression> expression1;
+      std::shared_ptr<Expression> expression2;
       
-      LogicalAndExpression(std::unique_ptr<Expression> &expression1, std::unique_ptr<Expression> &expression2) :
+      LogicalAndExpression(std::shared_ptr<Expression> &expression1, std::shared_ptr<Expression> &expression2) :
                              expression1(std::move(expression1)), expression2(std::move(expression2)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class EqualityExpression : public OpExpression
+  class EqualityExpression : public OpExpression, public std::enable_shared_from_this<EqualityExpression>
   {
     public:
-      EqualityExpression(std::unique_ptr<EqualityOp> &op, std::unique_ptr<Expression> &expression1,
-                         std::unique_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
+      EqualityExpression(std::shared_ptr<EqualityOp> &op, std::shared_ptr<Expression> &expression1,
+                         std::shared_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
 
-  class RelationalExpression : public OpExpression
+  class RelationalExpression : public OpExpression, public std::enable_shared_from_this<RelationalExpression>
   {
     public:
-      RelationalExpression(std::unique_ptr<RelationalOp> &op, std::unique_ptr<Expression> &expression1,
-                           std::unique_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
+      RelationalExpression(std::shared_ptr<RelationalOp> &op, std::shared_ptr<Expression> &expression1,
+                           std::shared_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class AdditiveExpression : public OpExpression
+  class AdditiveExpression : public OpExpression, public std::enable_shared_from_this<AdditiveExpression>
   {
     public:
-      AdditiveExpression(std::unique_ptr<AddOp> &op, std::unique_ptr<Expression> &expression1,
-                         std::unique_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)){ };
+      AdditiveExpression(std::shared_ptr<AddOp> &op, std::shared_ptr<Expression> &expression1,
+                         std::shared_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)){ };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class MultiplicativeExpression : public OpExpression
+  class MultiplicativeExpression : public OpExpression, public std::enable_shared_from_this<MultiplicativeExpression>
   {
     public:
-      MultiplicativeExpression(std::unique_ptr<MultOp> &op, std::unique_ptr<Expression> &expression1,
-                               std::unique_ptr<Expression> &expression2) : 
+      MultiplicativeExpression(std::shared_ptr<MultOp> &op, std::shared_ptr<Expression> &expression1,
+                               std::shared_ptr<Expression> &expression2) : 
                                  OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class CallExpression : public Expression
+  class CallExpression : public Expression, public std::enable_shared_from_this<CallExpression>
   {
     public:
       StringIdentifier                         ID;
-      std::vector<std::unique_ptr<Expression>> arguments;
+      std::vector<std::shared_ptr<Expression>> arguments;
       
-      CallExpression(StringIdentifier &ID, std::vector<std::unique_ptr<Expression>> &arguments) :
+      CallExpression(StringIdentifier &ID, std::vector<std::shared_ptr<Expression>> &arguments) :
                        ID(ID), arguments(std::move(arguments)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class UnaryLeftExpression : public Expression
+  class UnaryLeftExpression : public Expression, public std::enable_shared_from_this<UnaryLeftExpression>
   {
     public:
-      std::unique_ptr<UnaryOp>    op;
-      std::unique_ptr<Expression> expression;
+      std::shared_ptr<UnaryOp>    op;
+      std::shared_ptr<Expression> expression;
       
-      UnaryLeftExpression(std::unique_ptr<UnaryOp> &op, std::unique_ptr<Expression> &expression) :
+      UnaryLeftExpression(std::shared_ptr<UnaryOp> &op, std::shared_ptr<Expression> &expression) :
                             op(std::move(op)), expression(std::move(expression)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class UnaryRightExpression : public Expression
+  class UnaryRightExpression : public Expression, public std::enable_shared_from_this<UnaryRightExpression>
   {
     public:
-      std::unique_ptr<UnaryOp>    op;
-      std::unique_ptr<Expression> expression;
+      std::shared_ptr<UnaryOp>    op;
+      std::shared_ptr<Expression> expression;
       
-      UnaryRightExpression(std::unique_ptr<Expression> &expression, std::unique_ptr<UnaryOp> &op) :
+      UnaryRightExpression(std::shared_ptr<Expression> &expression, std::shared_ptr<UnaryOp> &op) :
                              expression(std::move(expression)), op(std::move(op)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class CNull : public Expression
+  class CNull : public Expression, public std::enable_shared_from_this<CNull>
   {
     public:
       CNull() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class CFalse : public Expression
+  class CFalse : public Expression, public std::enable_shared_from_this<CFalse>
   {
     public:
       CFalse() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class CTrue : public Expression
+  class CTrue : public Expression, public std::enable_shared_from_this<CTrue>
   {
     public:
       CTrue() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class CThis : public Expression
+  class CThis : public Expression, public std::enable_shared_from_this<CThis>
   {
     public:
       CThis() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class CIntegerLiteral : public Expression
+  class CIntegerLiteral : public Expression, public std::enable_shared_from_this<CIntegerLiteral>
   {
     public:
       std::string integer;
       
       CIntegerLiteral(std::string &integer) : integer(integer) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class CRef : public Expression
+  class CRef : public Expression, public std::enable_shared_from_this<CRef>
   {
     public:
       StringIdentifier ID;
       
       CRef(StringIdentifier &ID) : ID(ID) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class NewObject : public Expression
+  class NewObject : public Expression, public std::enable_shared_from_this<NewObject>
   {
     public:
       StringIdentifier ID;
       
       NewObject(StringIdentifier &ID) : ID(ID) { };
 
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class NewArray : public Expression
+  class NewArray : public Expression, public std::enable_shared_from_this<NewArray>
   {
     public:
-      std::unique_ptr<BasicType>  type;
-      std::unique_ptr<Expression> expression;
+      std::shared_ptr<BasicType>  type;
+      std::shared_ptr<Expression> expression;
       int                         arrayDepth;
       
-      NewArray(std::unique_ptr<BasicType>  &type, std::unique_ptr<Expression> &expression,
+      NewArray(std::shared_ptr<BasicType>  &type, std::shared_ptr<Expression> &expression,
                int &arrayDepth) :
                  type(std::move(type)), expression(std::move(expression)), arrayDepth(arrayDepth) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class Parameter : public Node
+  class Parameter : public Node, public std::enable_shared_from_this<Parameter>
   {
     public:
-      std::unique_ptr<Type> type;
+      std::shared_ptr<Type> type;
       StringIdentifier      ID;
       
-      Parameter(std::unique_ptr<Type> &type, StringIdentifier &ID) :
+      Parameter(std::shared_ptr<Type> &type, StringIdentifier &ID) :
             type(std::move(type)), ID(ID) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
@@ -640,136 +628,136 @@ namespace cmpl
 /*********************** Statements ***********************/
   
   
-  class Block : public Statement
+  class Block : public Statement, public std::enable_shared_from_this<Block>
   {
     public:
-      std::vector<std::unique_ptr<BlockStatement>> statements;
+      std::vector<std::shared_ptr<BlockStatement>> statements;
       
-      Block(std::vector<std::unique_ptr<BlockStatement>> &statements) : statements(std::move(statements)) { };
+      Block(std::vector<std::shared_ptr<BlockStatement>> &statements) : statements(std::move(statements)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class IfStatement : public Statement
+  class IfStatement : public Statement, public std::enable_shared_from_this<IfStatement>
   {
     public:
-      std::unique_ptr<Expression> expression;
-      std::unique_ptr<Statement>  ifStatement;
+      std::shared_ptr<Expression> expression;
+      std::shared_ptr<Statement>  ifStatement;
       
-      IfStatement(std::unique_ptr<Expression> &expression, std::unique_ptr<Statement> &ifStatement) :
+      IfStatement(std::shared_ptr<Expression> &expression, std::shared_ptr<Statement> &ifStatement) :
                     expression(std::move(expression)), ifStatement(std::move(ifStatement)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class IfElseStatement : public Statement
+  class IfElseStatement : public Statement, public std::enable_shared_from_this<IfElseStatement>
   {
     public:
-      std::unique_ptr<Expression> expression;
-      std::unique_ptr<Statement>  ifStatement;
-      std::unique_ptr<Statement>  elseStatement;
+      std::shared_ptr<Expression> expression;
+      std::shared_ptr<Statement>  ifStatement;
+      std::shared_ptr<Statement>  elseStatement;
       
-      IfElseStatement(std::unique_ptr<Expression> &expression, std::unique_ptr<Statement> &ifStatement,
-                      std::unique_ptr<Statement> &elseStatement) :
+      IfElseStatement(std::shared_ptr<Expression> &expression, std::shared_ptr<Statement> &ifStatement,
+                      std::shared_ptr<Statement> &elseStatement) :
                         expression(std::move(expression)), ifStatement(std::move(ifStatement)),
                         elseStatement(std::move(elseStatement)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class ExpressionStatement : public Statement
+  class ExpressionStatement : public Statement, public std::enable_shared_from_this<ExpressionStatement>
   {
     public:
-      std::unique_ptr<Expression> expression;
+      std::shared_ptr<Expression> expression;
       
-      ExpressionStatement(std::unique_ptr<Expression> &expression) :
+      ExpressionStatement(std::shared_ptr<Expression> &expression) :
                             expression(std::move(expression)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class WhileStatement : public Statement
+  class WhileStatement : public Statement, public std::enable_shared_from_this<WhileStatement>
   {
     public:
-      std::unique_ptr<Expression> expression;
-      std::unique_ptr<Statement>  statement;
+      std::shared_ptr<Expression> expression;
+      std::shared_ptr<Statement>  statement;
       
-      WhileStatement(std::unique_ptr<Expression> &expression, std::unique_ptr<Statement> &statement) :
+      WhileStatement(std::shared_ptr<Expression> &expression, std::shared_ptr<Statement> &statement) :
                        expression(std::move(expression)), statement(std::move(statement)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class ReturnExpressionStatement : public Statement
+  class ReturnExpressionStatement : public Statement, public std::enable_shared_from_this<ReturnExpressionStatement>
   {
     public:
-      std::unique_ptr<Expression> expression; 
+      std::shared_ptr<Expression> expression; 
       
-      ReturnExpressionStatement(std::unique_ptr<Expression> &expression) :
+      ReturnExpressionStatement(std::shared_ptr<Expression> &expression) :
                                   expression(std::move(expression)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class ReturnStatement : public Statement
+  class ReturnStatement : public Statement, public std::enable_shared_from_this<ReturnStatement>
   {
     public:
       ReturnStatement() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class EmptyStatement : public Statement
+  class EmptyStatement : public Statement, public std::enable_shared_from_this<EmptyStatement>
   {
     public:
       EmptyStatement() { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class LocalVariableDeclaration : public BlockStatement
+  class LocalVariableDeclaration : public BlockStatement, public std::enable_shared_from_this<LocalVariableDeclaration>
   {
     public:
-      std::unique_ptr<Type> type;
+      std::shared_ptr<Type> type;
       StringIdentifier      ID;
       
-      LocalVariableDeclaration(std::unique_ptr<Type> &type, StringIdentifier &ID) :
+      LocalVariableDeclaration(std::shared_ptr<Type> &type, StringIdentifier &ID) :
                                  type(std::move(type)), ID(ID) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class LocalVariableExpressionDeclaration : public BlockStatement
+  class LocalVariableExpressionDeclaration : public BlockStatement, public std::enable_shared_from_this<LocalVariableExpressionDeclaration>
   {
     public:
-      std::unique_ptr<Type>       type;
+      std::shared_ptr<Type>       type;
       StringIdentifier            ID;
-      std::unique_ptr<Expression> expression;
+      std::shared_ptr<Expression> expression;
       
-      LocalVariableExpressionDeclaration(std::unique_ptr<Type> &type, StringIdentifier &ID,
-                                         std::unique_ptr<Expression> &expression) :
+      LocalVariableExpressionDeclaration(std::shared_ptr<Type> &type, StringIdentifier &ID,
+                                         std::shared_ptr<Expression> &expression) :
                                            type(std::move(type)), ID(ID), expression(std::move(expression)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
@@ -777,83 +765,83 @@ namespace cmpl
 /*********************** Class related ***********************/
   
   
-  class Field : public ClassMember
+  class Field : public ClassMember, public std::enable_shared_from_this<Field>
   {
     public:
-      std::unique_ptr<Type> type;
+      std::shared_ptr<Type> type;
       StringIdentifier      ID;
       
-      Field(std::unique_ptr<Type> &type, StringIdentifier &ID) :
+      Field(std::shared_ptr<Type> &type, StringIdentifier &ID) :
             type(std::move(type)), ID(ID) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
-  class Method : public ClassMember
+  class Method : public ClassMember, public std::enable_shared_from_this<Method>
   {
     public:
-      std::unique_ptr<Type>                   type;
+      std::shared_ptr<Type>                   type;
       StringIdentifier                        ID;
-      std::vector<std::unique_ptr<Parameter>> parameters;
-      std::unique_ptr<Block>                  block;
+      std::vector<std::shared_ptr<Parameter>> parameters;
+      std::shared_ptr<Block>                  block;
       
-      Method(std::unique_ptr<Type> &type, StringIdentifier &ID, std::vector<std::unique_ptr<Parameter>> &parameters,
-             std::unique_ptr<Block> &block) :
+      Method(std::shared_ptr<Type> &type, StringIdentifier &ID, std::vector<std::shared_ptr<Parameter>> &parameters,
+             std::shared_ptr<Block> &block) :
                type(std::move(type)), ID(ID), parameters(std::move(parameters)), block(std::move(block)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
   /** The MainMethod is a ClassMember and therefore part of a ClassDeclaration. The MainMethod element contains two IDs (Method-identifier and parameter-identifier) and a Block (Representation of the method body) */
-  class MainMethod : public ClassMember
+  class MainMethod : public ClassMember, public std::enable_shared_from_this<MainMethod>
   {
     public:
       StringIdentifier       ID;
       StringIdentifier       parameterID;
-      std::unique_ptr<Block> block;
+      std::shared_ptr<Block> block;
       
-      MainMethod(StringIdentifier &ID, StringIdentifier &parameterID, std::unique_ptr<Block> &block) :
+      MainMethod(StringIdentifier &ID, StringIdentifier &parameterID, std::shared_ptr<Block> &block) :
                    ID(ID), parameterID(std::move(parameterID)), block(std::move(block)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
   /** A ClassDeclaration consists of an ID, which is the identifier for this class and various ClassMembers, like Methods and Fields.  */
-  class ClassDeclaration : public Node
+  class ClassDeclaration : public Node, public std::enable_shared_from_this<ClassDeclaration>
   {
     public:
       StringIdentifier                          ID;
-      std::vector<std::unique_ptr<ClassMember>> classMembers;
+      std::vector<std::shared_ptr<ClassMember>> classMembers;
       std::map<StringIdentifier, std::weak_ptr<Method>> methods;
       std::map<StringIdentifier, std::weak_ptr<Field>> fields;
     
       bool returns = false;
     
-      ClassDeclaration(StringIdentifier &ID, std::vector<std::unique_ptr<ClassMember>> &classMembers) :
+      ClassDeclaration(StringIdentifier &ID, std::vector<std::shared_ptr<ClassMember>> &classMembers) :
                          ID(ID), classMembers(std::move(classMembers)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   
   /** Always the first element in the AST. Can contain multiple ClassDeclarations. */	
-  class Program : public Node
+  class Program : public Node, public std::enable_shared_from_this<Program>
   {
     public:
-      std::vector<std::unique_ptr<ClassDeclaration>> classDeclarations;
+      std::vector<std::shared_ptr<ClassDeclaration>> classDeclarations;
       
-      Program(std::vector<std::unique_ptr<ClassDeclaration>> &classDeclarations) :
+      Program(std::vector<std::shared_ptr<ClassDeclaration>> &classDeclarations) :
                 classDeclarations(std::move(classDeclarations)) { };
     
-      void accept (Dispatcher& d) override {
-        d.dispatch(*this);
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
       }
   };
   

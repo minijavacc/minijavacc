@@ -8,6 +8,7 @@
 
 #include "checker.h"
 #include "returnchecker.h"
+#include "methodfieldcollector.h"
 
 #include <iostream>
 
@@ -16,18 +17,21 @@ using namespace cmpl;
 
 void Checker::run() {
   
-  std::unique_ptr<Node> n;
-  parser.getAST(n);
+  std::shared_ptr<Node> n = parser.getAST();
 
   // walk the line
   
-  ReturnChecker rc;
+//  std::shared_ptr<ReturnChecker> rc(new ReturnChecker());
+//  
+//  n->accept(rc);
+//  
+//  if (rc->valid) {
+//    std::cout << "Return check: valid!\n";
+//  } else {
+//    std::cout << "Return check: invalid (missing return)!\n";
+//  }
   
-  n->accept(rc);
+  std::shared_ptr<MethodFieldCollector> mfc(new MethodFieldCollector());
   
-  if (rc.valid) {
-    std::cout << "Return check: valid!\n";
-  } else {
-    std::cout << "Return check: invalid (missing return)!\n";
-  }
+  n->accept(mfc);
 }

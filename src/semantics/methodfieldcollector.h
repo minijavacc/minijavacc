@@ -1,5 +1,5 @@
 //
-//  returnchecker.hpp
+//  methodfieldcollector.hpp
 //  mjcc
 //
 //  Created by Markus Schlegel on 17/11/16.
@@ -10,12 +10,15 @@
 
 #include "node.h"
 
-namespace cmpl {
+using namespace std;
 
-  class ReturnChecker : public Dispatcher, public std::enable_shared_from_this<ReturnChecker> {
-  public:
-    bool valid = false;
+namespace cmpl {
+  
+  class MethodFieldCollector : public Dispatcher, public std::enable_shared_from_this<MethodFieldCollector> {
+  private:
+    shared_ptr<ClassDeclaration> currentClassDeclaration;
     
+  public:
     virtual void dispatch(std::shared_ptr<Type> n);
     virtual void dispatch(std::shared_ptr<UserType> n);
     virtual void dispatch(std::shared_ptr<TypeInt> n);
@@ -72,5 +75,5 @@ namespace cmpl {
     virtual void dispatch(std::shared_ptr<Negate> n);
     virtual void dispatch(std::shared_ptr<Minus> n);
   };
-
+  
 }
