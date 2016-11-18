@@ -1,6 +1,5 @@
 #pragma once
 
-#include "prettyprinter.h"
 #include "../stringtable/stringtable.h"
 
 #include <memory>
@@ -11,263 +10,409 @@
 namespace cmpl
 {
   // abstract classes for categorization
+  
+  class Dispatcher;
+  
+  class SemanticType;
+  
+  class Type;
+  class UserType;
+  class TypeInt;
+  class TypeBoolean;
+  class TypeVoid;
+  class Program;
+  class ClassDeclaration;
+  class Field;
+  class Method;
+  class MainMethod;
+  class Parameter;
+  class Block;
+  class IfStatement;
+  class IfElseStatement;
+  class ExpressionStatement;
+  class WhileStatement;
+  class LocalVariableDeclaration;
+  class LocalVariableExpressionDeclaration;
+  class ReturnStatement;
+  class ReturnExpressionStatement;
+  class EmptyStatement;
+  class MethodInvocation;
+  class ArrayAccess;
+  class FieldAccess;
+  class AssignmentExpression;
+  class LogicalOrExpression;
+  class LogicalAndExpression;
+  class EqualityExpression;
+  class RelationalExpression;
+  class AdditiveExpression;
+  class MultiplicativeExpression;
+  class CallExpression;
+  class UnaryLeftExpression;
+  class UnaryRightExpression;
+  class CNull;
+  class CThis;
+  class CTrue;
+  class CFalse;
+  class CRef;
+  class CIntegerLiteral;
+  class NewObject;
+  class NewArray;
+  class Equals;
+  class NotEquals;
+  class LessThan;
+  class LessThanOrEqual;
+  class GreaterThan;
+  class GreaterThanOrEqual;
+  class Add;
+  class Subtract;
+  class Multiply;
+  class Divide;
+  class Modulo;
+  class Negate;
+  class Minus;
+  
+  // ------ Visitor pattern ------ //
+  class Dispatcher {
+  public:
+    virtual void dispatch(std::shared_ptr<Type> n) = 0;
+    virtual void dispatch(std::shared_ptr<UserType> n) = 0;
+    virtual void dispatch(std::shared_ptr<TypeInt> n) = 0;
+    virtual void dispatch(std::shared_ptr<TypeBoolean> n) = 0;
+    virtual void dispatch(std::shared_ptr<TypeVoid> n) = 0;
+    virtual void dispatch(std::shared_ptr<Program> n) = 0;
+    virtual void dispatch(std::shared_ptr<ClassDeclaration> n) = 0;
+    virtual void dispatch(std::shared_ptr<Field> n) = 0;
+    virtual void dispatch(std::shared_ptr<Method> n) = 0;
+    virtual void dispatch(std::shared_ptr<MainMethod> n) = 0;
+    virtual void dispatch(std::shared_ptr<Parameter> n) = 0;
+    virtual void dispatch(std::shared_ptr<Block> n) = 0;
+    virtual void dispatch(std::shared_ptr<IfStatement> n) = 0;
+    virtual void dispatch(std::shared_ptr<IfElseStatement> n) = 0;
+    virtual void dispatch(std::shared_ptr<ExpressionStatement> n) = 0;
+    virtual void dispatch(std::shared_ptr<WhileStatement> n) = 0;
+    virtual void dispatch(std::shared_ptr<LocalVariableDeclaration> n) = 0;
+    virtual void dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) = 0;
+    virtual void dispatch(std::shared_ptr<ReturnStatement> n) = 0;
+    virtual void dispatch(std::shared_ptr<ReturnExpressionStatement> n) = 0;
+    virtual void dispatch(std::shared_ptr<EmptyStatement> n) = 0;
+    virtual void dispatch(std::shared_ptr<MethodInvocation> n) = 0;
+    virtual void dispatch(std::shared_ptr<ArrayAccess> n) = 0;
+    virtual void dispatch(std::shared_ptr<FieldAccess> n) = 0;
+    virtual void dispatch(std::shared_ptr<AssignmentExpression> n) = 0;
+    virtual void dispatch(std::shared_ptr<LogicalOrExpression> n) = 0;
+    virtual void dispatch(std::shared_ptr<LogicalAndExpression> n) = 0;
+    virtual void dispatch(std::shared_ptr<EqualityExpression> n) = 0;
+    virtual void dispatch(std::shared_ptr<RelationalExpression> n) = 0;
+    virtual void dispatch(std::shared_ptr<AdditiveExpression> n) = 0;
+    virtual void dispatch(std::shared_ptr<MultiplicativeExpression> n) = 0;
+    virtual void dispatch(std::shared_ptr<CallExpression> n) = 0;
+    virtual void dispatch(std::shared_ptr<UnaryLeftExpression> n) = 0;
+    virtual void dispatch(std::shared_ptr<UnaryRightExpression> n) = 0;
+    virtual void dispatch(std::shared_ptr<CNull> n) = 0;
+    virtual void dispatch(std::shared_ptr<CThis> n) = 0;
+    virtual void dispatch(std::shared_ptr<CTrue> n) = 0;
+    virtual void dispatch(std::shared_ptr<CFalse> n) = 0;
+    virtual void dispatch(std::shared_ptr<CRef> n) = 0;
+    virtual void dispatch(std::shared_ptr<CIntegerLiteral> n) = 0;
+    virtual void dispatch(std::shared_ptr<NewObject> n) = 0;
+    virtual void dispatch(std::shared_ptr<NewArray> n) = 0;
+    virtual void dispatch(std::shared_ptr<Equals> n) = 0;
+    virtual void dispatch(std::shared_ptr<NotEquals> n) = 0;
+    virtual void dispatch(std::shared_ptr<LessThan> n) = 0;
+    virtual void dispatch(std::shared_ptr<LessThanOrEqual> n) = 0;
+    virtual void dispatch(std::shared_ptr<GreaterThan> n) = 0;
+    virtual void dispatch(std::shared_ptr<GreaterThanOrEqual> n) = 0;
+    virtual void dispatch(std::shared_ptr<Add> n) = 0;
+    virtual void dispatch(std::shared_ptr<Subtract> n) = 0;
+    virtual void dispatch(std::shared_ptr<Multiply> n) = 0;
+    virtual void dispatch(std::shared_ptr<Divide> n) = 0;
+    virtual void dispatch(std::shared_ptr<Modulo> n) = 0;
+    virtual void dispatch(std::shared_ptr<Negate> n) = 0;
+    virtual void dispatch(std::shared_ptr<Minus> n) = 0;
+  };
+  
   class Node
   {
     public:
-      virtual void toString(PrettyPrinter &printer) const = 0; // must be implemented by subclasses
+    virtual void accept(std::shared_ptr<Dispatcher> d) = 0;
   };
   
 /**************** actual nodes ****************/
 
-  class BasicType      : public Node           { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class ClassMember    : public Node           { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class Expression     : public Node           { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class BlockStatement : public Node           { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class Statement      : public BlockStatement { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class Op             : public Node           { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class EqualityOp     : public Op             { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class RelationalOp   : public Op             { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class AddOp          : public Op             { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class MultOp         : public Op             { public: virtual void toString(PrettyPrinter &printer) const = 0; };
-  class UnaryOp        : public Op             { public: virtual void toString(PrettyPrinter &printer) const = 0; };
+  class BasicType      : public Node           { public: bool virtual equals(std::shared_ptr<BasicType> t) = 0; };
+  class ClassMember    : public Node           { public: bool returns = false; };
+  class Expression     : public Node           { public: std::shared_ptr<SemanticType> type; };
+  class BlockStatement : public Node           { public: bool returns = false; };
+  class Statement      : public BlockStatement { public: };
+  class Op             : public Node           { public: };
+  class EqualityOp     : public Op             { public: };
+  class RelationalOp   : public Op             { public: };
+  class AddOp          : public Op             { public: };
+  class MultOp         : public Op             { public: };
+  class UnaryOp        : public Op             { public: };
   
-  class Type : public Node
+  class Type : public Node, public std::enable_shared_from_this<Type>
   {
     public:
-      std::unique_ptr<BasicType> type;
+      std::shared_ptr<BasicType> type;
       int                        arrayDepth;
       
-      Type(std::unique_ptr<BasicType> &type, int &arrayDepth) : type(std::move(type)), arrayDepth(arrayDepth) { };
-      
-      void toString(PrettyPrinter &printer) const {
-        type->toString(printer);
-        for(int i=0; i<arrayDepth; i++) {
-          printer.print("[]");
-        }
-      };
+      Type(std::shared_ptr<BasicType> const& type, int const& arrayDepth) : type(std::move(type)), arrayDepth(arrayDepth) { };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
+    
+      bool equals(std::shared_ptr<Type> t) {
+        return shared_from_this()->arrayDepth == t->arrayDepth && shared_from_this()->type->equals(t->type);
+      }
   };
   
-  class TypeInt : public BasicType
+  class TypeInt : public BasicType, public std::enable_shared_from_this<TypeInt>
   {
     public:
       TypeInt() { };
-      
-      void toString(PrettyPrinter &printer) const {
-        printer.print("int");
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
+    
+      bool equals(std::shared_ptr<BasicType> t) override {
+        if (dynamic_cast<TypeInt*>(t.get())) {
+          return true;
+        } else {
+          return false;
+        }
+      }
   };
   
-  class TypeBoolean : public BasicType
+  class TypeBoolean : public BasicType, public std::enable_shared_from_this<TypeBoolean>
   {
     public:
       TypeBoolean() { };
-      
-      void toString(PrettyPrinter &printer) const {
-        printer.print("boolean");
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
+    
+    bool equals(std::shared_ptr<BasicType> t) override {
+      if (dynamic_cast<TypeBoolean*>(t.get())) {
+        return true;
+      } else {
+        return false;
+      }
+    }
   };
   
-  class TypeVoid : public BasicType
+  class TypeVoid : public BasicType, public std::enable_shared_from_this<TypeVoid>
   {
     public:
       TypeVoid() { };
-      
-      void toString(PrettyPrinter &printer) const {
-        printer.print("void");
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
+    
+    bool equals(std::shared_ptr<BasicType> t) override {
+      if (dynamic_cast<TypeVoid*>(t.get())) {
+        return true;
+      } else {
+        return false;
+      }
+    }
   };
   
-  class UserType : public BasicType
+  class UserType : public BasicType, public std::enable_shared_from_this<UserType>
   {
     public:
       StringIdentifier ID;
+      std::weak_ptr<ClassDeclaration> declaration;
       
       UserType(StringIdentifier &ID) : ID(ID) { }
-      
-      void toString(PrettyPrinter &printer) const {
-        printer.print(StringTable::lookupIdentifier(ID));
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
+    
+    bool equals(std::shared_ptr<BasicType> other) override {
+      if (UserType* ut = dynamic_cast<UserType*>(other.get())) {
+        return ID == ut->ID;
+      } else {
+        return false;
+      }
+    }
+    
+    bool operator!= (std::shared_ptr<UserType> t) {
+      return !(shared_from_this() == t);
+    }
   };
 
-  class NotEquals : public EqualityOp
+  class NotEquals : public EqualityOp, public std::enable_shared_from_this<NotEquals>
   {
     public:
       NotEquals() { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print("!=");
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
 
-  class Equals : public EqualityOp
+  class Equals : public EqualityOp, public std::enable_shared_from_this<Equals>
   {
     public:
       Equals() { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print("==");
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
 
-  class LessThan : public RelationalOp
+  class LessThan : public RelationalOp, public std::enable_shared_from_this<LessThan>
   {
     public:
       LessThan() { }
-      
-      void toString(PrettyPrinter &printer) const {
-        printer.print("<");
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
 
-  class LessThanOrEqual : public RelationalOp
+  class LessThanOrEqual : public RelationalOp, public std::enable_shared_from_this<LessThanOrEqual>
   {
     public:
       LessThanOrEqual() { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print("<=");
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
 
-  class GreaterThan : public RelationalOp
+  class GreaterThan : public RelationalOp, public std::enable_shared_from_this<GreaterThan>
   {
     public:
       GreaterThan() { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print(">");
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
 
-  class GreaterThanOrEqual : public RelationalOp
+  class GreaterThanOrEqual : public RelationalOp, public std::enable_shared_from_this<GreaterThanOrEqual>
   {
     public:
       GreaterThanOrEqual() { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print(">=");
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
 
-  class Add : public AddOp
+  class Add : public AddOp, public std::enable_shared_from_this<Add>
   {
     public:
       Add() { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print("+");
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
 
-  class Subtract : public AddOp
+  class Subtract : public AddOp, public std::enable_shared_from_this<Subtract>
   {
     public:
       Subtract() { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print("-");
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
 
-  class Multiply : public MultOp
+  class Multiply : public MultOp, public std::enable_shared_from_this<Multiply>
   {
     public:
       Multiply() { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print("*");
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
 
-  class Divide : public MultOp
+  class Divide : public MultOp, public std::enable_shared_from_this<Divide>
   {
     public:
       Divide() { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print("/");
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
 
-  class Modulo : public MultOp
+  class Modulo : public MultOp, public std::enable_shared_from_this<Modulo>
   {
     public:
       Modulo() { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print("%");
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
 
-  class Negate : public UnaryOp
+  class Negate : public UnaryOp, public std::enable_shared_from_this<Negate>
   {
     public:
       Negate() { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print("!");
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
 
-  class Minus : public UnaryOp
+  class Minus : public UnaryOp, public std::enable_shared_from_this<Minus>
   {
     public:
       Minus() { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print("-");
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
 
-  class MethodInvocation : public UnaryOp
+  class MethodInvocation : public UnaryOp, public std::enable_shared_from_this<MethodInvocation>
   {
     public:
       StringIdentifier                         ID;
-      std::vector<std::unique_ptr<Expression>> arguments;
+      std::vector<std::shared_ptr<Expression>> arguments;
       
-      MethodInvocation(StringIdentifier &ID, std::vector<std::unique_ptr<Expression>> &arguments) :
+      MethodInvocation(StringIdentifier &ID, std::vector<std::shared_ptr<Expression>> &arguments) :
                          ID(ID), arguments(std::move(arguments)) { };
-        
-      void toString(PrettyPrinter &printer) const {
-        printer.print("." + StringTable::lookupIdentifier(ID) + "(");
-        
-        bool continous = false;
-        for(auto const& argument:arguments) {
-          if(continous) {
-            printer.print(", ");
-          }
-          argument->toString(printer);
-          continous = true;
-        }
-        
-        printer.print(")");
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
 
-  class FieldAccess : public UnaryOp
+  class FieldAccess : public UnaryOp, public std::enable_shared_from_this<FieldAccess>
   {
     public:
       StringIdentifier ID;
       
       FieldAccess(StringIdentifier &ID) : ID(ID) { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print("." + StringTable::lookupIdentifier(ID));
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
 
-  class ArrayAccess : public UnaryOp
+  class ArrayAccess : public UnaryOp, public std::enable_shared_from_this<ArrayAccess>
   {
     public:
-      std::unique_ptr<Expression> expression;
+      std::shared_ptr<Expression> expression;
       
-      ArrayAccess(std::unique_ptr<Expression> &expression) : expression(std::move(expression)) { };
+      ArrayAccess(std::shared_ptr<Expression> &expression) : expression(std::move(expression)) { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print("[");
-        expression->toString(printer);
-        printer.print("]");
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
   
@@ -276,633 +421,473 @@ namespace cmpl
   class OpExpression : public Expression
   {
     protected:
-      OpExpression(std::unique_ptr<Op> op, std::unique_ptr<Expression> expression1,
-                   std::unique_ptr<Expression> expression2) :
+      OpExpression(std::shared_ptr<Op> op, std::shared_ptr<Expression> expression1,
+                   std::shared_ptr<Expression> expression2) :
                      op(std::move(op)), expression1(std::move(expression1)), expression2(std::move(expression2)) { };
     public:
-      std::unique_ptr<Op>         op;
-      std::unique_ptr<Expression> expression1;
-      std::unique_ptr<Expression> expression2;
-      
-      
-      void toString(PrettyPrinter &printer) const {
-        expression1->toString(printer);
-        op->toString(printer);
-        expression2->toString(printer);
-      };
+      std::shared_ptr<Op>         op;
+      std::shared_ptr<Expression> expression1;
+      std::shared_ptr<Expression> expression2;
   };
   
-  class AssignmentExpression : public Expression
+  class AssignmentExpression : public Expression, public std::enable_shared_from_this<AssignmentExpression>
   {
     public:
-      std::unique_ptr<Expression> expression1;
-      std::unique_ptr<Expression> expression2;
+      std::shared_ptr<Expression> expression1;
+      std::shared_ptr<Expression> expression2;
       
-      AssignmentExpression(std::unique_ptr<Expression> &expression1, std::unique_ptr<Expression> &expression2) :
+      AssignmentExpression(std::shared_ptr<Expression> &expression1, std::shared_ptr<Expression> &expression2) :
                              expression1(std::move(expression1)), expression2(std::move(expression2)) { };
     
-      void toString(PrettyPrinter &printer) const {
-        expression1->toString(printer);
-        printer.print(" = ");
-        expression2->toString(printer);
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class LogicalOrExpression : public Expression
+  class LogicalOrExpression : public Expression, public std::enable_shared_from_this<LogicalOrExpression>
   {
     public:
-      std::unique_ptr<Expression> expression1;
-      std::unique_ptr<Expression> expression2;
+      std::shared_ptr<Expression> expression1;
+      std::shared_ptr<Expression> expression2;
       
-      LogicalOrExpression(std::unique_ptr<Expression> &expression1, std::unique_ptr<Expression> &expression2) :
+      LogicalOrExpression(std::shared_ptr<Expression> &expression1, std::shared_ptr<Expression> &expression2) :
                             expression1(std::move(expression1)), expression2(std::move(expression2)) { };
     
-      void toString(PrettyPrinter &printer) const {
-        expression1->toString(printer);
-        printer.print(" || ");
-        expression2->toString(printer);
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class LogicalAndExpression : public Expression
+  class LogicalAndExpression : public Expression, public std::enable_shared_from_this<LogicalAndExpression>
   {
     public:
-      std::unique_ptr<Expression> expression1;
-      std::unique_ptr<Expression> expression2;
+      std::shared_ptr<Expression> expression1;
+      std::shared_ptr<Expression> expression2;
       
-      LogicalAndExpression(std::unique_ptr<Expression> &expression1, std::unique_ptr<Expression> &expression2) :
+      LogicalAndExpression(std::shared_ptr<Expression> &expression1, std::shared_ptr<Expression> &expression2) :
                              expression1(std::move(expression1)), expression2(std::move(expression2)) { };
     
-      void toString(PrettyPrinter &printer) const {
-        expression1->toString(printer);
-        printer.print(" && ");
-        expression2->toString(printer);
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class EqualityExpression : public OpExpression
+  class EqualityExpression : public OpExpression, public std::enable_shared_from_this<EqualityExpression>
   {
     public:
-      EqualityExpression(std::unique_ptr<EqualityOp> &op, std::unique_ptr<Expression> &expression1,
-                         std::unique_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
+      EqualityExpression(std::shared_ptr<EqualityOp> &op, std::shared_ptr<Expression> &expression1,
+                         std::shared_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
 
-  class RelationalExpression : public OpExpression
+  class RelationalExpression : public OpExpression, public std::enable_shared_from_this<RelationalExpression>
   {
     public:
-      RelationalExpression(std::unique_ptr<RelationalOp> &op, std::unique_ptr<Expression> &expression1,
-                           std::unique_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
+      RelationalExpression(std::shared_ptr<RelationalOp> &op, std::shared_ptr<Expression> &expression1,
+                           std::shared_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class AdditiveExpression : public OpExpression
+  class AdditiveExpression : public OpExpression, public std::enable_shared_from_this<AdditiveExpression>
   {
     public:
-      AdditiveExpression(std::unique_ptr<AddOp> &op, std::unique_ptr<Expression> &expression1,
-                         std::unique_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)){ };
+      AdditiveExpression(std::shared_ptr<AddOp> &op, std::shared_ptr<Expression> &expression1,
+                         std::shared_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)){ };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class MultiplicativeExpression : public OpExpression
+  class MultiplicativeExpression : public OpExpression, public std::enable_shared_from_this<MultiplicativeExpression>
   {
     public:
-      MultiplicativeExpression(std::unique_ptr<MultOp> &op, std::unique_ptr<Expression> &expression1,
-                               std::unique_ptr<Expression> &expression2) : 
+      MultiplicativeExpression(std::shared_ptr<MultOp> &op, std::shared_ptr<Expression> &expression1,
+                               std::shared_ptr<Expression> &expression2) : 
                                  OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class CallExpression : public Expression
+  class CallExpression : public Expression, public std::enable_shared_from_this<CallExpression>
   {
     public:
       StringIdentifier                         ID;
-      std::vector<std::unique_ptr<Expression>> arguments;
-      
-      CallExpression(StringIdentifier &ID, std::vector<std::unique_ptr<Expression>> &arguments) :
+      std::vector<std::shared_ptr<Expression>> arguments;
+      std::weak_ptr<Method> declaration;
+    
+      CallExpression(StringIdentifier &ID, std::vector<std::shared_ptr<Expression>> &arguments) :
                        ID(ID), arguments(std::move(arguments)) { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print(StringTable::lookupIdentifier(ID) + "(");
-        
-        bool continous = false;
-        for(auto const& argument:arguments) {
-          if(continous) {
-            printer.print(", ");
-          }
-          argument->toString(printer);
-          continous = true;
-        }
-        
-        printer.print(")");
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class UnaryLeftExpression : public Expression
+  class UnaryLeftExpression : public Expression, public std::enable_shared_from_this<UnaryLeftExpression>
   {
     public:
-      std::unique_ptr<UnaryOp>    op;
-      std::unique_ptr<Expression> expression;
+      std::shared_ptr<UnaryOp>    op;
+      std::shared_ptr<Expression> expression;
       
-      UnaryLeftExpression(std::unique_ptr<UnaryOp> &op, std::unique_ptr<Expression> &expression) :
+      UnaryLeftExpression(std::shared_ptr<UnaryOp> &op, std::shared_ptr<Expression> &expression) :
                             op(std::move(op)), expression(std::move(expression)) { };
     
-      void toString(PrettyPrinter &printer) const {
-        op->toString(printer);
-        expression->toString(printer);
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class UnaryRightExpression : public Expression
+  class UnaryRightExpression : public Expression, public std::enable_shared_from_this<UnaryRightExpression>
   {
     public:
-      std::unique_ptr<UnaryOp>    op;
-      std::unique_ptr<Expression> expression;
+      std::shared_ptr<UnaryOp>    op;
+      std::shared_ptr<Expression> expression;
       
-      UnaryRightExpression(std::unique_ptr<Expression> &expression, std::unique_ptr<UnaryOp> &op) :
+      UnaryRightExpression(std::shared_ptr<Expression> &expression, std::shared_ptr<UnaryOp> &op) :
                              expression(std::move(expression)), op(std::move(op)) { };
     
-      void toString(PrettyPrinter &printer) const {
-        expression->toString(printer);
-        op->toString(printer);
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class CNull : public Expression
+  class CNull : public Expression, public std::enable_shared_from_this<CNull>
   {
     public:
       CNull() { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print("null");
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class CFalse : public Expression
+  class CFalse : public Expression, public std::enable_shared_from_this<CFalse>
   {
     public:
       CFalse() { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print("false");
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class CTrue : public Expression
+  class CTrue : public Expression, public std::enable_shared_from_this<CTrue>
   {
     public:
       CTrue() { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print("true");
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class CThis : public Expression
+  class CThis : public Expression, public std::enable_shared_from_this<CThis>
   {
     public:
       CThis() { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print("this");
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class CIntegerLiteral : public Expression
+  class CIntegerLiteral : public Expression, public std::enable_shared_from_this<CIntegerLiteral>
   {
     public:
       std::string integer;
       
       CIntegerLiteral(std::string &integer) : integer(integer) { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print(integer);
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class CRef : public Expression
+  class CRef : public Expression, public std::enable_shared_from_this<CRef>
   {
     public:
       StringIdentifier ID;
-      
+      std::weak_ptr<Node> declaration;
+    
       CRef(StringIdentifier &ID) : ID(ID) { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print(StringTable::lookupIdentifier(ID));
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class NewObject : public Expression
+  class NewObject : public Expression, public std::enable_shared_from_this<NewObject>
   {
     public:
-      StringIdentifier ID;
-      
-      NewObject(StringIdentifier &ID) : ID(ID) { };
+      std::shared_ptr<UserType> userType;
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print("new " + StringTable::lookupIdentifier(ID) + "()");
-      };
+      NewObject(std::shared_ptr<UserType> t) : userType(t) { };
+
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class NewArray : public Expression
+  class NewArray : public Expression, public std::enable_shared_from_this<NewArray>
   {
     public:
-      std::unique_ptr<BasicType>  type;
-      std::unique_ptr<Expression> expression;
+      std::shared_ptr<BasicType>  type;
+      std::shared_ptr<Expression> expression;
       int                         arrayDepth;
       
-      NewArray(std::unique_ptr<BasicType>  &type, std::unique_ptr<Expression> &expression,
+      NewArray(std::shared_ptr<BasicType>  &type, std::shared_ptr<Expression> &expression,
                int &arrayDepth) :
                  type(std::move(type)), expression(std::move(expression)), arrayDepth(arrayDepth) { };
     
-      void toString(PrettyPrinter &printer) const {
-        printer.print("new ");
-        type->toString(printer);
-        printer.print("[");
-        expression->toString(printer);
-        printer.print("]");
-        
-        for(int i=0; i<arrayDepth; i++) {
-          printer.print("[]");
-        }
-      };
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class Parameter : public Node
+  class Parameter : public Node, public std::enable_shared_from_this<Parameter>
   {
     public:
-      std::unique_ptr<Type> type;
+      std::shared_ptr<Type> type;
       StringIdentifier      ID;
       
-      Parameter(std::unique_ptr<Type> &type, StringIdentifier &ID) :
+      Parameter(std::shared_ptr<Type> &type, StringIdentifier &ID) :
             type(std::move(type)), ID(ID) { };
-      
-      void toString(PrettyPrinter &printer) const {
-        type->toString(printer);
-        printer.println(" " + StringTable::lookupIdentifier(ID));
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
   
 /*********************** Statements ***********************/
   
   
-  class Block : public Statement
+  class Block : public Statement, public std::enable_shared_from_this<Block>
   {
     public:
-      std::vector<std::unique_ptr<BlockStatement>> statements;
+      std::vector<std::shared_ptr<BlockStatement>> statements;
       
-      Block(std::vector<std::unique_ptr<BlockStatement>> &statements) : statements(std::move(statements)) { };
-      
-      void toString(PrettyPrinter &printer) const {
-        printer.println("{");
-        printer.addIndent();
-        for(auto const& statement : statements) {
-          statement->toString(printer);
-        }
-        printer.removeIndent();
-        printer.println("}");
-      };
+      Block(std::vector<std::shared_ptr<BlockStatement>> &statements) : statements(std::move(statements)) { };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class IfStatement : public Statement
+  class IfStatement : public Statement, public std::enable_shared_from_this<IfStatement>
   {
     public:
-      std::unique_ptr<Expression> expression;
-      std::unique_ptr<Statement>  ifStatement;
+      std::shared_ptr<Expression> expression;
+      std::shared_ptr<Statement>  ifStatement;
       
-      IfStatement(std::unique_ptr<Expression> &expression, std::unique_ptr<Statement> &ifStatement) :
+      IfStatement(std::shared_ptr<Expression> &expression, std::shared_ptr<Statement> &ifStatement) :
                     expression(std::move(expression)), ifStatement(std::move(ifStatement)) { };
-      
-      void toString(PrettyPrinter &printer) const {
-        printer.print("if (");
-        expression->toString(printer);
-        
-        if(dynamic_cast<Block*>(ifStatement.get())) {
-          printer.print(") ");
-          ifStatement->toString(printer);
-        } else {
-          printer.println(")");
-          printer.addIndent();
-          ifStatement->toString(printer);
-          printer.removeIndent();
-        }
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class IfElseStatement : public Statement
+  class IfElseStatement : public Statement, public std::enable_shared_from_this<IfElseStatement>
   {
     public:
-      std::unique_ptr<Expression> expression;
-      std::unique_ptr<Statement>  ifStatement;
-      std::unique_ptr<Statement>  elseStatement;
+      std::shared_ptr<Expression> expression;
+      std::shared_ptr<Statement>  ifStatement;
+      std::shared_ptr<Statement>  elseStatement;
       
-      IfElseStatement(std::unique_ptr<Expression> &expression, std::unique_ptr<Statement> &ifStatement,
-                      std::unique_ptr<Statement> &elseStatement) :
+      IfElseStatement(std::shared_ptr<Expression> &expression, std::shared_ptr<Statement> &ifStatement,
+                      std::shared_ptr<Statement> &elseStatement) :
                         expression(std::move(expression)), ifStatement(std::move(ifStatement)),
                         elseStatement(std::move(elseStatement)) { };
-      
-      void toString(PrettyPrinter &printer) const {
-        printer.print("if (");
-        expression->toString(printer);
-        
-        if(dynamic_cast<Block*>(ifStatement.get())) {
-          printer.print(") ");
-          ifStatement->toString(printer);
-        } else {
-          printer.println(")");
-          printer.addIndent();
-          ifStatement->toString(printer);
-          printer.removeIndent();
-        }
-        
-        if(dynamic_cast<Block*>(elseStatement.get())) {
-          printer.print("else ");
-          elseStatement->toString(printer);
-        } else {
-          printer.println("else");
-          printer.addIndent();
-          elseStatement->toString(printer);
-          printer.removeIndent();
-        }
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class ExpressionStatement : public Statement
+  class ExpressionStatement : public Statement, public std::enable_shared_from_this<ExpressionStatement>
   {
     public:
-      std::unique_ptr<Expression> expression;
+      std::shared_ptr<Expression> expression;
       
-      ExpressionStatement(std::unique_ptr<Expression> &expression) :
+      ExpressionStatement(std::shared_ptr<Expression> &expression) :
                             expression(std::move(expression)) { };
-      
-      void toString(PrettyPrinter &printer) const {
-        expression->toString(printer);
-        printer.println(";");
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class WhileStatement : public Statement
+  class WhileStatement : public Statement, public std::enable_shared_from_this<WhileStatement>
   {
     public:
-      std::unique_ptr<Expression> expression;
-      std::unique_ptr<Statement>  statement;
+      std::shared_ptr<Expression> expression;
+      std::shared_ptr<Statement>  statement;
       
-      WhileStatement(std::unique_ptr<Expression> &expression, std::unique_ptr<Statement> &statement) :
+      WhileStatement(std::shared_ptr<Expression> &expression, std::shared_ptr<Statement> &statement) :
                        expression(std::move(expression)), statement(std::move(statement)) { };
-      
-      void toString(PrettyPrinter &printer) const {
-        printer.print("while (");
-        expression->toString(printer);
-        if(dynamic_cast<Block*>(statement.get())) {
-          printer.print(") ");
-          statement->toString(printer);
-        } else {
-          printer.println(") ");
-          printer.addIndent();
-          statement->toString(printer);
-          printer.removeIndent();
-        }
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class ReturnExpressionStatement : public Statement
+  class ReturnExpressionStatement : public Statement, public std::enable_shared_from_this<ReturnExpressionStatement>
   {
     public:
-      std::unique_ptr<Expression> expression; 
+      std::shared_ptr<Expression> expression; 
       
-      ReturnExpressionStatement(std::unique_ptr<Expression> &expression) :
+      ReturnExpressionStatement(std::shared_ptr<Expression> &expression) :
                                   expression(std::move(expression)) { };
-      
-      void toString(PrettyPrinter &printer) const {
-        printer.print("return ");
-        expression->toString(printer);
-        printer.println(";");
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class ReturnStatement : public Statement
+  class ReturnStatement : public Statement, public std::enable_shared_from_this<ReturnStatement>
   {
     public:
       ReturnStatement() { };
-      
-      void toString(PrettyPrinter &printer) const {
-        printer.println("return;");
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class EmptyStatement : public Statement
+  class EmptyStatement : public Statement, public std::enable_shared_from_this<EmptyStatement>
   {
     public:
       EmptyStatement() { };
-      
-      void toString(PrettyPrinter &printer) const {
-        printer.println(";");
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class LocalVariableDeclaration : public BlockStatement
+  class LocalVariableDeclaration : public BlockStatement, public std::enable_shared_from_this<LocalVariableDeclaration>
   {
     public:
-      std::unique_ptr<Type> type;
+      std::shared_ptr<Type> type;
       StringIdentifier      ID;
       
-      LocalVariableDeclaration(std::unique_ptr<Type> &type, StringIdentifier &ID) :
+      LocalVariableDeclaration(std::shared_ptr<Type> &type, StringIdentifier &ID) :
                                  type(std::move(type)), ID(ID) { };
-      
-      void toString(PrettyPrinter &printer) const {
-        type->toString(printer);
-        printer.println(" " + StringTable::lookupIdentifier(ID) + ";");
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class LocalVariableExpressionDeclaration : public BlockStatement
+  class LocalVariableExpressionDeclaration : public BlockStatement, public std::enable_shared_from_this<LocalVariableExpressionDeclaration>
   {
     public:
-      std::unique_ptr<Type>       type;
+      std::shared_ptr<Type>       type;
       StringIdentifier            ID;
-      std::unique_ptr<Expression> expression;
+      std::shared_ptr<Expression> expression;
       
-      LocalVariableExpressionDeclaration(std::unique_ptr<Type> &type, StringIdentifier &ID,
-                                         std::unique_ptr<Expression> &expression) :
+      LocalVariableExpressionDeclaration(std::shared_ptr<Type> &type, StringIdentifier &ID,
+                                         std::shared_ptr<Expression> &expression) :
                                            type(std::move(type)), ID(ID), expression(std::move(expression)) { };
-      
-      void toString(PrettyPrinter &printer) const {
-        type->toString(printer);
-        printer.println(" " + StringTable::lookupIdentifier(ID));
-        printer.println(" = ");
-        expression->toString(printer);
-        printer.println(";");
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
   
 /*********************** Class related ***********************/
   
   
-  class Field : public ClassMember
+  class Field : public ClassMember, public std::enable_shared_from_this<Field>
   {
     public:
-      std::unique_ptr<Type> type;
+      std::shared_ptr<Type> type;
       StringIdentifier      ID;
       
-      Field(std::unique_ptr<Type> &type, StringIdentifier &ID) :
+      Field(std::shared_ptr<Type> &type, StringIdentifier &ID) :
             type(std::move(type)), ID(ID) { };
-      
-      void toString(PrettyPrinter &printer) const {
-        type->toString(printer);
-        printer.println(" " + StringTable::lookupIdentifier(ID) + ";");
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
-  class Method : public ClassMember
+  class Method : public ClassMember, public std::enable_shared_from_this<Method>
   {
     public:
-      std::unique_ptr<Type>                   type;
+      std::shared_ptr<Type>                   type;
       StringIdentifier                        ID;
-      std::vector<std::unique_ptr<Parameter>> parameters;
-      std::unique_ptr<Block>                  block;
-      
-      Method(std::unique_ptr<Type> &type, StringIdentifier &ID, std::vector<std::unique_ptr<Parameter>> &parameters,
-             std::unique_ptr<Block> &block) :
+      std::vector<std::shared_ptr<Parameter>> parameters;
+      std::shared_ptr<Block>                  block;
+      std::map<StringIdentifier, std::weak_ptr<Parameter>> parameterMap;
+    
+      Method(std::shared_ptr<Type> &type, StringIdentifier &ID, std::vector<std::shared_ptr<Parameter>> &parameters,
+             std::shared_ptr<Block> &block) :
                type(std::move(type)), ID(ID), parameters(std::move(parameters)), block(std::move(block)) { };
-      
-      void toString(PrettyPrinter &printer) const {
-        printer.print("public ");
-        type->toString(printer);
-        printer.print(" ");
-        printer.print(StringTable::lookupIdentifier(ID) + "(");
-
-        bool continous = false;
-        for(auto const& parameter:parameters) {
-          if(continous) {
-            printer.print(", ");
-          }
-          parameter->toString(printer);
-          continous = true;
-        }
-
-        printer.print(")");
-        block->toString(printer);
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
   /** The MainMethod is a ClassMember and therefore part of a ClassDeclaration. The MainMethod element contains two IDs (Method-identifier and parameter-identifier) and a Block (Representation of the method body) */
-  class MainMethod : public ClassMember
+  class MainMethod : public ClassMember, public std::enable_shared_from_this<MainMethod>
   {
     public:
       StringIdentifier       ID;
       StringIdentifier       parameterID;
-      std::unique_ptr<Block> block;
+      std::shared_ptr<Block> block;
       
-      MainMethod(StringIdentifier &ID, StringIdentifier &parameterID, std::unique_ptr<Block> &block) :
+      MainMethod(StringIdentifier &ID, StringIdentifier &parameterID, std::shared_ptr<Block> &block) :
                    ID(ID), parameterID(std::move(parameterID)), block(std::move(block)) { };
-      
-      void toString(PrettyPrinter &printer) const {
-        printer.print("public static void " + StringTable::lookupIdentifier(ID) + "(String[] " + StringTable::lookupIdentifier(parameterID) + ")");
-        block->toString(printer);
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
   /** A ClassDeclaration consists of an ID, which is the identifier for this class and various ClassMembers, like Methods and Fields.  */
-  class ClassDeclaration : public Node
+  class ClassDeclaration : public Node, public std::enable_shared_from_this<ClassDeclaration>
   {
     public:
       StringIdentifier                          ID;
-      std::vector<std::unique_ptr<ClassMember>> classMembers;
-      
-      ClassDeclaration(StringIdentifier &ID, std::vector<std::unique_ptr<ClassMember>> &classMembers) :
+      std::vector<std::shared_ptr<ClassMember>> classMembers;
+      std::map<StringIdentifier, std::weak_ptr<Method>> methods;
+      std::map<StringIdentifier, std::weak_ptr<Field>> fields;
+    
+      bool returns = false;
+    
+      ClassDeclaration(StringIdentifier &ID, std::vector<std::shared_ptr<ClassMember>> &classMembers) :
                          ID(ID), classMembers(std::move(classMembers)) { };
-      
-      void toString(PrettyPrinter &printer) const {
-        // sort the classMembers
-        // first methods then fields, each of them in alphabetical order
-        
-        // TODO: sort() throws compiler error
-        /*std::sort(classMembers.begin(), classMembers.end(), 
-          [](const std::unique_ptr<ClassMember> &a, const std::unique_ptr<ClassMember> &b) -> bool{
-            Field* a_p;
-            Field* b_p;
-            
-            if ((a_p = dynamic_cast<Field*>(a.get())) && (b_p = dynamic_cast<Field*>(b.get())))
-            {
-              // a and b are both Fields
-              
-              // get identifier strings and compare them
-              return StringTable::lookupIdentifier(ap_ID).compare(StringTable::lookupIdentifier(b_pID));
-            }
-            else if ((dynamic_cast<Method*>(a.get()) || dynamic_cast<MainMethod*>(a.get())) && 
-              (dynamic_cast<Method*>(b.get()) || dynamic_cast<MainMethod*>(b.get())))
-            {
-              // a and b are both either Method or MainMethod
-              std::string a_s;
-              std::string b_s;
-              Method* m;
-              MainMethod* mm;
-              
-              // get identifier string for a
-              if (m = dynamic_cast<Method*>(a.get()))
-              {
-                a_s = StringTable::lookupIdentifier(m->ID);
-              }
-              else if (mm = dynamic_cast<MainMethod*>(a.get()))
-              {
-                a_s = StringTable::lookupIdentifier(mm->ID);
-              }
-              
-              // get identifier string for b
-              if (m = dynamic_cast<Method*>(b.get()))
-              {
-                b_s = StringTable::lookupIdentifier(m->ID);
-              }
-              else if (mm = dynamic_cast<MainMethod*>(b.get()))
-              {
-                b_s = StringTable::lookupIdentifier(mm->ID);
-              }
-              
-              // compare strings
-              return a_s.compare(b_s);
-            }
-            else if (dynamic_cast<Field*>(a.get()) && 
-              (dynamic_cast<Method*>(b.get()) || dynamic_cast<MainMethod*>(b.get())))
-            {
-              // a is field and b is Method or MainMethod
-              return 1;
-            }
-            else
-            {
-              // a is Method or MainMethod and b is Field
-              return -1;
-            }
-        });*/
-        
-        printer.println("class "+ StringTable::lookupIdentifier(ID) + " {");
-        printer.addIndent();
-        for(auto const& classMember : classMembers) {
-          classMember->toString(printer);
-        }
-        printer.removeIndent();
-        printer.println("}");
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
   
   /** Always the first element in the AST. Can contain multiple ClassDeclarations. */	
-  class Program : public Node
+  class Program : public Node, public std::enable_shared_from_this<Program>
   {
     public:
-      std::vector<std::unique_ptr<ClassDeclaration>> classDeclarations;
+      std::vector<std::shared_ptr<ClassDeclaration>> classDeclarations;
       
-      Program(std::vector<std::unique_ptr<ClassDeclaration>> &classDeclarations) :
+      Program(std::vector<std::shared_ptr<ClassDeclaration>> &classDeclarations) :
                 classDeclarations(std::move(classDeclarations)) { };
-
-      void toString(PrettyPrinter &printer) const {
-        // sort classes by alphabetical order
-        
-        // TODO: sort() throws compiler error
-        /*std::sort(classDeclarations.begin(), classDeclarations.end(), 
-          [](const std::unique_ptr<ClassDeclaration> &a, const std::unique_ptr<ClassDeclaration> &b) -> bool{
-            return StringTable::lookupIdentifier(a->ID).compare(StringTable::lookupIdentifier(b->ID));
-        });*/
-        
-        for(auto const& classDeclaration : classDeclarations) {
-          classDeclaration->toString(printer);
-        }
-      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
   };
+  
+  
 }

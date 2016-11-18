@@ -56,4 +56,6 @@ int InputParser::handleArgs() const
     // actual call
     return opt.fn(file);
   }
+    
+    return 0;
 }

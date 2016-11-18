@@ -853,6 +853,7 @@ inline void Lexer::insertToken(std::unique_ptr<Token> token)
 bool Lexer::putBackToken(std::unique_ptr<Token> &t)
 {
   tokenArray.push_front(std::move(t));
+    return true;
 }
 
 bool Lexer::getNextToken(std::unique_ptr<Token> &t)

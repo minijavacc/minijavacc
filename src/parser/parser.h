@@ -14,7 +14,7 @@ namespace cmpl
     public:
       Parser(Lexer &lexer) : lexer(lexer) { };
       void run();
-      void getAST(std::unique_ptr<Node> &n);
+      std::shared_ptr<Node> getAST();
     
     private:
       /*
@@ -23,27 +23,27 @@ namespace cmpl
        * parseProgram() starts with no tokens and returns when there are no tokens left.
        * parseClassDeclaration() returns with the last symbol ('}') as currentToken.
        */
-      std::unique_ptr<Program>          parseProgram();
-      std::unique_ptr<ClassDeclaration> parseClassDeclaration();
-      std::unique_ptr<ClassMember>      parseClassMember();
-      std::unique_ptr<Type>             parseType();
-      std::unique_ptr<BasicType>        parseBasicType();
-      std::unique_ptr<Parameter>        parseParameter();
-      std::unique_ptr<BlockStatement>   parseBlockStatement();
-      std::unique_ptr<BlockStatement>   parseLocalVarDecl();
-      std::unique_ptr<Block>            parseBlock();
-      std::unique_ptr<Statement>        parseStatement();
-      std::unique_ptr<Statement>        parseIfElseStatement();
-      std::unique_ptr<Statement>        parseWhileStatement();
-      std::unique_ptr<Statement>        parseReturnStatement();
-      std::unique_ptr<Statement>        parseExpressionStatement();
-      std::unique_ptr<Expression>       parseExpression(unsigned int minPrecedence = 0);
-      std::unique_ptr<Expression>       parseUnaryExpression();
-      std::unique_ptr<Expression>       parsePostfixExpression();
-      std::unique_ptr<Expression>       parsePrimaryExpression();
+      std::shared_ptr<Program>          parseProgram();
+      std::shared_ptr<ClassDeclaration> parseClassDeclaration();
+      std::shared_ptr<ClassMember>      parseClassMember();
+      std::shared_ptr<Type>             parseType();
+      std::shared_ptr<BasicType>        parseBasicType();
+      std::shared_ptr<Parameter>        parseParameter();
+      std::shared_ptr<BlockStatement>   parseBlockStatement();
+      std::shared_ptr<BlockStatement>   parseLocalVarDecl();
+      std::shared_ptr<Block>            parseBlock();
+      std::shared_ptr<Statement>        parseStatement();
+      std::shared_ptr<Statement>        parseIfElseStatement();
+      std::shared_ptr<Statement>        parseWhileStatement();
+      std::shared_ptr<Statement>        parseReturnStatement();
+      std::shared_ptr<Statement>        parseExpressionStatement();
+      std::shared_ptr<Expression>       parseExpression(unsigned int minPrecedence = 0);
+      std::shared_ptr<Expression>       parseUnaryExpression();
+      std::shared_ptr<Expression>       parsePostfixExpression();
+      std::shared_ptr<Expression>       parsePrimaryExpression();
       
       Lexer& lexer;
-      std::unique_ptr<Node> ast;
+      std::shared_ptr<Node> ast;
       std::unique_ptr<Token> currentToken;
 
       inline void error(const std::string &err);

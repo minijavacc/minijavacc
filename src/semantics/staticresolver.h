@@ -1,25 +1,29 @@
+//
+//  staticresolver.h
+//  mjcc
+//
+//  Created by Markus Schlegel on 17/11/16.
+//  Copyright © 2016 Markus Schlegel. All rights reserved.
+//
+
 #pragma once
 
 #include "node.h"
+#include "symboltable.h"
+
+using namespace std;
 
 namespace cmpl {
   
-  class PrettyPrinter : public Dispatcher, public std::enable_shared_from_this<PrettyPrinter> {
+  class StaticResolver : public Dispatcher, public std::enable_shared_from_this<StaticResolver> {
   private:
-    const std::string indent = "   ";
-    std::ostream& printStream;
-    std::string indents;
-    bool indentsPrinted;
+    std::shared_ptr<Program> currentProgram;
+    std::shared_ptr<ClassDeclaration> currentClassDeclaration;
+    std::shared_ptr<Method> currentMethod;
+    std::unique_ptr<SymbolTable> currentSymbolTable;
+    bool valid = false;
     
   public:
-    PrettyPrinter(std::ostream& printStream) : printStream(printStream), indentsPrinted(false) { };
-    void print(const std::string &s);
-    void println(const std::string &s);
-    void addIndent();
-    void removeIndent();
-    
-    std::ostream& getStream();
-    
     virtual void dispatch(std::shared_ptr<Type> n);
     virtual void dispatch(std::shared_ptr<UserType> n);
     virtual void dispatch(std::shared_ptr<TypeInt> n);
@@ -76,4 +80,5 @@ namespace cmpl {
     virtual void dispatch(std::shared_ptr<Negate> n);
     virtual void dispatch(std::shared_ptr<Minus> n);
   };
+  
 }

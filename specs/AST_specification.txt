@@ -3,19 +3,27 @@ Type :: BasicType Int
 BasicType = TypeInt | TypeBoolean | TypeVoid | UserType
 
 UserType :: Ident
+  Attribute decl -> ClassDeclaration
 
 
 Program :: [ClassDeclaration]
 
 ClassDeclaration :: Ident [ClassMember]
+  is a Declaration
+  Attribute methods (map from StringIdentifier -> Method)
+  Attribute fields (map from StringIdentifier -> Field)
 
 ClassMember = Field | Method | MainMethod
 
 Field :: Ident Type
+  is a Declaration
 Method :: Ident Type [Parameter] Block
+  is a Declaration
+  Attribute parameters (map from StringIdentifier -> Parameter)
 MainMethod :: Ident Ident Block
 
 Parameter :: Ident Type
+  is a Declaration
 
 Block :: [BlockStatement]
 
@@ -36,7 +44,9 @@ WhileStatement :: Expression Statement
 ReturnExpressionStatement :: Expression
 
 LocalVariableDeclaration :: Ident Type
+  is a Declaration
 LocalVariableExpressionDeclaration :: Ident Type Expression
+  is a Declaration
 
 EqualityOp = NotEquals | Equals
 
@@ -49,8 +59,10 @@ MultOp = Multiply | Divide | Modulo
 UnaryOp = Negate | Minus | MethodInvocation | FieldAccess | ArrayAccess
 
 MethodInvocation :: Ident [Expression]
+  Attribute decl -> Method
 
 FieldAccess :: Ident
+  Attribute decl -> Field
 
 ArrayAccess :: Expression
 
@@ -61,6 +73,7 @@ Expression = AssignmentExpression
            | RelationalExpression
            | AdditiveExpression 
            | MultiplicativeExpression
+           | CallExpression
            | UnaryExpression
            | PrimaryExpression
 
@@ -71,6 +84,8 @@ EqualityExpression :: EqualityOp Expression Expression
 RelationalExpression :: RelationalOp Expression Expression
 AdditiveExpression :: AddOp Expression Expression
 MultiplicativeExpression :: MultOp Expression Expression
+CallExpression :: Ident [Expression]
+  Attribute decl -> Method
 UnaryExpression :: UnaryOp PrimaryExpression
 
 PrimaryExpression = CFalse
@@ -87,8 +102,9 @@ PrimaryExpression = CFalse
 
 CIntegerLiteral :: Int
 CRef :: Ident
+  Attribute decl -> LocalVariableDeclaration / LocalVariableExpressionDeclaration / Field / Parameter
 CMethRef :: Ident [Expression]
-NewObject :: Ident
+NewObject :: UserType
 NewArray :: Int BasicType Expression
 CallExpression :: Ident [Expression]
 NestedExpression :: Expression
