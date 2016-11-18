@@ -1,5 +1,5 @@
 //
-//  methodfieldcollector.hpp
+//  staticdeclarationscollector.h
 //  mjcc
 //
 //  Created by Markus Schlegel on 17/11/16.
@@ -14,7 +14,7 @@ using namespace std;
 
 namespace cmpl {
   
-  class MethodFieldCollector : public Dispatcher, public std::enable_shared_from_this<MethodFieldCollector> {
+  class StaticDeclarationsCollector : public Dispatcher, public std::enable_shared_from_this<StaticDeclarationsCollector> {
   private:
     shared_ptr<ClassDeclaration> currentClassDeclaration;
     
