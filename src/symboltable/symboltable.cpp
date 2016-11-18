@@ -15,15 +15,16 @@ using namespace cmpl;
 
 // --- Scope ---
 
-std::weak_ptr<Node> Scope::lookup(StringIdentifier name) {
+bool Scope::lookup(StringIdentifier name, std::weak_ptr<Node> &res) {
   if (declarations->count(name) > 0) {
-    return declarations->at(name);
+    res = declarations->at(name);
+    return true;
   } else {
     if (parent != nullptr) {
-      return parent->lookup(name);
+      return parent->lookup(name, res);
     }
     
-    return std::weak_ptr<Node>();
+    return false;
   }
 }
 
@@ -49,20 +50,21 @@ void SymbolTable::leaveScope() {
   }
 }
 
-std::weak_ptr<Node> SymbolTable::lookup(StringIdentifier name) {
+bool SymbolTable::lookup(StringIdentifier name, std::weak_ptr<Node> &res) {
   if (current) {
-    return current->lookup(name);
+    return current->lookup(name, res);
   } else {
-    return std::weak_ptr<Node>();
+    return false;
   }
-}
-
-bool SymbolTable::isDefinedInCurrentScope(StringIdentifier name) {
-  return current->declarations->count(name) > 0;
 }
 
 void SymbolTable::insert(StringIdentifier name, std::weak_ptr<Node> decl) {
   if (current) {
     current->insert(name, decl);
   }
+}
+
+bool SymbolTable::hasValueFor(StringIdentifier name) {
+  std::weak_ptr<Node> ptr;
+  return lookup(name, ptr);
 }

@@ -14,7 +14,7 @@ namespace cmpl
       std::unique_ptr<std::map<StringIdentifier, std::weak_ptr<Node> > > declarations;
       std::shared_ptr<Scope> parent;
       Scope(std::shared_ptr<Scope> p);
-      std::weak_ptr<Node> lookup(StringIdentifier name);
+      bool lookup(StringIdentifier name, std::weak_ptr<Node> &res);
       void insert(StringIdentifier name, std::weak_ptr<Node> decl);
   };
   
@@ -25,8 +25,8 @@ namespace cmpl
       void enterScope();
       void leaveScope();
       void insert(StringIdentifier name, std::weak_ptr<Node> decl);
-      std::weak_ptr<Node> lookup(StringIdentifier name);
-      bool isDefinedInCurrentScope(StringIdentifier name);
+      bool lookup(StringIdentifier name, std::weak_ptr<Node> &res);
+      bool hasValueFor(StringIdentifier name);
       SymbolTable() : current(nullptr) {}
       
     private:
