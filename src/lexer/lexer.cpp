@@ -901,7 +901,7 @@ inline std::istream& Lexer::getNextChar(std::ifstream &inputFile, char& currentC
   
   if (currentChar == '\n')
   {
-    column = 1;
+    column = 0;
     line++;
   }
   else
