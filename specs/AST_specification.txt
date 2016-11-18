@@ -10,6 +10,8 @@ Program :: [ClassDeclaration]
 
 ClassDeclaration :: Ident [ClassMember]
   is a Declaration
+  Attribute methods (map from StringIdentifier -> Method)
+  Attribute fields (map from StringIdentifier -> Field)
 
 ClassMember = Field | Method | MainMethod
 
@@ -17,6 +19,7 @@ Field :: Ident Type
   is a Declaration
 Method :: Ident Type [Parameter] Block
   is a Declaration
+  Attribute parameters (map from StringIdentifier -> Parameter)
 MainMethod :: Ident Ident Block
 
 Parameter :: Ident Type
