@@ -6,7 +6,7 @@ namespace cmpl {
   
   class PrettyPrinter : public Dispatcher, public std::enable_shared_from_this<PrettyPrinter> {
   private:
-    const std::string indent = "   ";
+    const std::string indent = "  ";
     std::ostream& printStream;
     std::string indents;
     bool indentsPrinted;

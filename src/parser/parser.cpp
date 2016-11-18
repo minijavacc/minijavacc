@@ -322,6 +322,7 @@ std::shared_ptr<BlockStatement> Parser::parseLocalVarDecl()
   type = parseType();
   ID = getIdentifierFromCurrent();
   if(isNextTokenOSKTokenOfType(T_O_SEMICOLON)) {
+    nextToken();
     return std::make_shared<LocalVariableDeclaration>(type, ID);
   } else {
     assureCurrentIsOSKTokenWithType(T_O_EQUAL);
