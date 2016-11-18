@@ -6,12 +6,7 @@ cmake_install.cmake
 install_manifest.txt
 CTestTestfile.cmake
 bin
-hs/Lexer.hi
-hs/Lexer.o
-hs/Main.hi
-hs/Main.o
-hs/parser
-hs/Parser.hi
-hs/Parser.o
-hs/ParserTests.hi
-hs/ParserTests.o
+*.o
+*.hi
+doc
+.codelite

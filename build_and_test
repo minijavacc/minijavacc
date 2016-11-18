@@ -6,13 +6,42 @@ BASEDIR=$(dirname "$(readlink -f "$0")")
 # Assume script resides inside the project root directory and is always called from there
 if [ "$BUILDSCRIPT" = "CPPCHECK" ]
 then
-  cppcheck --enable=all -i tests --error-exitcode=1 ./src/
+  (cppcheck --enable=all -i tests --error-exitcode=1 ./src/)
+  ret=$?
+  if [ $ret -ne 0 ]; then
+    exit 1
+  fi
+  
+  exit 0
 elif [ "$BUILDSCRIPT" = "BUILDONLY" ]
 then
-  ./build
+  (./build)
+  ret=$?
+  if [ $ret -ne 0 ]; then
+    exit 1
+  fi
+  
+  exit 0
 else
-  ./build
+  (./build)
+  ret=$?
+  if [ $ret -ne 0 ]; then
+    exit 1
+  fi
+
   cd ./src/lexer/tests/
-  ./tests.sh
-  MJ_RUN="${BASEDIR}/run" ${BASEDIR}/tests/mjt.py --produce_no_reports all
+  
+  (./tests.sh)
+  ret=$?
+  if [ $ret -ne 0 ]; then
+    exit 1
+  fi
+  
+  (MJ_RUN="${BASEDIR}/run" ${BASEDIR}/tests/mjt.py --produce_no_reports all)
+  ret=$?
+  if [ $ret -ne 0 ]; then
+    exit 1
+  fi
+  
+  exit 0
 fi
