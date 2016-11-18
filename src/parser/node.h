@@ -585,9 +585,9 @@ namespace cmpl
   class NewObject : public Expression, public std::enable_shared_from_this<NewObject>
   {
     public:
-      StringIdentifier ID;
-      
-      NewObject(StringIdentifier &ID) : ID(ID) { };
+      std::shared_ptr<UserType> userType;
+    
+      NewObject(std::shared_ptr<UserType> t) : userType(t) { };
 
       void accept (std::shared_ptr<Dispatcher> d) override {
         d->dispatch(shared_from_this());

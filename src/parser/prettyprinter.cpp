@@ -328,7 +328,7 @@ void PrettyPrinter::dispatch(std::shared_ptr<CIntegerLiteral> n) {
 };
 
 void PrettyPrinter::dispatch(std::shared_ptr<NewObject> n) {
-  print("new " + StringTable::lookupIdentifier(n->ID) + "()");
+  print("new " + StringTable::lookupIdentifier(n->userType->ID) + "()");
 };
 
 void PrettyPrinter::dispatch(std::shared_ptr<NewArray> n) {

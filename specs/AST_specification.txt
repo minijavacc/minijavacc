@@ -103,7 +103,7 @@ CIntegerLiteral :: Int
 CRef :: Ident
   Attribute decl -> LocalVariableDeclaration / LocalVariableExpressionDeclaration / Field / Parameter
 CMethRef :: Ident [Expression]
-NewObject :: Ident
+NewObject :: UserType
 NewArray :: Int BasicType Expression
 NestedExpression :: Expression
 
