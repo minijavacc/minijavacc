@@ -12,7 +12,7 @@
 using namespace cmpl;
 
 
-std::shared_ptr<Type> voidNode() {
+std::shared_ptr<Type> ReturnChecker::voidNode() {
   return std::make_shared<Type>(std::make_shared<TypeVoid>(), 0);
 }
 

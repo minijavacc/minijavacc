@@ -13,9 +13,6 @@ namespace cmpl
     bool isLValue = false;
     std::shared_ptr<Type> astType;
     bool isValidSemanticType(); // Semantic types type expressions, expressions cannot be void
-    
-    
-  private:
     SemanticType(std::weak_ptr<Type> t) : astType(t) { };
   };
 

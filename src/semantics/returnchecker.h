@@ -13,6 +13,8 @@
 namespace cmpl {
 
   class ReturnChecker : public Dispatcher, public std::enable_shared_from_this<ReturnChecker> {
+  private:
+    std::shared_ptr<Type> voidNode();
   public:
     bool valid = false;
     

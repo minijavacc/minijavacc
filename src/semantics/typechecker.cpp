@@ -27,15 +27,15 @@ inline void error(const std::string &err)
   throw TypeError(err);
 }
 
-std::shared_ptr<Type> voidNode() {
+std::shared_ptr<Type> TypeChecker::voidNode() {
   return std::make_shared<Type>(std::make_shared<TypeVoid>(), 0);
 }
 
-std::shared_ptr<Type> intNode() {
+std::shared_ptr<Type> TypeChecker::intNode() {
   return std::make_shared<Type>(std::make_shared<TypeInt>(), 0);
 }
 
-std::shared_ptr<Type> booleanNode() {
+std::shared_ptr<Type> TypeChecker::booleanNode() {
   return std::make_shared<Type>(std::make_shared<TypeBoolean>(), 0);
 }
 
@@ -252,7 +252,7 @@ void TypeChecker::dispatch(std::shared_ptr<CallExpression> n) {
     }
   }
   
-  n->type = std::make_shared<SemanticType>(n->declaration);
+  n->type = std::make_shared<SemanticType>(decl->type);
 };
 
 void TypeChecker::dispatch(std::shared_ptr<UnaryLeftExpression> n) {

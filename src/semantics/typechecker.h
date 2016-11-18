@@ -17,6 +17,9 @@ namespace cmpl {
     std::shared_ptr<Program> currentProgram;
     std::shared_ptr<ClassDeclaration> currentClassDeclaration;
     std::shared_ptr<Method> currentMethod;
+    std::shared_ptr<Type> voidNode();
+    std::shared_ptr<Type> intNode();
+    std::shared_ptr<Type> booleanNode();
     
   public:
     virtual void dispatch(std::shared_ptr<Type> n);

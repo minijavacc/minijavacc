@@ -7,9 +7,11 @@
 //
 
 #include "checker.h"
-#include "returnchecker.h"
-#include "staticdeclarationscollector.h"
-#include "staticresolver.h"
+//#include "returnchecker.h"
+//#include "staticdeclarationscollector.h"
+//#include "staticresolver.h"
+#include "node.h"
+//#include "parser.h"
 
 #include <iostream>
 
@@ -32,9 +34,10 @@ void Checker::run() {
 //    std::cout << "Return check: invalid (missing return)!\n";
 //  }
   
-  std::shared_ptr<StaticDeclarationsCollector> coll(new StaticDeclarationsCollector());
-  std::shared_ptr<StaticResolver> resolver(new StaticResolver());
+//  std::shared_ptr<StaticDeclarationsCollector> coll(new StaticDeclarationsCollector());
+//  std::shared_ptr<StaticResolver> resolver(new StaticResolver());
   
-  n->accept(coll);
-  n->accept(resolver);
+//  n->accept(coll);
+//  n->accept(resolver);
+ 
 }
