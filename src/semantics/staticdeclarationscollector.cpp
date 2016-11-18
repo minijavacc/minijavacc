@@ -13,6 +13,20 @@
 using namespace cmpl;
 
 
+// helpers
+
+class CollectorError : public std::runtime_error
+{
+public:
+  CollectorError(const std::string& err) : std::runtime_error(err) { }
+};
+
+inline void error(const std::string &err)
+{
+  throw CollectorError(err);
+}
+
+
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Program> n) {
   for(auto const& c: n->classDeclarations) {
@@ -30,10 +44,20 @@ void StaticDeclarationsCollector::dispatch(std::shared_ptr<ClassDeclaration> n) 
 };
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Field> n) {
+  if (currentClassDeclaration->fields.count(n->ID) > 0) {
+    error("cannot have multiple fields with the same name");
+    return;
+  }
+  
   currentClassDeclaration->fields.emplace(n->ID, n);
 };
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Method> n) {
+  if (currentClassDeclaration->methods.count(n->ID) > 0) {
+    error("cannot have multiple methods with the same name");
+    return;
+  }
+  
   currentClassDeclaration->methods.emplace(n->ID, n);
   
   // collect parameters
@@ -45,6 +69,11 @@ void StaticDeclarationsCollector::dispatch(std::shared_ptr<Method> n) {
 };
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Parameter> n) {
+  if (currentMethod->parameterMap.count(n->ID) > 0) {
+    error("cannot have multiple parameters with the same name");
+    return;
+  }
+  
   currentMethod->parameterMap.emplace(n->ID, n);
 };
 
