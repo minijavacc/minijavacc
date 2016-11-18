@@ -198,6 +198,7 @@ namespace cmpl
   {
     public:
       StringIdentifier ID;
+      std::weak_ptr<ClassDeclaration> declaration;
       
       UserType(StringIdentifier &ID) : ID(ID) { }
     
@@ -481,7 +482,8 @@ namespace cmpl
     public:
       StringIdentifier                         ID;
       std::vector<std::shared_ptr<Expression>> arguments;
-      
+      std::weak_ptr<Method> declaration;
+    
       CallExpression(StringIdentifier &ID, std::vector<std::shared_ptr<Expression>> &arguments) :
                        ID(ID), arguments(std::move(arguments)) { };
     
@@ -574,7 +576,8 @@ namespace cmpl
   {
     public:
       StringIdentifier ID;
-      
+      std::weak_ptr<Node> declaration;
+    
       CRef(StringIdentifier &ID) : ID(ID) { };
     
       void accept (std::shared_ptr<Dispatcher> d) override {
@@ -786,7 +789,8 @@ namespace cmpl
       StringIdentifier                        ID;
       std::vector<std::shared_ptr<Parameter>> parameters;
       std::shared_ptr<Block>                  block;
-      
+      std::map<StringIdentifier, std::weak_ptr<Parameter>> parameterMap;
+    
       Method(std::shared_ptr<Type> &type, StringIdentifier &ID, std::vector<std::shared_ptr<Parameter>> &parameters,
              std::shared_ptr<Block> &block) :
                type(std::move(type)), ID(ID), parameters(std::move(parameters)), block(std::move(block)) { };
