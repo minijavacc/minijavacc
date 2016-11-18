@@ -15,7 +15,6 @@ using namespace cmpl;
 
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Program> n) {
-  currentProgram = n;
   for(auto const& c: n->classDeclarations) {
     c->accept(shared_from_this());
   }
@@ -36,6 +35,17 @@ void StaticDeclarationsCollector::dispatch(std::shared_ptr<Field> n) {
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Method> n) {
   currentClassDeclaration->methods.emplace(n->ID, n);
+  
+  // collect parameters
+  currentMethod = n;
+  
+  for (auto const& p : n->parameters) {
+    p->accept(shared_from_this());
+  }
+};
+
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<Parameter> n) {
+  currentMethod->parameterMap.emplace(n->ID, n);
 };
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<MainMethod> n) { };
@@ -44,7 +54,6 @@ void StaticDeclarationsCollector::dispatch(std::shared_ptr<UserType> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<TypeInt> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<TypeBoolean> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<TypeVoid> n) { };
-void StaticDeclarationsCollector::dispatch(std::shared_ptr<Parameter> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Block> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<IfStatement> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<ExpressionStatement> n) { };

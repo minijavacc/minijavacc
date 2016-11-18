@@ -17,6 +17,7 @@ namespace cmpl {
   class StaticDeclarationsCollector : public Dispatcher, public std::enable_shared_from_this<StaticDeclarationsCollector> {
   private:
     shared_ptr<ClassDeclaration> currentClassDeclaration;
+    shared_ptr<Method> currentMethod;
     
   public:
     virtual void dispatch(std::shared_ptr<Type> n);
