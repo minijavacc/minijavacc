@@ -4,22 +4,18 @@
 #include <string>
 #include <memory>
 
-#include "token.h"
+#include "node.h"
 
 namespace cmpl
 {
   
-  struct Declaration {
-    std::string foo;
-  };
-  
   class Scope {
     public:
-      std::unique_ptr<std::map<StringIdentifier, std::weak_ptr<Declaration> > > declarations;
+      std::unique_ptr<std::map<StringIdentifier, std::weak_ptr<Node> > > declarations;
       std::shared_ptr<Scope> parent;
       Scope(std::shared_ptr<Scope> p);
-      std::weak_ptr<Declaration> lookup(StringIdentifier name);
-      void insert(StringIdentifier name, std::weak_ptr<Declaration> decl);
+      std::weak_ptr<Node> lookup(StringIdentifier name);
+      void insert(StringIdentifier name, std::weak_ptr<Node> decl);
   };
   
   
@@ -28,8 +24,8 @@ namespace cmpl
     public:
       void enterScope();
       void leaveScope();
-      void insert(StringIdentifier name, std::weak_ptr<Declaration> decl);
-      std::weak_ptr<Declaration> lookup(StringIdentifier name);
+      void insert(StringIdentifier name, std::weak_ptr<Node> decl);
+      std::weak_ptr<Node> lookup(StringIdentifier name);
       bool isDefinedInCurrentScope(StringIdentifier name);
       SymbolTable() : current(nullptr) {}
       
