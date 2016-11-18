@@ -1,4 +1,4 @@
-#include "SemanticType.h"
+#include "semantictype.h"
 
 using namespace cmpl;
 
