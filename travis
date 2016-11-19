@@ -12,9 +12,7 @@ then
   ./build
    cd ./src/lexer/tests/
   ./tests.sh
-  MJ_RUN="${BASEDIR}/run" ${BASEDIR}/tests/mjt.py --produce_no_reports lexer
-  MJ_RUN="${BASEDIR}/run" ${BASEDIR}/tests/mjt.py --produce_no_reports syntax
-  MJ_RUN="${BASEDIR}/run" ${BASEDIR}/tests/mjt.py --produce_no_reports semantic
+  MJ_RUN="${BASEDIR}/run" ${BASEDIR}/tests/mjt.py --produce_no_reports all
 else
   ./build
 fi
