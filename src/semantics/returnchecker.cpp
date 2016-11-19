@@ -59,7 +59,7 @@ void ReturnChecker::dispatch(std::shared_ptr<Method> n) {
 };
 
 void ReturnChecker::dispatch(std::shared_ptr<Type> n) {
-  n->type->accept(shared_from_this());
+  n->basicType->accept(shared_from_this());
 };
 
 void ReturnChecker::dispatch(std::shared_ptr<UserType> n) { };

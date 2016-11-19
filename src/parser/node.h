@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../stringtable/stringtable.h"
+#include "stringtable.h"
 
 #include <memory>
 #include <string>
@@ -12,8 +12,6 @@ namespace cmpl
   // abstract classes for categorization
   
   class Dispatcher;
-  
-  class SemanticType;
   
   class Type;
   class UserType;
@@ -141,7 +139,6 @@ namespace cmpl
 
   class BasicType      : public Node           { public: bool virtual equals(std::shared_ptr<BasicType> t) = 0; };
   class ClassMember    : public Node           { public: bool returns = false; };
-  class Expression     : public Node           { public: std::shared_ptr<SemanticType> type; };
   class BlockStatement : public Node           { public: bool returns = false; };
   class Statement      : public BlockStatement { public: };
   class Op             : public Node           { public: };
@@ -154,17 +151,17 @@ namespace cmpl
   class Type : public Node, public std::enable_shared_from_this<Type>
   {
     public:
-      std::shared_ptr<BasicType> type;
+      std::shared_ptr<BasicType> basicType;
       int                        arrayDepth;
       
-      Type(std::shared_ptr<BasicType> const& type, int const& arrayDepth) : type(std::move(type)), arrayDepth(arrayDepth) { };
+      Type(std::shared_ptr<BasicType> const& basicType, int const& arrayDepth) : basicType(std::move(basicType)), arrayDepth(arrayDepth) { };
     
       void accept (std::shared_ptr<Dispatcher> d) override {
         d->dispatch(shared_from_this());
       }
     
       bool equals(std::shared_ptr<Type> t) {
-        return shared_from_this()->arrayDepth == t->arrayDepth && shared_from_this()->type->equals(t->type);
+        return shared_from_this()->arrayDepth == t->arrayDepth && shared_from_this()->basicType->equals(t->basicType);
       }
   };
   
@@ -244,6 +241,21 @@ namespace cmpl
     
     bool operator!= (std::shared_ptr<UserType> t) {
       return !(shared_from_this() == t);
+    }
+  };
+  
+  class Expression : public Node
+  {
+  public:
+    bool isLValue = false;
+    std::shared_ptr<Type> type;
+    
+    bool isValidSemanticType() { // Semantic types type expressions, expressions cannot be void
+      if (TypeVoid *v = dynamic_cast<TypeVoid*>(type->basicType.get())) {
+        return true;
+      } else {
+        return false;
+      }
     }
   };
 

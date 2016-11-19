@@ -160,7 +160,7 @@ void PrettyPrinter::dispatch(std::shared_ptr<Method> n) {
 };
 
 void PrettyPrinter::dispatch(std::shared_ptr<Type> n) {
-  n->type->accept(shared_from_this());
+  n->basicType->accept(shared_from_this());
   for(int i=0; i<n->arrayDepth; i++) {
     print("[]");
   }

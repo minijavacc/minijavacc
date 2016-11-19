@@ -196,7 +196,7 @@ void StaticResolver::dispatch(std::shared_ptr<NewArray> n) {
 };
 
 void StaticResolver::dispatch(std::shared_ptr<Type> n) {
-  n->type->accept(shared_from_this());
+  n->basicType->accept(shared_from_this());
 };
 
 void StaticResolver::dispatch(std::shared_ptr<UserType> n) {
