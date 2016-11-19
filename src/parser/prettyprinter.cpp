@@ -32,7 +32,7 @@ void PrettyPrinter::addIndent()
 
 void PrettyPrinter::removeIndent()
 {
-  indents.erase(indents.begin(),indents.end()-indent.size());
+  indents.erase(indents.size() - indent.size(), indent.size());
 }
 
 std::ostream& PrettyPrinter::getStream()
@@ -45,6 +45,12 @@ std::ostream& PrettyPrinter::getStream()
 
 
 void PrettyPrinter::dispatch(std::shared_ptr<Program> n) {
+  // sort classes by alphabetical order
+  std::sort(n->classDeclarations.begin(), n->classDeclarations.end(), 
+    [](const std::shared_ptr<ClassDeclaration> &a, const std::shared_ptr<ClassDeclaration> &b) -> bool{
+      return StringTable::lookupIdentifier(b->ID).compare(StringTable::lookupIdentifier(a->ID)) > 0;
+  });
+  
   for(auto const& classDeclaration : n->classDeclarations) {
     classDeclaration->accept(shared_from_this());
   }
@@ -52,6 +58,66 @@ void PrettyPrinter::dispatch(std::shared_ptr<Program> n) {
 
 void PrettyPrinter::dispatch(std::shared_ptr<ClassDeclaration> n) {
   println("class "+ StringTable::lookupIdentifier(n->ID) + " {");
+
+  // sort the classMembers
+  // first methods then fields, each of them in alphabetical order
+  
+  std::sort(n->classMembers.begin(), n->classMembers.end(), 
+    [](const std::shared_ptr<ClassMember> &a, const std::shared_ptr<ClassMember> &b) -> bool{
+      Field* a_p;
+      Field* b_p;
+      
+      if ((a_p = dynamic_cast<Field*>(a.get())) && (b_p = dynamic_cast<Field*>(b.get())))
+      {
+        // a and b are both Fields
+        
+        // get identifier strings and compare them
+        return StringTable::lookupIdentifier(a_p->ID).compare(StringTable::lookupIdentifier(b_p->ID)) > 0;
+      }
+      else if ((dynamic_cast<Method*>(a.get()) || dynamic_cast<MainMethod*>(a.get())) && 
+        (dynamic_cast<Method*>(b.get()) || dynamic_cast<MainMethod*>(b.get())))
+      {
+        // a and b are both either Method or MainMethod
+        std::string a_s;
+        std::string b_s;
+        Method* m;
+        MainMethod* mm;
+        
+        // get identifier string for a
+        if (m = dynamic_cast<Method*>(a.get()))
+        {
+          a_s = StringTable::lookupIdentifier(m->ID);
+        }
+        else if (mm = dynamic_cast<MainMethod*>(a.get()))
+        {
+          a_s = StringTable::lookupIdentifier(mm->ID);
+        }
+        
+        // get identifier string for b
+        if (m = dynamic_cast<Method*>(b.get()))
+        {
+          b_s = StringTable::lookupIdentifier(m->ID);
+        }
+        else if (mm = dynamic_cast<MainMethod*>(b.get()))
+        {
+          b_s = StringTable::lookupIdentifier(mm->ID);
+        }
+        
+        // compare strings
+        return a_s.compare(b_s) > 0;
+      }
+      else if (dynamic_cast<Field*>(a.get()) && 
+        (dynamic_cast<Method*>(b.get()) || dynamic_cast<MainMethod*>(b.get())))
+      {
+        // a is field and b is Method or MainMethod
+        return true;
+      }
+      else
+      {
+        // a is Method or MainMethod and b is Field
+        return false;
+      }
+  });
 
   addIndent();
   
@@ -71,7 +137,7 @@ void PrettyPrinter::dispatch(std::shared_ptr<MainMethod> n) {
 void PrettyPrinter::dispatch(std::shared_ptr<Field> n) {
   print("public ");
   n->type->accept(shared_from_this());
-  println(" " + StringTable::lookupIdentifier(n->ID) + ";\n");
+  println(" " + StringTable::lookupIdentifier(n->ID) + ";");
 };
 
 void PrettyPrinter::dispatch(std::shared_ptr<Method> n) {
@@ -122,13 +188,20 @@ void PrettyPrinter::dispatch(std::shared_ptr<Parameter> n) {
 };
 
 void PrettyPrinter::dispatch(std::shared_ptr<Block> n) {
-  println("{");
-  addIndent();
-  for(auto const& statement : n->statements) {
-    statement->accept(shared_from_this());
+  if (n->statements.size() > 0)
+  {
+    println("{");
+    addIndent();
+    for(auto const& statement : n->statements) {
+      statement->accept(shared_from_this());
+    }
+    removeIndent();
+    println("}");
   }
-  removeIndent();
-  println("}");
+  else
+  {
+    print("{ }");
+  }
 };
 
 void PrettyPrinter::dispatch(std::shared_ptr<IfStatement> n) {
