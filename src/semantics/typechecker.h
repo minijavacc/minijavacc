@@ -18,11 +18,13 @@ namespace cmpl {
     std::shared_ptr<Program> currentProgram;
     std::shared_ptr<ClassDeclaration> currentClassDeclaration;
     std::shared_ptr<Method> currentMethod;
-    std::shared_ptr<Type> voidNode();
-    std::shared_ptr<Type> intNode();
-    std::shared_ptr<Type> booleanNode();
     
     void error(const std::string &err);
+    
+    // singletons for Types containing BasicTypes except UserType
+    std::shared_ptr<Type> voidNode = std::make_shared<Type>(std::make_shared<TypeVoid>(), 0);
+    std::shared_ptr<Type> intNode = std::make_shared<Type>(std::make_shared<TypeInt>(), 0);
+    std::shared_ptr<Type> booleanNode = std::make_shared<Type>(std::make_shared<TypeBoolean>(), 0);
     
   public:
     virtual void dispatch(std::shared_ptr<Type> n);

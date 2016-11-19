@@ -20,20 +20,6 @@ inline void TypeChecker::error(const std::string &err)
   throw TypeError(err.c_str());
 }
 
-std::shared_ptr<Type> TypeChecker::voidNode() {
-  return std::make_shared<Type>(std::make_shared<TypeVoid>(), 0);
-}
-
-std::shared_ptr<Type> TypeChecker::intNode() {
-  return std::make_shared<Type>(std::make_shared<TypeInt>(), 0);
-}
-
-std::shared_ptr<Type> TypeChecker::booleanNode() {
-  return std::make_shared<Type>(std::make_shared<TypeBoolean>(), 0);
-}
-
-
-
 void TypeChecker::dispatch(std::shared_ptr<Program> n) {
   for (auto const& c : n->classDeclarations) {
     c->accept(shared_from_this());
@@ -129,8 +115,8 @@ void TypeChecker::dispatch(std::shared_ptr<LogicalOrExpression> n) {
   n->expression1->accept(shared_from_this());
   n->expression2->accept(shared_from_this());
   
-  if (!n->expression1->type->equals(booleanNode()) ||
-      !n->expression2->type->equals(booleanNode())) {
+  if (!n->expression1->type->equals(booleanNode) ||
+      !n->expression2->type->equals(booleanNode)) {
     error("type mismatch or");
     return;
   }
@@ -142,8 +128,8 @@ void TypeChecker::dispatch(std::shared_ptr<LogicalAndExpression> n) {
   n->expression1->accept(shared_from_this());
   n->expression2->accept(shared_from_this());
   
-  if (!n->expression1->type->equals(booleanNode()) ||
-      !n->expression2->type->equals(booleanNode())) {
+  if (!n->expression1->type->equals(booleanNode) ||
+      !n->expression2->type->equals(booleanNode)) {
     error("type mismatch and");
     return;
   }
@@ -167,8 +153,8 @@ void TypeChecker::dispatch(std::shared_ptr<RelationalExpression> n) {
   n->expression1->accept(shared_from_this());
   n->expression2->accept(shared_from_this());
   
-  if (!n->expression1->type->equals(intNode()) ||
-      !n->expression2->type->equals(intNode())) {
+  if (!n->expression1->type->equals(intNode) ||
+      !n->expression2->type->equals(intNode)) {
     error("type mismatch rel");
     return;
   }
@@ -180,8 +166,8 @@ void TypeChecker::dispatch(std::shared_ptr<AdditiveExpression> n) {
   n->expression1->accept(shared_from_this());
   n->expression2->accept(shared_from_this());
   
-  if (!n->expression1->type->equals(intNode()) ||
-      !n->expression2->type->equals(intNode())) {
+  if (!n->expression1->type->equals(intNode) ||
+      !n->expression2->type->equals(intNode)) {
     error("type mismatch add");
     return;
   }
@@ -193,8 +179,8 @@ void TypeChecker::dispatch(std::shared_ptr<MultiplicativeExpression> n) {
   n->expression1->accept(shared_from_this());
   n->expression2->accept(shared_from_this());
   
-  if (!n->expression1->type->equals(intNode()) ||
-      !n->expression2->type->equals(intNode())) {
+  if (!n->expression1->type->equals(intNode) ||
+      !n->expression2->type->equals(intNode)) {
     error("type mismatch mult");
     return;
   }
@@ -231,14 +217,14 @@ void TypeChecker::dispatch(std::shared_ptr<UnaryLeftExpression> n) {
   n->expression->accept(shared_from_this());
   
   // case n->op is Neg => expression must be boolean
-  if (dynamic_cast<Negate*>(n->op.get()) && !n->expression->type->equals(booleanNode()))
+  if (dynamic_cast<Negate*>(n->op.get()) && !n->expression->type->equals(booleanNode))
   {
     error("type mismatch UnaryLeftExpression (expected boolean)");
     return;
   }
   
   // case n->op is Minus => expression must be int
-  else if (dynamic_cast<Minus*>(n->op.get()) && !n->expression->type->equals(intNode()))
+  else if (dynamic_cast<Minus*>(n->op.get()) && !n->expression->type->equals(intNode))
   {
     error("type mismatch UnaryLeftExpression (expected integer)");
     return;
@@ -258,14 +244,14 @@ void TypeChecker::dispatch(std::shared_ptr<UnaryRightExpression> n) {
   }
   
   // case n->op is ArrayAccess => expression must be int
-  else if (dynamic_cast<Minus*>(n->op.get()) && !n->expression->type->equals(intNode()))
+  else if (dynamic_cast<Minus*>(n->op.get()) && !n->expression->type->equals(intNode))
   {
     error("type mismatch UnaryLeftExpression (expected integer)");
     return;
   }
   
   // case n->op is MethodInvocation => expression must be UserType Method
-  else if (dynamic_cast<Minus*>(n->op.get()) && !n->expression->type->equals(intNode()))
+  else if (dynamic_cast<Minus*>(n->op.get()) && !n->expression->type->equals(intNode))
   {
     error("type mismatch UnaryLeftExpression (expected integer)");
     return;
