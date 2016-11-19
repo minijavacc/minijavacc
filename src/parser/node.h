@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <stdint.h>
 
 namespace cmpl
 {
@@ -132,7 +133,7 @@ namespace cmpl
   class Node
   {
     public:
-    virtual void accept(std::shared_ptr<Dispatcher> d) = 0;
+      virtual void accept(std::shared_ptr<Dispatcher> d) = 0;
   };
   
 /**************** actual nodes ****************/
@@ -147,6 +148,21 @@ namespace cmpl
   class AddOp          : public Op             { public: };
   class MultOp         : public Op             { public: };
   class UnaryOp        : public Op             { public: };
+  
+  // helper classes for typechecker
+  
+  class TypedNode
+  {
+    public:
+      TypedNode() { };
+      TypedNode(std::shared_ptr<Type> type) : type(type) { };
+      TypedNode(std::shared_ptr<BasicType> basicType, int arrayDepth) : type(std::make_shared<Type>(basicType, arrayDepth)) { };
+      
+      // Explanation to lvalues and rvalues: (initialized to false)
+      // http://eli.thegreenplace.net/2011/12/15/understanding-lvalues-and-rvalues-in-c-and-c
+      bool isLValue = false;
+      std::shared_ptr<Type> type;
+  };
   
   class Type : public Node, public std::enable_shared_from_this<Type>
   {
@@ -164,6 +180,8 @@ namespace cmpl
         return shared_from_this()->arrayDepth == t->arrayDepth && shared_from_this()->basicType->equals(t->basicType);
       }
   };
+  
+  // basic types (created in AST)
   
   class TypeInt : public BasicType, public std::enable_shared_from_this<TypeInt>
   {
@@ -244,12 +262,15 @@ namespace cmpl
     }
   };
   
-  class Expression : public Node
+  // other nodes
+  
+  class Expression : public Node, public TypedNode
   {
   public:
-    bool isLValue = false;
-    std::shared_ptr<Type> type;
+    Expression() { };
     
+    // necessary to allow NewArray set attributes of TypedNode in its contructor
+    Expression(std::shared_ptr<BasicType> basicType, int arrayDepth) : TypedNode(basicType, arrayDepth) { };
     bool isValidSemanticType() { // Semantic types type expressions, expressions cannot be void
       if (TypeVoid *v = dynamic_cast<TypeVoid*>(type->basicType.get())) {
         return true;
@@ -616,6 +637,7 @@ namespace cmpl
   {
     public:
       std::string integer;
+      uint32_t value;
       
       CIntegerLiteral(std::string &integer) : integer(integer) { };
     
@@ -652,27 +674,24 @@ namespace cmpl
   class NewArray : public Expression, public std::enable_shared_from_this<NewArray>
   {
     public:
-      std::shared_ptr<BasicType>  type;
       std::shared_ptr<Expression> expression;
-      int                         arrayDepth;
       
-      NewArray(std::shared_ptr<BasicType>  &type, std::shared_ptr<Expression> &expression,
-               int &arrayDepth) :
-                 type(std::move(type)), expression(std::move(expression)), arrayDepth(arrayDepth) { };
+      NewArray(std::shared_ptr<BasicType> type, std::shared_ptr<Expression> &expression,
+               int &arrayDepth) : Expression(type, arrayDepth), expression(std::move(expression)) {
+      };
     
       void accept (std::shared_ptr<Dispatcher> d) override {
         d->dispatch(shared_from_this());
       }
   };
   
-  class Parameter : public Node, public std::enable_shared_from_this<Parameter>
+  class Parameter : public Node, public TypedNode, public std::enable_shared_from_this<Parameter>
   {
     public:
-      std::shared_ptr<Type> type;
-      StringIdentifier      ID;
+      StringIdentifier ID;
       
       Parameter(std::shared_ptr<Type> &type, StringIdentifier &ID) :
-            type(std::move(type)), ID(ID) { };
+            TypedNode(type), ID(ID) { };
     
       void accept (std::shared_ptr<Dispatcher> d) override {
         d->dispatch(shared_from_this());
@@ -786,30 +805,28 @@ namespace cmpl
       }
   };
   
-  class LocalVariableDeclaration : public BlockStatement, public std::enable_shared_from_this<LocalVariableDeclaration>
+  class LocalVariableDeclaration : public BlockStatement, public TypedNode, public std::enable_shared_from_this<LocalVariableDeclaration>
   {
     public:
-      std::shared_ptr<Type> type;
-      StringIdentifier      ID;
+      StringIdentifier ID;
       
       LocalVariableDeclaration(std::shared_ptr<Type> &type, StringIdentifier &ID) :
-                                 type(std::move(type)), ID(ID) { };
+                                 TypedNode(type), ID(ID) { };
     
       void accept (std::shared_ptr<Dispatcher> d) override {
         d->dispatch(shared_from_this());
       }
   };
   
-  class LocalVariableExpressionDeclaration : public BlockStatement, public std::enable_shared_from_this<LocalVariableExpressionDeclaration>
+  class LocalVariableExpressionDeclaration : public BlockStatement, public TypedNode, public std::enable_shared_from_this<LocalVariableExpressionDeclaration>
   {
     public:
-      std::shared_ptr<Type>       type;
       StringIdentifier            ID;
       std::shared_ptr<Expression> expression;
       
       LocalVariableExpressionDeclaration(std::shared_ptr<Type> &type, StringIdentifier &ID,
                                          std::shared_ptr<Expression> &expression) :
-                                           type(std::move(type)), ID(ID), expression(std::move(expression)) { };
+                                           TypedNode(type), ID(ID), expression(std::move(expression)) { };
     
       void accept (std::shared_ptr<Dispatcher> d) override {
         d->dispatch(shared_from_this());
@@ -820,24 +837,22 @@ namespace cmpl
 /*********************** Class related ***********************/
   
   
-  class Field : public ClassMember, public std::enable_shared_from_this<Field>
+  class Field : public ClassMember, public TypedNode, public std::enable_shared_from_this<Field>
   {
     public:
-      std::shared_ptr<Type> type;
       StringIdentifier      ID;
       
       Field(std::shared_ptr<Type> &type, StringIdentifier &ID) :
-            type(std::move(type)), ID(ID) { };
+            TypedNode(type), ID(ID) { };
     
       void accept (std::shared_ptr<Dispatcher> d) override {
         d->dispatch(shared_from_this());
       }
   };
   
-  class Method : public ClassMember, public std::enable_shared_from_this<Method>
+  class Method : public ClassMember, public TypedNode, public std::enable_shared_from_this<Method>
   {
     public:
-      std::shared_ptr<Type>                   type;
       StringIdentifier                        ID;
       std::vector<std::shared_ptr<Parameter>> parameters;
       std::shared_ptr<Block>                  block;
@@ -845,7 +860,7 @@ namespace cmpl
     
       Method(std::shared_ptr<Type> &type, StringIdentifier &ID, std::vector<std::shared_ptr<Parameter>> &parameters,
              std::shared_ptr<Block> &block) :
-               type(std::move(type)), ID(ID), parameters(std::move(parameters)), block(std::move(block)) { };
+               TypedNode(type), ID(ID), parameters(std::move(parameters)), block(std::move(block)) { };
     
       void accept (std::shared_ptr<Dispatcher> d) override {
         d->dispatch(shared_from_this());

@@ -130,6 +130,12 @@ int Compiler::semcheck(std::ifstream &file)
     std::cerr << sourcePreview(file, e.line, e.column) << "\n";
     return 1;
   }
+  catch (SemanticError &e)
+  {
+    std::cerr << "semantic error: " << e.what() << "\n";
+    //std::cerr << sourcePreview(file, e.line, e.column) << "\n"; TODO: make semantic errors useful
+    return 1;
+  }
 }
 
 std::string Compiler::sourcePreview(std::ifstream &file, unsigned int line, unsigned int column)

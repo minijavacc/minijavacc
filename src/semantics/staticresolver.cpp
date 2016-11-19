@@ -192,7 +192,8 @@ void StaticResolver::dispatch(std::shared_ptr<NewObject> n) {
 };
 
 void StaticResolver::dispatch(std::shared_ptr<NewArray> n) {
-  n->type->accept(shared_from_this());
+  Expression* expr = static_cast<Expression*>(n.get());
+  expr->type->accept(shared_from_this());
 };
 
 void StaticResolver::dispatch(std::shared_ptr<Type> n) {
@@ -208,15 +209,21 @@ void StaticResolver::dispatch(std::shared_ptr<UserType> n) {
     }
   }
   
-  error("No declaration for basic type xyz"); // TODO: reverse lookup ID
+  error("No declaration for basic type"); // TODO: reverse lookup ID
 };
+
+void StaticResolver::dispatch(std::shared_ptr<CThis> n) {
+  // walk the AST upwards to find ClassDeclaration
+  
+  // TODO: not possible so far?
+};
+
 
 void StaticResolver::dispatch(std::shared_ptr<Parameter> n) { };
 void StaticResolver::dispatch(std::shared_ptr<TypeInt> n) { };
 void StaticResolver::dispatch(std::shared_ptr<TypeBoolean> n) { };
 void StaticResolver::dispatch(std::shared_ptr<TypeVoid> n) { };
 void StaticResolver::dispatch(std::shared_ptr<CNull> n) { };
-void StaticResolver::dispatch(std::shared_ptr<CThis> n) { };
 void StaticResolver::dispatch(std::shared_ptr<CTrue> n) { };
 void StaticResolver::dispatch(std::shared_ptr<CFalse> n) { };
 void StaticResolver::dispatch(std::shared_ptr<CIntegerLiteral> n) { };

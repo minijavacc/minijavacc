@@ -9,9 +9,9 @@
 #include "checker.h"
 #include "returnchecker.h"
 #include "staticdeclarationscollector.h"
-//#include "staticresolver.h"
+#include "staticresolver.h"
+#include "typechecker.h"
 #include "node.h"
-//#include "parser.h"
 
 #include <iostream>
 
@@ -24,29 +24,17 @@ void Checker::run() {
 
   // check for missing return paths
   std::shared_ptr<ReturnChecker> rc(new ReturnChecker());
-  try
-  {
-    n->accept(rc);
-    std::cout << "return check: valid!\n";
-  }
-  catch (SemanticError &e)
-  {
-     std::cout << "return check: " << e.what() << "\n";
-  }
+  n->accept(rc);
   
   // collect static declarations and check for duplicated methods and classes
   std::shared_ptr<StaticDeclarationsCollector> coll(new StaticDeclarationsCollector());
-  try
-  {
-    n->accept(coll);
-    std::cout << "static ceclarations check: valid!\n";
-  }
-  catch (SemanticError &e)
-  {
-     std::cout << "static declarations check: " << e.what() << "\n";
-  }
+  n->accept(coll);
   
-  //std::shared_ptr<StaticResolver> resolver(new StaticResolver());
-  //n->accept(resolver);
- 
+  // resolve all static references (CRefs)
+  std::shared_ptr<StaticResolver> res(new StaticResolver());
+  n->accept(res);
+  
+  // type check
+  std::shared_ptr<TypeChecker> typcheck(new TypeChecker());
+  n->accept(typcheck);
 }

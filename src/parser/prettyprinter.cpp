@@ -423,13 +423,18 @@ void PrettyPrinter::dispatch(std::shared_ptr<NewObject> n) {
 };
 
 void PrettyPrinter::dispatch(std::shared_ptr<NewArray> n) {
+  if (!n->type)
+    throw std::runtime_error("fatal error: NewArray node has empty type");
+  if (!n->type->basicType)
+    throw std::runtime_error("fatal error: NewArray node has empty type");
+  
   print("new ");
-  n->type->accept(shared_from_this());
+  n->type->basicType->accept(shared_from_this());
   print("[");
   n->expression->accept(shared_from_this());
   print("]");
   
-  for(int i=0; i<n->arrayDepth; i++) {
+  for(int i = 0; i < 0 /*n->type->arrayDepth*/; i++) {
     print("[]");
   }
 };

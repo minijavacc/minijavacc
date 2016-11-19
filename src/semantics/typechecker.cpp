@@ -71,19 +71,43 @@ void TypeChecker::dispatch(std::shared_ptr<WhileStatement> n) {
   n->statement->accept(shared_from_this());
 };
 
-void TypeChecker::dispatch(std::shared_ptr<LocalVariableDeclaration> n) { };
+void TypeChecker::dispatch(std::shared_ptr<LocalVariableDeclaration> n) {
+  // type has been set by parser
+  
+  // REVIEW: declares every LocalVariableDeclaration an lvalue type?
+  // set isLValue=true
+  n->isLValue = true;
+};
 
 void TypeChecker::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) {
+  // type has been set by parser
+  
+  // get type of expression
   n->expression->accept(shared_from_this());
+  
+  // check if type matches the type of the expression
+  if (!n->type->basicType->equals(n->expression->type->basicType))
+  {
+    error("expression in LocalVariableExpressionDeclaration has wrong type");
+  }
+  
+  // REVIEW: declares every LocalVariableExpressionDeclaration an lvalue type?
+  // set isLValue=true
+  n->isLValue = true;
 };
 
 void TypeChecker::dispatch(std::shared_ptr<EmptyStatement> n) { };
 
 void TypeChecker::dispatch(std::shared_ptr<IfElseStatement> n) {
   n->expression->accept(shared_from_this());
-  
   n->ifStatement->accept(shared_from_this());
   n->elseStatement->accept(shared_from_this());
+  
+  // check if expression is boolean
+  if (!n->expression->type->equals(booleanNode))
+  {
+    error("expression in IfElseStatement must be of type boolean");
+  }
 };
 
 void TypeChecker::dispatch(std::shared_ptr<ReturnStatement> n) {
@@ -262,19 +286,55 @@ void TypeChecker::dispatch(std::shared_ptr<UnaryRightExpression> n) {
 };
 
 void TypeChecker::dispatch(std::shared_ptr<CNull> n) {
-  // TODO
+  // TODO: add singleton for special UserType nulltpr?
 };
 
-void TypeChecker::dispatch(std::shared_ptr<CThis> n) { };
-void TypeChecker::dispatch(std::shared_ptr<CTrue> n) { };
-void TypeChecker::dispatch(std::shared_ptr<CFalse> n) { };
+void TypeChecker::dispatch(std::shared_ptr<CThis> n) {
+  
+};
+
+void TypeChecker::dispatch(std::shared_ptr<CTrue> n) {
+  n->type = booleanNode;
+};
+
+void TypeChecker::dispatch(std::shared_ptr<CFalse> n) {
+  n->type = booleanNode;
+};
 
 void TypeChecker::dispatch(std::shared_ptr<CRef> n) {
-  // follow pointer to decl
-  // return type of decl
+  // type of CRef is type of declaration
+  
+  auto decl = n->declaration.lock();
+  TypedNode* typedNode;
+  
+  if (!decl || !(typedNode = dynamic_cast<TypedNode*>(decl.get())))
+  {
+    error("declaration on CRef is missing or not TypedNode"); // TODO: better exception type
+  }
+  
+  if (!typedNode->type)
+  {
+    error("CRef points to declaration with missing type"); // TODO: better exception type
+  }
+  
+  n->type->basicType = typedNode->type->basicType;
+  n->isLValue = typedNode->isLValue;
+}
+
+void TypeChecker::dispatch(std::shared_ptr<CIntegerLiteral> n) {
+  // check if value in string is correct int
+  try
+  {
+    n->value = std::stoi(n->integer);
+  }
+  catch (std::invalid_argument &e)
+  {
+    error("CIntegerLiteral can't be converted to 32bit integer");
+  }
+  
+  n->type = intNode;
 };
 
-void TypeChecker::dispatch(std::shared_ptr<CIntegerLiteral> n) { };
 void TypeChecker::dispatch(std::shared_ptr<NewObject> n) { };
 void TypeChecker::dispatch(std::shared_ptr<NewArray> n) { };
 void TypeChecker::dispatch(std::shared_ptr<Equals> n) { };
