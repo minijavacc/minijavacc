@@ -16,15 +16,9 @@ using namespace cmpl;
 
 // helpers
 
-class TypeError : public std::runtime_error
+inline void TypeChecker::error(const std::string &err)
 {
-public:
-  TypeError(const std::string& err) : std::runtime_error(err) { }
-};
-
-inline void error(const std::string &err)
-{
-  throw TypeError(err);
+  throw TypeError(err.c_str());
 }
 
 std::shared_ptr<Type> TypeChecker::voidNode() {
@@ -102,8 +96,6 @@ void TypeChecker::dispatch(std::shared_ptr<EmptyStatement> n) { };
 
 void TypeChecker::dispatch(std::shared_ptr<IfElseStatement> n) {
   n->expression->accept(shared_from_this());
-  
-  if (n->expression->type)
   
   n->ifStatement->accept(shared_from_this());
   n->elseStatement->accept(shared_from_this());
@@ -257,12 +249,60 @@ void TypeChecker::dispatch(std::shared_ptr<CallExpression> n) {
 
 void TypeChecker::dispatch(std::shared_ptr<UnaryLeftExpression> n) {
   n->expression->accept(shared_from_this());
+  
   // case n->op is Neg => expression must be boolean
+  if (dynamic_cast<Negate*>(n->op.get()) && !n->expression->type->astType->equals(booleanNode()))
+  {
+    error("type mismatch UnaryLeftExpression (expected boolean)");
+    return;
+  }
+  
   // case n->op is Minus => expression must be int
+  else if (dynamic_cast<Minus*>(n->op.get()) && !n->expression->type->astType->equals(intNode()))
+  {
+    error("type mismatch UnaryLeftExpression (expected integer)");
+    return;
+  }
+  
+  n->type = std::make_shared<SemanticType>(n->expression->type->astType);
 };
 
-void TypeChecker::dispatch(std::shared_ptr<UnaryRightExpression> n) { };
-void TypeChecker::dispatch(std::shared_ptr<CNull> n) { };
+void TypeChecker::dispatch(std::shared_ptr<UnaryRightExpression> n) {
+  n->expression->accept(shared_from_this());
+  
+  // case n->op is FieldAccess => expression must be UserType Class
+  if (dynamic_cast<FieldAccess*>(n->op.get()) && !dynamic_cast<UserType*>(n->expression->type->astType->type.get()))
+  {
+    error("type mismatch UnaryLeftExpression (expected boolean)");
+    return;
+  }
+  
+  
+  //TODO: what is the difference between CallExpression and MethodInvocation?
+  /*
+  // case n->op is ArrayAccess => expression must be int
+  else if (dynamic_cast<Minus*>(n->op.get()) && !n->expression->type->astType->equals(intNode()))
+  {
+    error("type mismatch UnaryLeftExpression (expected integer)");
+    return;
+  }
+  
+  // case n->op is MethodInvocation => expression must be UserType Method
+  else if (dynamic_cast<Minus*>(n->op.get()) && !n->expression->type->astType->equals(intNode()))
+  {
+    error("type mismatch UnaryLeftExpression (expected integer)");
+    return;
+  }
+  */
+  
+  
+  n->type = std::make_shared<SemanticType>(n->expression->type->astType);
+};
+
+void TypeChecker::dispatch(std::shared_ptr<CNull> n) {
+  n->type = std::make_shared<SemanticType>(intNode());
+};
+
 void TypeChecker::dispatch(std::shared_ptr<CThis> n) { };
 void TypeChecker::dispatch(std::shared_ptr<CTrue> n) { };
 void TypeChecker::dispatch(std::shared_ptr<CFalse> n) { };

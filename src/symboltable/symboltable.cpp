@@ -41,7 +41,7 @@ void Scope::insert(StringIdentifier name, std::weak_ptr<Node> decl) {
 // --- SymbolTable ---
 
 void SymbolTable::enterScope() {
-  current = std::unique_ptr<Scope>(new Scope(current));
+  current = std::shared_ptr<Scope>(new Scope(current));
 }
 
 void SymbolTable::leaveScope() {

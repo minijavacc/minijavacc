@@ -195,13 +195,13 @@ namespace cmpl
         d->dispatch(shared_from_this());
       }
     
-    bool equals(std::shared_ptr<BasicType> t) override {
-      if (dynamic_cast<TypeBoolean*>(t.get())) {
-        return true;
-      } else {
-        return false;
+      bool equals(std::shared_ptr<BasicType> t) override {
+        if (dynamic_cast<TypeBoolean*>(t.get())) {
+          return true;
+        } else {
+          return false;
+        }
       }
-    }
   };
   
   class TypeVoid : public BasicType, public std::enable_shared_from_this<TypeVoid>
@@ -213,13 +213,13 @@ namespace cmpl
         d->dispatch(shared_from_this());
       }
     
-    bool equals(std::shared_ptr<BasicType> t) override {
-      if (dynamic_cast<TypeVoid*>(t.get())) {
-        return true;
-      } else {
-        return false;
+      bool equals(std::shared_ptr<BasicType> t) override {
+        if (dynamic_cast<TypeVoid*>(t.get())) {
+          return true;
+        } else {
+          return false;
+        }
       }
-    }
   };
   
   class UserType : public BasicType, public std::enable_shared_from_this<UserType>
@@ -234,11 +234,11 @@ namespace cmpl
         d->dispatch(shared_from_this());
       }
     
-    bool equals(std::shared_ptr<BasicType> other) override {
-      if (UserType* ut = dynamic_cast<UserType*>(other.get())) {
-        return ID == ut->ID;
-      } else {
-        return false;
+      bool equals(std::shared_ptr<BasicType> other) override {
+        if (UserType* ut = dynamic_cast<UserType*>(other.get())) {
+          return ID == ut->ID;
+        } else {
+          return false;
       }
     }
     

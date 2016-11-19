@@ -9,6 +9,7 @@
 #pragma once
 
 #include "node.h"
+#include "checker.h"
 
 namespace cmpl {
   
@@ -20,6 +21,8 @@ namespace cmpl {
     std::shared_ptr<Type> voidNode();
     std::shared_ptr<Type> intNode();
     std::shared_ptr<Type> booleanNode();
+    
+    void error(const std::string &err);
     
   public:
     virtual void dispatch(std::shared_ptr<Type> n);
@@ -77,6 +80,12 @@ namespace cmpl {
     virtual void dispatch(std::shared_ptr<Modulo> n);
     virtual void dispatch(std::shared_ptr<Negate> n);
     virtual void dispatch(std::shared_ptr<Minus> n);
+  };
+  
+  class TypeError : public SemanticError
+  {
+  public:
+    TypeError(const char* err) : SemanticError(err) { }
   };
   
 }
