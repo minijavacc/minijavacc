@@ -7,8 +7,8 @@
 //
 
 #include "checker.h"
-//#include "returnchecker.h"
-//#include "staticdeclarationscollector.h"
+#include "returnchecker.h"
+#include "staticdeclarationscollector.h"
 //#include "staticresolver.h"
 #include "node.h"
 //#include "parser.h"
@@ -22,22 +22,31 @@ void Checker::run() {
   
   std::shared_ptr<Node> n = parser.getAST();
 
-  // walk the line
+  // check for missing return paths
+  std::shared_ptr<ReturnChecker> rc(new ReturnChecker());
+  try
+  {
+    n->accept(rc);
+    std::cout << "return check: valid!\n";
+  }
+  catch (SemanticError &e)
+  {
+     std::cout << "return check: " << e.what() << "\n";
+  }
   
-//  std::shared_ptr<ReturnChecker> rc(new ReturnChecker());
-//  
-//  n->accept(rc);
-//  
-//  if (rc->valid) {
-//    std::cout << "Return check: valid!\n";
-//  } else {
-//    std::cout << "Return check: invalid (missing return)!\n";
-//  }
+  // collect static declarations and check for duplicated methods and classes
+  std::shared_ptr<StaticDeclarationsCollector> coll(new StaticDeclarationsCollector());
+  try
+  {
+    n->accept(coll);
+    std::cout << "static ceclarations check: valid!\n";
+  }
+  catch (SemanticError &e)
+  {
+     std::cout << "static declarations check: " << e.what() << "\n";
+  }
   
-//  std::shared_ptr<StaticDeclarationsCollector> coll(new StaticDeclarationsCollector());
-//  std::shared_ptr<StaticResolver> resolver(new StaticResolver());
-  
-//  n->accept(coll);
-//  n->accept(resolver);
+  //std::shared_ptr<StaticResolver> resolver(new StaticResolver());
+  //n->accept(resolver);
  
 }

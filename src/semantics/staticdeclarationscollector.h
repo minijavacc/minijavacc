@@ -1,14 +1,13 @@
-//
-//  staticdeclarationscollector.h
-//  mjcc
-//
-//  Created by Markus Schlegel on 17/11/16.
-//  Copyright © 2016 Markus Schlegel. All rights reserved.
-//
+/*
+ * Static Declarations Collector
+ * - collects all static declarations and saves them in 'methods', 'fields' and 'parameterMap' in the ClassDeclaration-Node
+ * - checks for multiple methods/fields with the same name (no overloading allowed)
+ */
 
 #pragma once
 
 #include "node.h"
+#include "checker.h"
 
 using namespace std;
 
@@ -18,6 +17,8 @@ namespace cmpl {
   private:
     shared_ptr<ClassDeclaration> currentClassDeclaration;
     shared_ptr<Method> currentMethod;
+    
+    void error(const std::string &err);
     
   public:
     virtual void dispatch(std::shared_ptr<Type> n);
@@ -75,6 +76,12 @@ namespace cmpl {
     virtual void dispatch(std::shared_ptr<Modulo> n);
     virtual void dispatch(std::shared_ptr<Negate> n);
     virtual void dispatch(std::shared_ptr<Minus> n);
+  };
+  
+  class CollectorError : public SemanticError
+  {
+  public:
+    CollectorError(const char* err) : SemanticError(err) { }
   };
   
 }

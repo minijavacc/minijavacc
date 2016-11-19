@@ -24,4 +24,17 @@ namespace cmpl
     Parser &parser;
   };
   
+  class SemanticError : public std::runtime_error
+  {
+    public:
+      // TODO: think about a way to create useful error messages for semantic errors
+      // e.g. should every Node have a reference to the token it was built from?
+      SemanticError(const char* err) : std::runtime_error(err) { }
+      SemanticError(const char* err, unsigned int line, unsigned int column)
+        : std::runtime_error(err), line(line), column(column) { }
+        
+      unsigned int line;
+      unsigned int column;
+  };
+  
 }

@@ -1,22 +1,17 @@
-//
-//  returnchecker.cpp
-//  mjcc
-//
-//  Created by Markus Schlegel on 17/11/16.
-//  Copyright © 2016 Markus Schlegel. All rights reserved.
-//
-
 #include "returnchecker.h"
 
 
 using namespace cmpl;
 
 
+inline void ReturnChecker::error(const std::string &err)
+{
+  throw MissingReturnPathError(err.c_str());
+}
+
 std::shared_ptr<Type> ReturnChecker::voidNode() {
   return std::make_shared<Type>(std::make_shared<TypeVoid>(), 0);
 }
-
-
   
 void ReturnChecker::dispatch(std::shared_ptr<Program> n) {
   valid = true;
@@ -53,6 +48,11 @@ void ReturnChecker::dispatch(std::shared_ptr<Method> n) {
   if (!n->type->equals(voidNode())) {
     n->block->accept(shared_from_this()); // sets returns
     n->returns = n->block->returns; // propagate upwards
+    
+    if (n->block->returns)
+    {
+      error("Method has missing return paths");
+    }
   } else {
     n->returns = true;
   }

@@ -1,11 +1,3 @@
-//
-//  staticdeclarationscollector.cpp
-//  mjcc
-//
-//  Created by Markus Schlegel on 17/11/16.
-//  Copyright © 2016 Markus Schlegel. All rights reserved.
-//
-
 #include "staticdeclarationscollector.h"
 
 #include <iostream>
@@ -15,15 +7,9 @@ using namespace cmpl;
 
 // helpers
 
-class CollectorError : public std::runtime_error
+inline void StaticDeclarationsCollector::error(const std::string &err)
 {
-public:
-  CollectorError(const std::string& err) : std::runtime_error(err) { }
-};
-
-inline void error(const std::string &err)
-{
-  throw CollectorError(err);
+  throw CollectorError(err.c_str());
 }
 
 

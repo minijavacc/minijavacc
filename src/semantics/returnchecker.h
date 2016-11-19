@@ -1,20 +1,21 @@
-//
-//  returnchecker.hpp
-//  mjcc
-//
-//  Created by Markus Schlegel on 17/11/16.
-//  Copyright © 2016 Markus Schlegel. All rights reserved.
-//
+/*
+ * Return Checker
+ * - checks whether every execution path contains a return statement
+ * - main-method doesn't need to have a return statement
+ * - checks only the presence of the return statement, not the type!
+ */
 
 #pragma once
 
 #include "node.h"
+#include "checker.h"
 
 namespace cmpl {
 
   class ReturnChecker : public Dispatcher, public std::enable_shared_from_this<ReturnChecker> {
   private:
     std::shared_ptr<Type> voidNode();
+    void error(const std::string &err);
   public:
     bool valid = false;
     
@@ -73,6 +74,15 @@ namespace cmpl {
     virtual void dispatch(std::shared_ptr<Modulo> n);
     virtual void dispatch(std::shared_ptr<Negate> n);
     virtual void dispatch(std::shared_ptr<Minus> n);
+  };
+  
+  class MissingReturnPathError : public SemanticError
+  {
+    public:
+      MissingReturnPathError(const char* err) : SemanticError(err) { }
+      
+      unsigned int line;
+      unsigned int column;
   };
 
 }

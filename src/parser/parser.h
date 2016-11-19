@@ -45,10 +45,10 @@ namespace cmpl
       Lexer& lexer;
       std::shared_ptr<Node> ast;
       std::unique_ptr<Token> currentToken;
-
-      inline void error(const std::string &err);
       
       inline void nextToken();
+      
+      void error(const std::string &err);
       
       inline StringIdentifier getIdentifierFromCurrent();
       inline StringIdentifier getIdentifierFromNext();
@@ -73,7 +73,7 @@ namespace cmpl
   class ParserError : public std::runtime_error
   {
     public:
-      ParserError(const std::string& err, unsigned int line, unsigned int column)
+      ParserError(const char* err, unsigned int line, unsigned int column)
         : std::runtime_error(err), line(line), column(column) { }
       unsigned int line;
       unsigned int column;
