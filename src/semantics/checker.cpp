@@ -43,4 +43,5 @@ void Checker::run() {
   std::shared_ptr<GeneralChecker> generalcheck(new GeneralChecker());
   n->accept(generalcheck);
   
+  std::cout << "all semantic checks passed\n";
 }

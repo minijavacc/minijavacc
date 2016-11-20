@@ -26,12 +26,17 @@ inline void TypeChecker::fatalError(const std::string &err)
 }
 
 void TypeChecker::dispatch(std::shared_ptr<Program> n) {
+  currentProgram = n;
+  
   for (auto const& c : n->classDeclarations) {
     c->accept(shared_from_this());
   }
 };
 
 void TypeChecker::dispatch(std::shared_ptr<ClassDeclaration> n) {
+  currentClassDeclaration = n;
+  // type already set by parser
+  
   for (auto const& c : n->classMembers) {
     c->accept(shared_from_this());
   }
@@ -42,6 +47,8 @@ void TypeChecker::dispatch(std::shared_ptr<MainMethod> n) {
 };
 
 void TypeChecker::dispatch(std::shared_ptr<Method> n) {
+  currentMethod = n;
+  
   n->block->accept(shared_from_this());
   n->block->accept(shared_from_this());
 };
@@ -122,16 +129,81 @@ void TypeChecker::dispatch(std::shared_ptr<IfElseStatement> n) {
 };
 
 void TypeChecker::dispatch(std::shared_ptr<ReturnStatement> n) {
+  if (!currentMethod->type->equals(voidNode))
+  {
+    error("method must return type, but returns void");
+  }
 };
 
 void TypeChecker::dispatch(std::shared_ptr<ReturnExpressionStatement> n) {
+  n->expression->accept(shared_from_this());
+  
+  if (!currentMethod->type->equals(n->expression->type))
+  {
+    error("expression type in return statement doesn't match method return type");
+  }
 };
 
 void TypeChecker::dispatch(std::shared_ptr<MethodInvocation> n) {
+  auto userType = dynamic_cast<UserType*>(tmpExpression->type->basicType.get());
   
+  if (!userType)
+  {
+    error("method invocation on non-UserType");
+  }
+  
+  auto classDecl = userType->declaration.lock();
+  
+  if (!classDecl)
+  {
+    fatalError("declaration missing for UserType in MethodInvocation");
+  }
+  
+  // check for method ID in class given by expression
+  if (classDecl->methods.count(n->ID) != 1)
+  {
+    error("method invocation to unknown method (could not find method in UserType)");
+  }
+  
+  auto methodDecl = classDecl->methods[n->ID].lock();
+  
+  // check arguments
+  // Check number of arguments equals number of parameters
+  if (n->arguments.size() != methodDecl->parameters.size()) {
+    error("number of arguments MethodInvocation <-> Method does not match");
+  }
+  
+  for (int i = 0; i < n->arguments.size(); i++) {
+    n->arguments[i]->accept(shared_from_this());
+    
+    if (!n->arguments[i]->type->equals(methodDecl->parameters[i]->type)) {
+      error("type mismatch of MethodInvocation parameters");
+    }
+  }
+  
+  n->type = methodDecl->type;
 };
 
-void TypeChecker::dispatch(std::shared_ptr<ArrayAccess> n) { };
+void TypeChecker::dispatch(std::shared_ptr<ArrayAccess> n) {
+  if (tmpExpression->type->arrayDepth < 1)
+  {
+    error("trying to access something that is not an array");
+    return;
+  }
+  
+  n->expression->accept(shared_from_this());
+  
+  if (!n->expression->type->equals(intNode))
+  {
+    error("array index in ArrayAccess must be integer");
+  }
+  
+  n->type = std::make_shared<Type>(tmpExpression->type->basicType, tmpExpression->type->arrayDepth - 1);
+  
+  // REVIEW: is every array access an LValue?
+  n->isLValue = true;
+};
+
 void TypeChecker::dispatch(std::shared_ptr<FieldAccess> n) {
   auto userType = dynamic_cast<UserType*>(tmpExpression->type->basicType.get());
   
@@ -156,6 +228,9 @@ void TypeChecker::dispatch(std::shared_ptr<FieldAccess> n) {
   auto fieldDecl = classDecl->fields[n->ID].lock();
   
   n->type = fieldDecl->type;
+  
+  // REVIEW: is every field access an LValue?
+  n->isLValue = true;
 };
 
 void TypeChecker::dispatch(std::shared_ptr<AssignmentExpression> n) {
@@ -293,6 +368,7 @@ void TypeChecker::dispatch(std::shared_ptr<UnaryRightExpression> n) {
   n->op->accept(shared_from_this());
   
   n->type = n->op->type;
+  n->isLValue = n->op->isLValue;
 };
 
 void TypeChecker::dispatch(std::shared_ptr<CNull> n) {
@@ -309,9 +385,9 @@ void TypeChecker::dispatch(std::shared_ptr<CThis> n) {
     fatalError("declaration on CThis is missing or not TypedNode"); // TODO: better exception type
   }
   
-  if (!typedNode->type)
+  if (!typedNode->type || !typedNode->type->basicType)
   {
-    fatalError("CThis points to declaration with missing type"); // TODO: better exception type
+    fatalError("CThis points to declaration with missing type or missing basicType"); // TODO: better exception type
   }
   
   n->type = typedNode->type;
@@ -345,7 +421,7 @@ void TypeChecker::dispatch(std::shared_ptr<CRef> n) {
     fatalError("CRef points to declaration with missing or incomplete type"); // TODO: better exception type
   }
   
-  expr->type = std::make_shared<Type>(typedNode->type->basicType, 0);
+  expr->type = std::make_shared<Type>(typedNode->type->basicType, typedNode->type->arrayDepth);
   expr->isLValue = typedNode->isLValue;
 }
 
@@ -377,7 +453,13 @@ void TypeChecker::dispatch(std::shared_ptr<NewObject> n) {
 };
 
 void TypeChecker::dispatch(std::shared_ptr<NewArray> n) {
+  n->expression->accept(shared_from_this());
   // type already set by parser
+  
+  if (!n->expression->type->equals(intNode))
+  {
+    error("array size in NewArray must be integer");
+  }
 };
 
 void TypeChecker::dispatch(std::shared_ptr<Equals> n) { };

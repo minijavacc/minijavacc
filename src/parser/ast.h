@@ -886,6 +886,7 @@ namespace cmpl
       }
   };
   
+
   /** A ClassDeclaration consists of an ID, which is the identifier for this class and various ClassMembers, like Methods and Fields.  */
   class ClassDeclaration : public Node, public TypedNode, public std::enable_shared_from_this<ClassDeclaration>
   {
@@ -898,7 +899,7 @@ namespace cmpl
       bool returns = false;
       
       ClassDeclaration(StringIdentifier &ID, std::vector<std::shared_ptr<ClassMember>> &classMembers) :
-                         ID(ID), TypedNode(std::make_shared<UserType>(UserType(ID)), 0), classMembers(std::move(classMembers)) { };
+                         ID(ID), TypedNode(std::make_shared<UserType>(ID), 0), classMembers(std::move(classMembers)) { };
     
       void accept (std::shared_ptr<Dispatcher> d) override {
         d->dispatch(shared_from_this());

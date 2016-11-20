@@ -19,6 +19,11 @@ inline void StaticResolver::error(const std::string &err)
   throw ResolverError(err.c_str());
 }
 
+inline void StaticResolver::fatalError(const std::string &err)
+{
+  throw ResolverError(("fatal error: " + err).c_str());
+}
+
 
 
 void StaticResolver::dispatch(std::shared_ptr<Program> n) {
@@ -29,6 +34,16 @@ void StaticResolver::dispatch(std::shared_ptr<Program> n) {
 };
 
 void StaticResolver::dispatch(std::shared_ptr<ClassDeclaration> n) {
+  // set declaration pointer in own type
+  auto userType = dynamic_cast<UserType*>(n->type->basicType.get());
+  
+  if (!userType)
+  {
+    error("basicType of ClassDeclaration is not UserType");
+  }
+  
+  userType->declaration = n;
+  
   currentClassDeclaration = n;
   for (auto const& c : n->classMembers) {
     c->accept(shared_from_this());
@@ -207,6 +222,8 @@ void StaticResolver::dispatch(std::shared_ptr<NewObject> n) {
 };
 
 void StaticResolver::dispatch(std::shared_ptr<NewArray> n) {
+  n->expression->accept(shared_from_this());
+  
   // static cast because we know every CRef is an Expression
   // necessary to access fields of base class TypedNode
   Expression* expr = static_cast<Expression*>(n.get());
