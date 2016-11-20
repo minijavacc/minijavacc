@@ -154,7 +154,7 @@ namespace cmpl
   
   class ClassMember    : public Node                 { public: bool returns = false; };
   class BlockStatement : public Node                 { public: bool returns = false; };
-  class Statement      : public BlockStatement       { public: };
+  class Statement      : public BlockStatement       { public:  };
   class Op             : public Node                 { public: };
   class EqualityOp     : public Op                   { public: };
   class RelationalOp   : public Op                   { public: };
@@ -269,7 +269,6 @@ namespace cmpl
   {
   public:
     Expression() { };
-    
     // necessary to allow NewArray set attributes of TypedNode in its contructor
     Expression(std::shared_ptr<BasicType> basicType, int arrayDepth) : TypedNode(basicType, arrayDepth) { };
     bool isValidSemanticType() { // Semantic types type expressions, expressions cannot be void
@@ -709,7 +708,7 @@ namespace cmpl
   {
     public:
       std::vector<std::shared_ptr<BlockStatement>> statements;
-      
+	 
       Block(std::vector<std::shared_ptr<BlockStatement>> &statements) : statements(std::move(statements)) { };
     
       void accept (std::shared_ptr<Dispatcher> d) override {
