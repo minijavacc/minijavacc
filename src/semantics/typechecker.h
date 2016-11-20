@@ -18,8 +18,10 @@ namespace cmpl {
     std::shared_ptr<Program> currentProgram;
     std::shared_ptr<ClassDeclaration> currentClassDeclaration;
     std::shared_ptr<Method> currentMethod;
+    std::shared_ptr<Expression> tmpExpression; // used in UnaryRightExpression
     
-    void error(const std::string &err);
+    void error(const std::string &err);       // program is semantic incorrect
+    void fatalError(const std::string &err);  // error occured because of missing data in AST
     
     // singletons for Types containing BasicTypes except UserType
     std::shared_ptr<Type> voidNode = std::make_shared<Type>(std::make_shared<TypeVoid>(), 0);

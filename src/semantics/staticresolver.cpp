@@ -40,6 +40,12 @@ void StaticResolver::dispatch(std::shared_ptr<Field> n) { };
 void StaticResolver::dispatch(std::shared_ptr<Method> n) {
   currentMethod = n;
   currentSymbolTable.reset(new SymbolTable());
+  
+  for (auto const& p : n->parameters)
+  {
+    p->accept(shared_from_this());
+  }
+  
   n->block->accept(shared_from_this());
 };
 
@@ -59,6 +65,8 @@ void StaticResolver::dispatch(std::shared_ptr<Block> n) {
 };
 
 void StaticResolver::dispatch(std::shared_ptr<LocalVariableDeclaration> n) {
+  n->type->accept(shared_from_this());
+  
   if (currentSymbolTable->hasValueFor(n->ID)) {
     error("Multiple declarations of local variable ...");
     return;
@@ -69,6 +77,7 @@ void StaticResolver::dispatch(std::shared_ptr<LocalVariableDeclaration> n) {
 
 void StaticResolver::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) {
   n->expression->accept(shared_from_this());
+  n->type->accept(shared_from_this());
   
   if (currentSymbolTable->hasValueFor(n->ID)) {
     error("Multiple declarations of local variable ...");
@@ -79,6 +88,7 @@ void StaticResolver::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration
 };
 
 void StaticResolver::dispatch(std::shared_ptr<IfStatement> n) {
+  n->expression->accept(shared_from_this());
   n->ifStatement->accept(shared_from_this());
 };
 
@@ -155,12 +165,16 @@ void StaticResolver::dispatch(std::shared_ptr<MultiplicativeExpression> n) {
 void StaticResolver::dispatch(std::shared_ptr<CallExpression> n) {
   // method call on implicit this -> look for method in this class
   
-  if (currentClassDeclaration->methods.count(n->ID) < 1)
+  if (currentClassDeclaration->methods.count(n->ID) != 1)
   {
     error("CallExpression to undefined method");
   }
   
   n->declaration = currentClassDeclaration->methods[n->ID];
+  
+  for (int i = 0; i < n->arguments.size(); i++) {
+    n->arguments[i]->accept(shared_from_this());
+  }
 };
 
 void StaticResolver::dispatch(std::shared_ptr<UnaryLeftExpression> n) {
@@ -221,7 +235,15 @@ void StaticResolver::dispatch(std::shared_ptr<CThis> n) {
 };
 
 
-void StaticResolver::dispatch(std::shared_ptr<Parameter> n) { };
+void StaticResolver::dispatch(std::shared_ptr<Parameter> n) {
+  if (currentSymbolTable->hasValueFor(n->ID)) {
+    error("Multiple declarations of parameter in method signature ...");
+    return;
+  }
+  
+  currentSymbolTable->insert(n->ID, n);
+};
+
 void StaticResolver::dispatch(std::shared_ptr<TypeInt> n) { };
 void StaticResolver::dispatch(std::shared_ptr<TypeBoolean> n) { };
 void StaticResolver::dispatch(std::shared_ptr<TypeVoid> n) { };

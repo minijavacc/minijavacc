@@ -15,6 +15,7 @@ namespace cmpl
   class Dispatcher;
   
   class Type;
+  class TypedNode;
   class TypeBoolean;
   class TypeInt;
   class TypeVoid;
@@ -137,20 +138,7 @@ namespace cmpl
   };
   
 /**************** actual nodes ****************/
-
-  class BasicType      : public Node           { public: bool virtual equals(std::shared_ptr<BasicType> t) = 0; };
-  class ClassMember    : public Node           { public: bool returns = false; };
-  class BlockStatement : public Node           { public: bool returns = false; };
-  class Statement      : public BlockStatement { public: };
-  class Op             : public Node           { public: };
-  class EqualityOp     : public Op             { public: };
-  class RelationalOp   : public Op             { public: };
-  class AddOp          : public Op             { public: };
-  class MultOp         : public Op             { public: };
-  class UnaryOp        : public Op             { public: };
-  
-  // helper classes for typechecker
-  
+  class BasicType      : public Node                 { public: bool virtual equals(std::shared_ptr<BasicType> t) = 0; };
   class TypedNode
   {
     public:
@@ -163,6 +151,19 @@ namespace cmpl
       bool isLValue = false;
       std::shared_ptr<Type> type;
   };
+  
+  class ClassMember    : public Node                 { public: bool returns = false; };
+  class BlockStatement : public Node                 { public: bool returns = false; };
+  class Statement      : public BlockStatement       { public: };
+  class Op             : public Node                 { public: };
+  class EqualityOp     : public Op                   { public: };
+  class RelationalOp   : public Op                   { public: };
+  class AddOp          : public Op                   { public: };
+  class MultOp         : public Op                   { public: };
+  class UnaryOp        : public Op, public TypedNode { public: };
+  
+  
+  // helper classes for typechecker
   
   class Type : public Node, public std::enable_shared_from_this<Type>
   {

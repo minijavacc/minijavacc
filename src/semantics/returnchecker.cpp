@@ -49,7 +49,7 @@ void ReturnChecker::dispatch(std::shared_ptr<Method> n) {
     n->block->accept(shared_from_this()); // sets returns
     n->returns = n->block->returns; // propagate upwards
     
-    if (n->block->returns)
+    if (!n->returns)
     {
       error("Method has missing return paths");
     }
