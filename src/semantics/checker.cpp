@@ -11,6 +11,7 @@
 #include "staticdeclarationscollector.h"
 #include "staticresolver.h"
 #include "typechecker.h"
+#include "generalchecker.h"
 #include "ast.h"
 
 #include <iostream>
@@ -37,4 +38,9 @@ void Checker::run() {
   // type check
   std::shared_ptr<TypeChecker> typcheck(new TypeChecker());
   n->accept(typcheck);
+  
+  // other  general checks
+  std::shared_ptr<GeneralChecker> generalcheck(new GeneralChecker());
+  n->accept(generalcheck);
+  
 }
