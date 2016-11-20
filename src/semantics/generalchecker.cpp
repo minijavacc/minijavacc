@@ -17,6 +17,10 @@ void GeneralChecker::dispatch(std::shared_ptr<Program> n) {
   for(auto const& c: n->classDeclarations) {	  
     c->accept(shared_from_this());
   }
+  if(mainMethods==0)
+	{
+		error("Found no MainMethod definition!");
+	}
 };
 
 void GeneralChecker::dispatch(std::shared_ptr<ClassDeclaration> n) {
