@@ -10,3 +10,5 @@ bin
 *.hi
 doc
 .codelite
+minijavacc.workspace
+compilation.db
