@@ -5,11 +5,6 @@
 
 using namespace cmpl;
 
-void printException(const std::exception e)
-{
-  std::cerr << "Exception occured: " << e.what();
-}
-
 int main(int argc, char* argv[])
 {
   Compiler c;
@@ -21,7 +16,7 @@ int main(int argc, char* argv[])
   }
   catch (ParameterError &e)
   {
-    printException(e);
+    std::cerr << "Wrong Parameters: " << e.what();
     return 1;
   }
 
@@ -31,7 +26,7 @@ int main(int argc, char* argv[])
   }
   catch (std::runtime_error &e)
   {
-    printException(e);
+    std::cerr << "Exception occured: " << e.what();
     return 2;
   }
 }

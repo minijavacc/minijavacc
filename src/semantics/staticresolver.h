@@ -10,6 +10,7 @@
 
 #include "ast.h"
 #include "symboltable.h"
+#include "checker.h"
 
 using namespace std;
 
@@ -17,6 +18,8 @@ namespace cmpl {
   
   class StaticResolver : public Dispatcher, public std::enable_shared_from_this<StaticResolver> {
   private:
+    void error(const std::string &err);
+  
     std::shared_ptr<Program> currentProgram;
     std::shared_ptr<ClassDeclaration> currentClassDeclaration;
     std::shared_ptr<Method> currentMethod;
@@ -81,4 +84,9 @@ namespace cmpl {
     virtual void dispatch(std::shared_ptr<Minus> n);
   };
   
+  class ResolverError : public SemanticError
+  {
+    public:
+      ResolverError(const char* err) : SemanticError(err) { }
+  };
 }

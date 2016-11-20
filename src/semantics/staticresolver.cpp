@@ -14,15 +14,9 @@ using namespace cmpl;
 
 // helpers
 
-class ResolverError : public std::runtime_error
+inline void StaticResolver::error(const std::string &err)
 {
-public:
-  ResolverError(const std::string& err) : std::runtime_error(err) { }
-};
-
-inline void error(const std::string &err)
-{
-  throw ResolverError(err);
+  throw ResolverError(err.c_str());
 }
 
 
@@ -74,6 +68,8 @@ void StaticResolver::dispatch(std::shared_ptr<LocalVariableDeclaration> n) {
 };
 
 void StaticResolver::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) {
+  n->expression->accept(shared_from_this());
+  
   if (currentSymbolTable->hasValueFor(n->ID)) {
     error("Multiple declarations of local variable ...");
     return;
@@ -157,9 +153,14 @@ void StaticResolver::dispatch(std::shared_ptr<MultiplicativeExpression> n) {
 };
 
 void StaticResolver::dispatch(std::shared_ptr<CallExpression> n) {
-  // method call on implicit this
-  // could be handled right here
-  // TODO: handle when handling MethodInvocation (consistency)
+  // method call on implicit this -> look for method in this class
+  
+  if (currentClassDeclaration->methods.count(n->ID) < 1)
+  {
+    error("CallExpression to undefined method");
+  }
+  
+  n->declaration = currentClassDeclaration->methods[n->ID];
 };
 
 void StaticResolver::dispatch(std::shared_ptr<UnaryLeftExpression> n) {
@@ -192,7 +193,10 @@ void StaticResolver::dispatch(std::shared_ptr<NewObject> n) {
 };
 
 void StaticResolver::dispatch(std::shared_ptr<NewArray> n) {
+  // static cast because we know every CRef is an Expression
+  // necessary to access fields of base class TypedNode
   Expression* expr = static_cast<Expression*>(n.get());
+  
   expr->type->accept(shared_from_this());
 };
 
@@ -213,9 +217,7 @@ void StaticResolver::dispatch(std::shared_ptr<UserType> n) {
 };
 
 void StaticResolver::dispatch(std::shared_ptr<CThis> n) {
-  // walk the AST upwards to find ClassDeclaration
-  
-  // TODO: not possible so far?
+  n->declaration = currentClassDeclaration;
 };
 
 

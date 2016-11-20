@@ -127,10 +127,13 @@ void TypeChecker::dispatch(std::shared_ptr<AssignmentExpression> n) {
   // Check left side for lvalueness
   if (!n->expression1->isLValue) {
     error("required lvalue");
-    return;
   }
   
-  // TODO: check lvalue and rvalue
+  // check if left and right expression have same type
+  if (!n->expression1->type->equals(n->expression2->type))
+  {
+    error("assignment type mismatch");
+  }
   
   n->type = n->expression2->type;
 };
@@ -142,7 +145,6 @@ void TypeChecker::dispatch(std::shared_ptr<LogicalOrExpression> n) {
   if (!n->expression1->type->equals(booleanNode) ||
       !n->expression2->type->equals(booleanNode)) {
     error("type mismatch or");
-    return;
   }
   
   n->type = n->expression2->type;
@@ -155,7 +157,6 @@ void TypeChecker::dispatch(std::shared_ptr<LogicalAndExpression> n) {
   if (!n->expression1->type->equals(booleanNode) ||
       !n->expression2->type->equals(booleanNode)) {
     error("type mismatch and");
-    return;
   }
   
   n->type = n->expression2->type;
@@ -167,7 +168,6 @@ void TypeChecker::dispatch(std::shared_ptr<EqualityExpression> n) {
   
   if (!n->expression1->type->equals(n->expression2->type)) {
     error("type mismatch eq");
-    return;
   }
   
   n->type = n->expression2->type;
@@ -180,7 +180,6 @@ void TypeChecker::dispatch(std::shared_ptr<RelationalExpression> n) {
   if (!n->expression1->type->equals(intNode) ||
       !n->expression2->type->equals(intNode)) {
     error("type mismatch rel");
-    return;
   }
   
   n->type = n->expression2->type;
@@ -193,7 +192,6 @@ void TypeChecker::dispatch(std::shared_ptr<AdditiveExpression> n) {
   if (!n->expression1->type->equals(intNode) ||
       !n->expression2->type->equals(intNode)) {
     error("type mismatch add");
-    return;
   }
   
   n->type = n->expression2->type;
@@ -206,7 +204,6 @@ void TypeChecker::dispatch(std::shared_ptr<MultiplicativeExpression> n) {
   if (!n->expression1->type->equals(intNode) ||
       !n->expression2->type->equals(intNode)) {
     error("type mismatch mult");
-    return;
   }
   
   n->type = n->expression2->type;
@@ -222,15 +219,13 @@ void TypeChecker::dispatch(std::shared_ptr<CallExpression> n) {
   // Check number of arguments equals number of parameters
   if (n->arguments.size() != decl->parameters.size()) {
     error("number of arguments CallExpression <-> Method no matchy");
-    return;
   }
   
-  for (int i = 0; i < n->arguments.size(); i++) {
+  for (int i = 0; i < n -> arguments.size(); i++) {
     n->arguments[i]->accept(shared_from_this());
     
     if (!n->arguments[i]->type->equals(decl->parameters[i]->type)) {
-      error("type mismatch CallExpression");
-      return;
+      error("type mismatch of CallExpression parameters");
     }
   }
   
@@ -244,14 +239,12 @@ void TypeChecker::dispatch(std::shared_ptr<UnaryLeftExpression> n) {
   if (dynamic_cast<Negate*>(n->op.get()) && !n->expression->type->equals(booleanNode))
   {
     error("type mismatch UnaryLeftExpression (expected boolean)");
-    return;
   }
   
   // case n->op is Minus => expression must be int
   else if (dynamic_cast<Minus*>(n->op.get()) && !n->expression->type->equals(intNode))
   {
     error("type mismatch UnaryLeftExpression (expected integer)");
-    return;
   }
   
   n->type = n->expression->type;
@@ -271,14 +264,12 @@ void TypeChecker::dispatch(std::shared_ptr<UnaryRightExpression> n) {
   else if (dynamic_cast<Minus*>(n->op.get()) && !n->expression->type->equals(intNode))
   {
     error("type mismatch UnaryLeftExpression (expected integer)");
-    return;
   }
   
   // case n->op is MethodInvocation => expression must be UserType Method
   else if (dynamic_cast<Minus*>(n->op.get()) && !n->expression->type->equals(intNode))
   {
     error("type mismatch UnaryLeftExpression (expected integer)");
-    return;
   }
   
   
@@ -290,7 +281,21 @@ void TypeChecker::dispatch(std::shared_ptr<CNull> n) {
 };
 
 void TypeChecker::dispatch(std::shared_ptr<CThis> n) {
+  auto decl = n->declaration.lock();
   
+  TypedNode* typedNode;
+  
+  if (!decl || !(typedNode = dynamic_cast<TypedNode*>(decl.get())))
+  {
+    error("declaration on CThis is missing or not TypedNode"); // TODO: better exception type
+  }
+  
+  if (!typedNode->type)
+  {
+    error("CThis points to declaration with missing type"); // TODO: better exception type
+  }
+  
+  n->type = typedNode->type;
 };
 
 void TypeChecker::dispatch(std::shared_ptr<CTrue> n) {
@@ -304,6 +309,10 @@ void TypeChecker::dispatch(std::shared_ptr<CFalse> n) {
 void TypeChecker::dispatch(std::shared_ptr<CRef> n) {
   // type of CRef is type of declaration
   
+  // static cast because we know every CRef is an Expression
+  // necessary to access fields of base class TypedNode
+  Expression* expr = static_cast<Expression*>(n.get());
+  
   auto decl = n->declaration.lock();
   TypedNode* typedNode;
   
@@ -312,13 +321,13 @@ void TypeChecker::dispatch(std::shared_ptr<CRef> n) {
     error("declaration on CRef is missing or not TypedNode"); // TODO: better exception type
   }
   
-  if (!typedNode->type)
+  if (!typedNode->type || !typedNode->type->basicType)
   {
-    error("CRef points to declaration with missing type"); // TODO: better exception type
+    error("CRef points to declaration with missing or incomplete type"); // TODO: better exception type
   }
   
-  n->type->basicType = typedNode->type->basicType;
-  n->isLValue = typedNode->isLValue;
+  expr->type = std::make_shared<Type>(typedNode->type->basicType, 0);
+  expr->isLValue = typedNode->isLValue;
 }
 
 void TypeChecker::dispatch(std::shared_ptr<CIntegerLiteral> n) {

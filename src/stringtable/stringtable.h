@@ -40,6 +40,10 @@ namespace cmpl
 ;
   };
   
-  class StringTableNotFound : public std::exception { };
+  class StringTableNotFound : public std::runtime_error
+  {
+    public:
+      StringTableNotFound(const char* err) : std::runtime_error(err) { };
+  };
 
 }
