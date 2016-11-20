@@ -4,7 +4,7 @@
 #include <string>
 #include <memory>
 
-#include "node.h"
+#include "ast.h"
 
 namespace cmpl
 {

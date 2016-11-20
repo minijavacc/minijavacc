@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "node.h"
+#include "ast.h"
 #include "symboltable.h"
 
 using namespace std;

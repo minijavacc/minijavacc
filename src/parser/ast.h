@@ -15,10 +15,10 @@ namespace cmpl
   class Dispatcher;
   
   class Type;
-  class UserType;
-  class TypeInt;
   class TypeBoolean;
+  class TypeInt;
   class TypeVoid;
+  class UserType;
   class Program;
   class ClassDeclaration;
   class Field;
@@ -74,10 +74,10 @@ namespace cmpl
   class Dispatcher {
   public:
     virtual void dispatch(std::shared_ptr<Type> n) = 0;
-    virtual void dispatch(std::shared_ptr<UserType> n) = 0;
-    virtual void dispatch(std::shared_ptr<TypeInt> n) = 0;
     virtual void dispatch(std::shared_ptr<TypeBoolean> n) = 0;
+    virtual void dispatch(std::shared_ptr<TypeInt> n) = 0;
     virtual void dispatch(std::shared_ptr<TypeVoid> n) = 0;
+    virtual void dispatch(std::shared_ptr<UserType> n) = 0;
     virtual void dispatch(std::shared_ptr<Program> n) = 0;
     virtual void dispatch(std::shared_ptr<ClassDeclaration> n) = 0;
     virtual void dispatch(std::shared_ptr<Field> n) = 0;

@@ -11,7 +11,7 @@
 #include "staticdeclarationscollector.h"
 #include "staticresolver.h"
 #include "typechecker.h"
-#include "node.h"
+#include "ast.h"
 
 #include <iostream>
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "lexer.h"
-#include "node.h"
+#include "ast.h"
 
 #include <memory>
 #include <stdexcept>
