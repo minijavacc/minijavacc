@@ -10,8 +10,9 @@
 #include "returnchecker.h"
 #include "staticdeclarationscollector.h"
 #include "staticresolver.h"
+#include "voidtypechecker.h"
 #include "typechecker.h"
-#include "generalchecker.h"
+#include "mainmethodchecker.h"
 #include "ast.h"
 
 #include <iostream>
@@ -35,13 +36,17 @@ void Checker::run() {
   std::shared_ptr<StaticResolver> res(new StaticResolver());
   n->accept(res);
   
+  // check main method
+  std::shared_ptr<MainMethodChecker> mc(new MainMethodChecker());
+  n->accept(mc);
+
+  // void type check
+  std::shared_ptr<VoidTypeChecker> voidcheck(new VoidTypeChecker());
+  n->accept(voidcheck);
+  
   // type check
   std::shared_ptr<TypeChecker> typcheck(new TypeChecker());
   n->accept(typcheck);
-  
-  // other  general checks
-  std::shared_ptr<GeneralChecker> generalcheck(new GeneralChecker());
-  n->accept(generalcheck);
-  
+
   std::cout << "all semantic checks passed\n";
 }
