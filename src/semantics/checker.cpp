@@ -22,8 +22,12 @@ using namespace cmpl;
 
 void Checker::run() {
   
+  if(parser.addPrintln()) {
+    // successfully added things needed for println, TODO preprocess
+  }
+  
   std::shared_ptr<Node> n = parser.getAST();
-
+  
   // check for missing return paths
   std::shared_ptr<ReturnChecker> rc(new ReturnChecker());
   n->accept(rc);

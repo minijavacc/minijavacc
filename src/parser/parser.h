@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lexer.h"
+#include "../lexer/lexer.h"
 #include "ast.h"
 
 #include <memory>
@@ -14,6 +14,7 @@ namespace cmpl
     public:
       Parser(Lexer &lexer) : lexer(lexer) { };
       void run();
+      bool addPrintln();
       std::shared_ptr<Node> getAST();
     
     private:

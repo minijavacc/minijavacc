@@ -120,7 +120,54 @@ void Parser::run()
   ast = parseProgram();
 }
 
-/* start: current = "class" */
+bool Parser::addPrintln(){
+  // first token is always Program
+  Program* program = static_cast<Program*>(ast.get());
+  
+  for(auto const& classDecl : program->classDeclarations) {
+    if(StringTable::lookupIdentifier(classDecl->ID) == "System") {
+      return false; // System has been user-definied, so no println needed
+    }
+  }
+  // add Class System with object out of Type __MAGIC__
+  
+  // println method
+  std::shared_ptr<BasicType> printBasicType = std::make_shared<TypeVoid>();
+  std::shared_ptr<Type> printType = std::make_shared<Type>(printBasicType, 0);
+  std::shared_ptr<Token> tokenPrint = StringTable::insertString("println",0,0);
+  StringIdentifier IDPrint = dynamic_cast<IdentifierToken*>(tokenPrint.get())->id;
+  std::vector<std::shared_ptr<Parameter>> parameters;
+  std::vector<std::shared_ptr<BlockStatement>> statements;
+  std::shared_ptr<Block> block = std::make_shared<Block>(statements);
+  std::shared_ptr<Method> println = std::make_shared<Method>(printType, IDPrint, parameters, block);
+  
+  // magic class
+  std::shared_ptr<Token> tokenMagic = StringTable::insertString("___MAGIC___",0,0);
+  StringIdentifier IDMagic = dynamic_cast<IdentifierToken*>(tokenMagic.get())->id;
+  std::vector<std::shared_ptr<ClassMember>> classMembersMagic;
+  classMembersMagic.push_back(std::move(println));
+  std::shared_ptr<ClassDeclaration> classMagic = std::make_shared<ClassDeclaration>(IDMagic, classMembersMagic);
+  program->classDeclarations.push_back(std::move(classMagic));
+  
+  // magic object
+  std::shared_ptr<Token> tokenOut = StringTable::insertString("out",0,0);
+  StringIdentifier IDOut = dynamic_cast<IdentifierToken*>(tokenOut.get())->id;
+  std::shared_ptr<BasicType> magicBasicType = std::make_shared<UserType>(IDMagic);
+  std::shared_ptr<Type> magicType = std::make_shared<Type>(magicBasicType, 0);
+  std::shared_ptr<Field> out = std::make_shared<Field>(magicType, IDOut);
+  
+  // system class
+  std::shared_ptr<Token> tokenSystem = StringTable::insertString("System",0,0);
+  StringIdentifier IDSystem = dynamic_cast<IdentifierToken*>(tokenSystem.get())->id;
+  std::vector<std::shared_ptr<ClassMember>> classMembersSystem;
+  classMembersSystem.push_back(std::move(out));
+  std::shared_ptr<ClassDeclaration> classSystem = std::make_shared<ClassDeclaration>(IDSystem, classMembersSystem);
+  program->classDeclarations.push_back(std::move(classSystem));
+  
+  return true;
+}
+
+/* dyast: current = "class" */
 std::shared_ptr<Program> Parser::parseProgram()
 {
   std::vector<std::shared_ptr<ClassDeclaration>> classes;
