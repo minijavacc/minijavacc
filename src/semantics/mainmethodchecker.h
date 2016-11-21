@@ -1,20 +1,19 @@
 /*
  * General Checker
- * - checks if there is exactly one main method
+ * - checks that there is exactly one main method
+ * - checks that this is not used
  *
  *  is per default valid=true and searches for violation of the upper requirements
  */
 
 #pragma once
 
-#include "ast.h"
 #include "checker.h"
 
 namespace cmpl {
 
-  class GeneralChecker : public Dispatcher, public std::enable_shared_from_this<GeneralChecker> {
+  class MainMethodChecker : public Dispatcher, public std::enable_shared_from_this<MainMethodChecker> {
   private:
-    std::shared_ptr<Type> voidNode();
     void error(const std::string &err);
   public:
     int mainMethods=0;
@@ -76,13 +75,9 @@ namespace cmpl {
     void dispatch(std::shared_ptr<Minus> n);
   };
   
-  class MultipleMainMethodsError : public SemanticError
+  class MainMethodError : public SemanticError
   {
     public:
-      MultipleMainMethodsError(const char* err) : SemanticError(err) { }
-      
-      unsigned int line;
-      unsigned int column;
+      MainMethodError(const char* err) : SemanticError(err) { }
   };
-
 }
