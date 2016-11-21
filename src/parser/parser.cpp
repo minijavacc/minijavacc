@@ -682,7 +682,7 @@ std::shared_ptr<Expression> Parser::parsePrimaryExpression()
       return std::make_shared<NewObject>(std::make_shared<UserType>(ID));
     } else if(isCurrentTokenOSKTokenOfType(T_O_LBRACK)) {
       // new array
-      int arrayDepth = 0;
+      int arrayDepth = 1;
       currentToken = std::move(token);
       std::shared_ptr<BasicType> type = parseBasicType();
       // [ has already been read

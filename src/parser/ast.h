@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stringtable.h"
+#include "../stringtable/stringtable.h"
 
 #include <memory>
 #include <string>
@@ -138,7 +138,7 @@ namespace cmpl
   };
   
 /**************** actual nodes ****************/
-  class BasicType      : public Node                 { public: bool virtual equals(std::shared_ptr<BasicType> t) = 0; };
+  class BasicType : public Node { public: bool virtual equals(std::shared_ptr<BasicType> t) = 0; };
   class TypedNode
   {
     public:
@@ -846,7 +846,7 @@ namespace cmpl
       
       Field(std::shared_ptr<Type> &type, StringIdentifier &ID) :
             TypedNode(type), ID(ID) { };
-    
+      
       void accept (std::shared_ptr<Dispatcher> d) override {
         d->dispatch(shared_from_this());
       }
@@ -859,7 +859,7 @@ namespace cmpl
       std::vector<std::shared_ptr<Parameter>> parameters;
       std::shared_ptr<Block>                  block;
       std::map<StringIdentifier, std::weak_ptr<Parameter>> parameterMap;
-    
+      
       Method(std::shared_ptr<Type> &type, StringIdentifier &ID, std::vector<std::shared_ptr<Parameter>> &parameters,
              std::shared_ptr<Block> &block) :
                TypedNode(type), ID(ID), parameters(std::move(parameters)), block(std::move(block)) { };

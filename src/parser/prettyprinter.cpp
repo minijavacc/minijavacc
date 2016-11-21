@@ -394,21 +394,10 @@ void PrettyPrinter::dispatch(std::shared_ptr<UnaryRightExpression> n) {
   n->op->accept(shared_from_this());
 };
 
-void PrettyPrinter::dispatch(std::shared_ptr<CNull> n) {
-  print("null");
-};
-
-void PrettyPrinter::dispatch(std::shared_ptr<CThis> n) {
-  print("this");
-};
-
-void PrettyPrinter::dispatch(std::shared_ptr<CTrue> n) {
-  print("true");
-};
-
-void PrettyPrinter::dispatch(std::shared_ptr<CFalse> n) {
-  print("false");
-};
+void PrettyPrinter::dispatch(std::shared_ptr<CNull> n) { print("null"); };
+void PrettyPrinter::dispatch(std::shared_ptr<CThis> n) { print("this"); };
+void PrettyPrinter::dispatch(std::shared_ptr<CTrue> n) { print("true"); };
+void PrettyPrinter::dispatch(std::shared_ptr<CFalse> n) { print("false"); };
 
 void PrettyPrinter::dispatch(std::shared_ptr<CRef> n) {
   print(StringTable::lookupIdentifier(n->ID));
@@ -439,54 +428,17 @@ void PrettyPrinter::dispatch(std::shared_ptr<NewArray> n) {
   }
 };
 
-void PrettyPrinter::dispatch(std::shared_ptr<Equals> n) {
-  print("==");
-};
+void PrettyPrinter::dispatch(std::shared_ptr<Equals> n)             { print("=="); };
+void PrettyPrinter::dispatch(std::shared_ptr<NotEquals> n)          { print("!="); };
+void PrettyPrinter::dispatch(std::shared_ptr<LessThan> n)           { print("<"); };
+void PrettyPrinter::dispatch(std::shared_ptr<LessThanOrEqual> n)    { print("<="); };
+void PrettyPrinter::dispatch(std::shared_ptr<GreaterThan> n)        { print(">"); };
+void PrettyPrinter::dispatch(std::shared_ptr<GreaterThanOrEqual> n) { print(">="); };
+void PrettyPrinter::dispatch(std::shared_ptr<Add> n)                { print("+"); };
+void PrettyPrinter::dispatch(std::shared_ptr<Subtract> n)           { print("-"); };
+void PrettyPrinter::dispatch(std::shared_ptr<Multiply> n)           { print("*"); };
+void PrettyPrinter::dispatch(std::shared_ptr<Divide> n)             { print("/"); };
+void PrettyPrinter::dispatch(std::shared_ptr<Modulo> n)             { print("%"); };
+void PrettyPrinter::dispatch(std::shared_ptr<Negate> n)             { print("!"); };
+void PrettyPrinter::dispatch(std::shared_ptr<Minus> n)              { print("-"); };
 
-void PrettyPrinter::dispatch(std::shared_ptr<NotEquals> n) {
-  print("!=");
-};
-
-void PrettyPrinter::dispatch(std::shared_ptr<LessThan> n) {
-  print("<");
-};
-
-void PrettyPrinter::dispatch(std::shared_ptr<LessThanOrEqual> n) {
-  print("<=");
-};
-
-void PrettyPrinter::dispatch(std::shared_ptr<GreaterThan> n) {
-  print(">");
-};
-
-void PrettyPrinter::dispatch(std::shared_ptr<GreaterThanOrEqual> n) {
-  print(">=");
-};
-
-void PrettyPrinter::dispatch(std::shared_ptr<Add> n) {
-  print("+");
-};
-
-void PrettyPrinter::dispatch(std::shared_ptr<Subtract> n) {
-  print("-");
-};
-
-void PrettyPrinter::dispatch(std::shared_ptr<Multiply> n) {
-  print("*");
-};
-
-void PrettyPrinter::dispatch(std::shared_ptr<Divide> n) {
-  print("/");
-};
-
-void PrettyPrinter::dispatch(std::shared_ptr<Modulo> n) {
-  print("%");
-};
-
-void PrettyPrinter::dispatch(std::shared_ptr<Negate> n) {
-  print("!");
-};
-
-void PrettyPrinter::dispatch(std::shared_ptr<Minus> n) {
-  print("-");
-};
