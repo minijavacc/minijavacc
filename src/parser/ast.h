@@ -692,7 +692,7 @@ namespace cmpl
     public:
       StringIdentifier ID;
       
-      Parameter(std::shared_ptr<Type> &type, StringIdentifier &ID) :
+      Parameter(std::shared_ptr<Type> type, StringIdentifier ID) :
             TypedNode(type), ID(ID) { };
     
       void accept (std::shared_ptr<Dispatcher> d) override {

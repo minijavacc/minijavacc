@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../lexer/lexer.h"
+#include "lexer.h"
 #include "ast.h"
+#include "stringtable.h"
 
 #include <memory>
 #include <stdexcept>

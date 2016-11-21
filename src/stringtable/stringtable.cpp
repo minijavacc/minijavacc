@@ -10,8 +10,8 @@ std::map<std::string, StringTableContainer> StringTable::map = std::map<std::str
 
 std::unique_ptr<Token> StringTable::insertString(std::string string, unsigned int line, unsigned int column)
 {
-  // will keep counting upwards, as it's static
-  static StringIdentifier nextStringIdentifier = 0;
+  // will keep counting upwards, as it's static (zero is invalid)
+  static StringIdentifier nextStringIdentifier = 1;
   
   // check if element exists already
   if (map.count(string) > 0)
@@ -66,5 +66,11 @@ std::string StringTable::lookupIdentifier(StringIdentifier id)
     }
   }
   
-  throw StringTableNotFound("stringtable not found on lookup");
+  if (id == invalidIdentifier)
+  {
+    // TODO: should not happen! quick fix to output System.out.printlf(param)
+    return "";
+  }
+  
+  throw StringTableNotFound("lookupIdentifier: identifier not found");
 }

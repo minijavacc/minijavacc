@@ -34,6 +34,8 @@ namespace cmpl
       static void insertKeyword(std::string string, TokenType type);
       static std::string lookupIdentifier(StringIdentifier id);
       
+      static const StringIdentifier invalidIdentifier = 0;
+      
     private:
       StringTable() { };
       static std::map<std::string, StringTableContainer> map;
