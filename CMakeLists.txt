@@ -12,6 +12,8 @@ include_directories(
   src/lexer
   src/stringtable
   src/parser
+  src/semantics
+  src/symboltable
 )
 
 # source files

@@ -7,7 +7,7 @@ using namespace cmpl;
 
 inline void Parser::error(const std::string &err)
 {
-  throw SemanticError(std::to_string(currentToken->line) + " " + std::to_string(currentToken->column) + ": " + err);
+  throw ParserError(err.c_str(), currentToken->line, currentToken->column);
 }
 
 // if token array of lexer is empty (method returns false) throw semanticError for now,
@@ -25,7 +25,8 @@ inline StringIdentifier Parser::getIdentifierFromCurrent() {
   if (id_t = dynamic_cast<IdentifierToken*>(currentToken.get())) {
     return id_t->id;
   } else {
-    error("Expected identifier");
+    error("Expected identifier, current token is " + currentToken->getStringValue());
+      return 0;
   }
 }
 
@@ -40,7 +41,7 @@ inline void Parser::assureCurrentTokenTypeIs()
 {
   if (!isCurrentTokenOfType<T>())
   {
-    error("expected a " + *typeid(T).name());
+    error(currentToken->getStringValue() + ", but expected a " + *typeid(T).name());
   }
 }
 
@@ -120,9 +121,9 @@ void Parser::run()
 }
 
 /* start: current = "class" */
-std::unique_ptr<Program> Parser::parseProgram()
+std::shared_ptr<Program> Parser::parseProgram()
 {
-  std::vector<std::unique_ptr<ClassDeclaration>> classes;
+  std::vector<std::shared_ptr<ClassDeclaration>> classes;
   
   // multiple classes
   while(lexer.hasNextToken()) {
@@ -130,13 +131,13 @@ std::unique_ptr<Program> Parser::parseProgram()
     classes.push_back(std::move(parseClassDeclaration()));
   }
   
-  return std::make_unique<Program>(classes);
+  return std::make_shared<Program>(classes);
 }
 
 /* start: current = "class" */
-std::unique_ptr<ClassDeclaration> Parser::parseClassDeclaration()
+std::shared_ptr<ClassDeclaration> Parser::parseClassDeclaration()
 {
-  std::vector<std::unique_ptr<ClassMember>> classMembers;
+  std::vector<std::shared_ptr<ClassMember>> classMembers;
   StringIdentifier ID;
   
   ID = getIdentifierFromNext();
@@ -147,11 +148,11 @@ std::unique_ptr<ClassDeclaration> Parser::parseClassDeclaration()
     classMembers.push_back(std::move(parseClassMember()));
   }
 
-  return std::make_unique<ClassDeclaration>(ID, classMembers);
+  return std::make_shared<ClassDeclaration>(ID, classMembers);
 }
 
 /* start: current = "public" */
-std::unique_ptr<ClassMember> Parser::parseClassMember()
+std::shared_ptr<ClassMember> Parser::parseClassMember()
 {
   assureCurrentIsOSKTokenWithType(T_K_PUBLIC);
   
@@ -159,15 +160,14 @@ std::unique_ptr<ClassMember> Parser::parseClassMember()
     // MainMethod
     StringIdentifier ID;
     StringIdentifier parameterID;
-    std::unique_ptr<Block> block;
+    std::shared_ptr<Block> block;
     
     assureNextIsOSKTokenWithType(T_K_VOID);
     
     ID = getIdentifierFromNext();
-    if(StringTable::lookupIdentifier(ID) != "main") {
+    /* if(StringTable::lookupIdentifier(ID) != "main") {
       error("Only method allowed to be static is main method!");
-    }
-
+    }*/
     assureNextIsOSKTokenWithType(T_O_LPAREN);
     StringIdentifier stringID = getIdentifierFromNext();
     if(StringTable::lookupIdentifier(stringID) != "String") {
@@ -179,18 +179,18 @@ std::unique_ptr<ClassMember> Parser::parseClassMember()
     assureNextIsOSKTokenWithType(T_O_RPAREN);
     nextToken();
     block = parseBlock();
-    return std::make_unique<MainMethod>(ID, parameterID, block);
+    return std::make_shared<MainMethod>(ID, parameterID, block);
   } else {
-    std::unique_ptr<Type> type = parseType();
+    std::shared_ptr<Type> type = parseType();
     StringIdentifier ID = getIdentifierFromCurrent();
     if(isNextTokenOSKTokenOfType(T_O_SEMICOLON)) {
       // Field
       nextToken();
-      return std::make_unique<Field>(type, ID);
+      return std::make_shared<Field>(type, ID);
     } else if(isCurrentTokenOSKTokenOfType(T_O_LPAREN)) {
       // Method
-      std::vector<std::unique_ptr<Parameter>> parameters;
-      std::unique_ptr<Block> block;
+      std::vector<std::shared_ptr<Parameter>> parameters;
+      std::shared_ptr<Block> block;
       nextToken(); // (
       bool continuous = false;
       while(!isCurrentTokenOSKTokenOfType(T_O_RPAREN)) {
@@ -203,16 +203,17 @@ std::unique_ptr<ClassMember> Parser::parseClassMember()
       }
       nextToken();
       block = parseBlock();
-      return std::make_unique<Method>(type, ID, parameters, block);
+      return std::make_shared<Method>(type, ID, parameters, block);
     } else {
       error("Neither Field nor Method definition");
     }
   }
+    return nullptr;
 }
 
-std::unique_ptr<Type> Parser::parseType()
+std::shared_ptr<Type> Parser::parseType()
 {
-  std::unique_ptr<BasicType> type = parseBasicType();
+  std::shared_ptr<BasicType> type = parseBasicType();
   int arrayDepth = 0;
   
   while(isCurrentTokenOSKTokenOfType(T_O_LBRACK)) {
@@ -221,57 +222,55 @@ std::unique_ptr<Type> Parser::parseType()
     nextToken();
   }
   
-  return std::make_unique<Type>(type, arrayDepth);
+  return std::make_shared<Type>(type, arrayDepth);
 }
 
-std::unique_ptr<BasicType> Parser::parseBasicType()
+std::shared_ptr<BasicType> Parser::parseBasicType()
 {
   if(isCurrentTokenOSKTokenOfType(T_K_BOOLEAN)) {
     nextToken();
-    return std::make_unique<TypeBoolean>();
+    return std::make_shared<TypeBoolean>();
   } else if(isCurrentTokenOSKTokenOfType(T_K_INT)) {
     nextToken();
-    return std::make_unique<TypeInt>();
+    return std::make_shared<TypeInt>();
   } else if(isCurrentTokenOSKTokenOfType(T_K_VOID)) {
     nextToken();
-    return std::make_unique<TypeVoid>();
+    return std::make_shared<TypeVoid>();
   } else {
     StringIdentifier ID = getIdentifierFromCurrent();
     nextToken();
-    return std::make_unique<UserType>(ID);
+    return std::make_shared<UserType>(ID);
   }
 }
 
 /* start: current = Type */
-std::unique_ptr<Parameter> Parser::parseParameter()
+std::shared_ptr<Parameter> Parser::parseParameter()
 {
-  std::unique_ptr<Type> type = parseType();
+  std::shared_ptr<Type> type = parseType();
 
   StringIdentifier ID = getIdentifierFromCurrent();
   nextToken();
-  return std::make_unique<Parameter>(type, ID);
+  return std::make_shared<Parameter>(type, ID);
 }
 
-std::unique_ptr<Statement> Parser::parseStatement()
+/* start: current = "{" */
+std::shared_ptr<Block> Parser::parseBlock()
 {
-  if(isCurrentTokenOSKTokenOfType(T_O_LBRACK)) {
-    // Block
-    return parseBlock(); // for thrills
-  } else if(isCurrentTokenOSKTokenOfType(T_K_IF)) {
-    // if (else)
-    return parseIfElseStatement();
-  } else if(isCurrentTokenOSKTokenOfType(T_K_WHILE)) {
-    // while
-    return parseWhileStatement();
-  } else if(isCurrentTokenOSKTokenOfType(T_K_RETURN)) {
-    // return
-    return parseReturnStatement();
-  } else if(isCurrentTokenOSKTokenOfType(T_O_SEMICOLON)) {
-    // empty
-    nextToken();
-    return std::make_unique<EmptyStatement>();
-  } else {
-    // Expression/LocVarDecl
+  std::vector<std::shared_ptr<BlockStatement>> statements;
+  
+  assureCurrentIsOSKTokenWithType(T_O_LBRACE);
+  nextToken();
+  while(!isCurrentTokenOSKTokenOfType(T_O_RBRACE)) {
+    statements.push_back(std::move(parseBlockStatement()));
+  }
+  nextToken();
+  
+  return std::make_shared<Block>(statements);
+}
+
+std::shared_ptr<BlockStatement> Parser::parseBlockStatement()
+{
+    // check for possible LocVarDecl
     if(isCurrentTokenOSKTokenOfType(T_K_INT)     ||
        isCurrentTokenOSKTokenOfType(T_K_BOOLEAN) ||
        isCurrentTokenOSKTokenOfType(T_K_VOID)) {
@@ -300,41 +299,71 @@ std::unique_ptr<Statement> Parser::parseStatement()
           lexer.putBackToken(currentToken);
           lexer.putBackToken(token2);
           currentToken = std::move(token1);
-          return parseExpressionStatement();
+          return parseStatement();
         }
       } else {
         // expression
         lexer.putBackToken(currentToken);
         currentToken = std::move(token1);
-        return parseExpressionStatement();
+        return parseStatement();
       }
     } else {
       // expression
-      return parseExpressionStatement();
+      return parseStatement();
     }
-  }
 }
 
-/* start: current = "{" */
-std::unique_ptr<Block> Parser::parseBlock()
+/* start: current = Type */
+std::shared_ptr<BlockStatement> Parser::parseLocalVarDecl()
 {
-  std::vector<std::unique_ptr<Statement>> statements;
+  std::shared_ptr<Type> type;
+  StringIdentifier ID;
   
-  assureCurrentIsOSKTokenWithType(T_O_LBRACE);
-  nextToken();
-  while(!isCurrentTokenOSKTokenOfType(T_O_RBRACE)) {
-    statements.push_back(std::move(parseStatement()));
+  type = parseType();
+  ID = getIdentifierFromCurrent();
+  if(isNextTokenOSKTokenOfType(T_O_SEMICOLON)) {
+    nextToken();
+    return std::make_shared<LocalVariableDeclaration>(type, ID);
+  } else {
+    assureCurrentIsOSKTokenWithType(T_O_EQUAL);
+    nextToken();
+    std::shared_ptr<Expression> expression = parseExpression();
+    assureCurrentIsOSKTokenWithType(T_O_SEMICOLON);
+    nextToken();
+    
+    return std::make_shared<LocalVariableExpressionDeclaration>(type, ID, expression);
   }
-  nextToken();
-  
-  return std::make_unique<Block>(statements);
+};
+
+std::shared_ptr<Statement> Parser::parseStatement()
+{
+  if(isCurrentTokenOSKTokenOfType(T_O_LBRACE)) {
+    // Block
+    return parseBlock(); // for thrills
+  } else if(isCurrentTokenOSKTokenOfType(T_K_IF)) {
+    // if (else)
+    return parseIfElseStatement();
+  } else if(isCurrentTokenOSKTokenOfType(T_K_WHILE)) {
+    // while
+    return parseWhileStatement();
+  } else if(isCurrentTokenOSKTokenOfType(T_K_RETURN)) {
+    // return
+    return parseReturnStatement();
+  } else if(isCurrentTokenOSKTokenOfType(T_O_SEMICOLON)) {
+    // empty
+    nextToken();
+    return std::make_shared<EmptyStatement>();
+  } else {
+    // probably an expression
+    return parseExpressionStatement();
+  }
 }
 
 /* start: current = "if" */
-std::unique_ptr<Statement> Parser::parseIfElseStatement()
+std::shared_ptr<Statement> Parser::parseIfElseStatement()
 {
-  std::unique_ptr<Expression> expression;
-  std::unique_ptr<Statement>  ifStatement;
+  std::shared_ptr<Expression> expression;
+  std::shared_ptr<Statement>  ifStatement;
   
   assureNextIsOSKTokenWithType(T_O_LPAREN);
   nextToken();
@@ -343,20 +372,20 @@ std::unique_ptr<Statement> Parser::parseIfElseStatement()
   nextToken();
   ifStatement = parseStatement();
   if(!isCurrentTokenOSKTokenOfType(T_K_ELSE)) {
-    return std::make_unique<IfStatement>(expression, ifStatement);
+    return std::make_shared<IfStatement>(expression, ifStatement);
   } else {
     // else
     nextToken();
-    std::unique_ptr<Statement> elseStatement = parseStatement();
-    return std::make_unique<IfElseStatement>(expression, ifStatement, elseStatement);
+    std::shared_ptr<Statement> elseStatement = parseStatement();
+    return std::make_shared<IfElseStatement>(expression, ifStatement, elseStatement);
   }
 };
 
 /* start: current = "while" */
-std::unique_ptr<Statement> Parser::parseWhileStatement()
+std::shared_ptr<Statement> Parser::parseWhileStatement()
 {
-  std::unique_ptr<Expression> expression;
-  std::unique_ptr<Statement>  statement;
+  std::shared_ptr<Expression> expression;
+  std::shared_ptr<Statement>  statement;
   
   assureNextIsOSKTokenWithType(T_O_LPAREN);
   nextToken();
@@ -365,78 +394,42 @@ std::unique_ptr<Statement> Parser::parseWhileStatement()
   nextToken();
   statement = parseStatement();
   
-  return std::make_unique<WhileStatement>(expression, statement);
+  return std::make_shared<WhileStatement>(expression, statement);
 };
 
 /* start: current = "return" */
-std::unique_ptr<Statement> Parser::parseReturnStatement()
+std::shared_ptr<Statement> Parser::parseReturnStatement()
 {
   if(isNextTokenOSKTokenOfType(T_O_SEMICOLON)) {
     nextToken();
-    return std::make_unique<ReturnStatement>();
+    return std::make_shared<ReturnStatement>();
   } else {
-    std::unique_ptr<Expression> expression = parseExpression();
+    std::shared_ptr<Expression> expression = parseExpression();
     assureCurrentIsOSKTokenWithType(T_O_SEMICOLON);
     nextToken();
-    return std::make_unique<ReturnExpressionStatement>(expression);
-  }
-};
-
-/* start: current = Type */
-std::unique_ptr<Statement> Parser::parseLocalVarDecl()
-{
-  std::unique_ptr<Type> type;
-  StringIdentifier ID;
-  
-  type = parseType();
-  ID = getIdentifierFromCurrent();
-  if(isNextTokenOSKTokenOfType(T_O_SEMICOLON)) {
-    return std::make_unique<LocalVariableDeclaration>(type, ID);
-  } else {
-    assureCurrentIsOSKTokenWithType(T_O_EQUAL);
-    nextToken();
-    std::unique_ptr<Expression> expression = parseExpression();
-    assureCurrentIsOSKTokenWithType(T_O_SEMICOLON);
-    nextToken();
-    
-    return std::make_unique<LocalVariableExpressionDeclaration>(type, ID, expression);
+    return std::make_shared<ReturnExpressionStatement>(expression);
   }
 };
 
 /* start: current = Expression */
-std::unique_ptr<Statement> Parser::parseExpressionStatement()
+std::shared_ptr<Statement> Parser::parseExpressionStatement()
 {
-  std::unique_ptr<Expression> expression = parseExpression();
+  std::shared_ptr<Expression> expression = parseExpression();
   assureCurrentIsOSKTokenWithType(T_O_SEMICOLON);
   nextToken();
 
-  return std::make_unique<ExpressionStatement>(expression);
+  return std::make_shared<ExpressionStatement>(expression);
 };
 
-std::unique_ptr<Expression> Parser::parseExpression(unsigned int minPrecedence)
+std::shared_ptr<Expression> Parser::parseExpression(unsigned int minPrecedence)
 {
-  std::unique_ptr<Expression> rightNode;
-  std::unique_ptr<Expression> node;
+  std::shared_ptr<Expression> rightNode;
+  std::shared_ptr<Expression> node;
   
   TokenType tokenType;
   unsigned int currentPrecedence;
   
-  // check for "(" determining subexpression
-  if(isCurrentTokenOSKTokenOfType(T_O_LPAREN))
-  {
-    // parse subexpression
-    nextToken(); // (
-    node = parseExpression();
-    
-    // and check for closing parensis
-    assureCurrentIsOSKTokenWithType(T_O_RPAREN);
-    nextToken();
-  }
-  // otherwise it has to be an UnaryExpression
-  else
-  {
-    node = parseUnaryExpression();
-  }
+  node = parseUnaryExpression();
   
   // precedence climbing
   while (isCurrentTokenOSKTokenOfCategory(binaryOperator, tokenType) && 
@@ -460,109 +453,109 @@ std::unique_ptr<Expression> Parser::parseExpression(unsigned int minPrecedence)
     {
       case T_O_EQUAL:
       {
-        node = std::make_unique<AssignmentExpression>(node, rightNode);
+        node = std::make_shared<AssignmentExpression>(node, rightNode);
         nextToken();
         break;
       }
       
       case T_O_PIPE_PIPE:
       {
-        node = std::make_unique<LogicalOrExpression>(node, rightNode);
+        node = std::make_shared<LogicalOrExpression>(node, rightNode);
         nextToken();
         break;
       }
       
       case T_O_AND_AND:
       {
-        node = std::make_unique<LogicalAndExpression>(node, rightNode);
+        node = std::make_shared<LogicalAndExpression>(node, rightNode);
         nextToken();
         break;
       }
       
       case T_O_EQUAL_EQUAL:
       {
-        std::unique_ptr<EqualityOp> op = std::make_unique<Equals>();
-        node = std::make_unique<EqualityExpression>(op, node, rightNode);
+        std::shared_ptr<EqualityOp> op = std::make_shared<Equals>();
+        node = std::make_shared<EqualityExpression>(op, node, rightNode);
         nextToken();
         break;
       }
       
       case T_O_EXCLM_EQUAL:
       {
-        std::unique_ptr<EqualityOp> op = std::make_unique<NotEquals>();
-        node = std::make_unique<EqualityExpression>(op, node, rightNode);
+        std::shared_ptr<EqualityOp> op = std::make_shared<NotEquals>();
+        node = std::make_shared<EqualityExpression>(op, node, rightNode);
         nextToken();
         break;
       }
       
       case T_O_LESS:
       {
-        std::unique_ptr<RelationalOp> op = std::make_unique<LessThan>();
-        node = std::make_unique<RelationalExpression>(op, node, rightNode);
+        std::shared_ptr<RelationalOp> op = std::make_shared<LessThan>();
+        node = std::make_shared<RelationalExpression>(op, node, rightNode);
         nextToken();
         break;
       }
       
       case T_O_LESS_EQUAL:
       {
-        std::unique_ptr<RelationalOp> op = std::make_unique<LessThanOrEqual>();
-        node = std::make_unique<RelationalExpression>(op, node, rightNode);
+        std::shared_ptr<RelationalOp> op = std::make_shared<LessThanOrEqual>();
+        node = std::make_shared<RelationalExpression>(op, node, rightNode);
         nextToken();
         break;
       }
       
       case T_O_MORE:
       {
-        std::unique_ptr<RelationalOp> op = std::make_unique<GreaterThan>();
-        node = std::make_unique<RelationalExpression>(op, node, rightNode);
+        std::shared_ptr<RelationalOp> op = std::make_shared<GreaterThan>();
+        node = std::make_shared<RelationalExpression>(op, node, rightNode);
         nextToken();
         break;
       }
       
       case T_O_MORE_EQUAL:
       {
-        std::unique_ptr<RelationalOp> op = std::make_unique<GreaterThanOrEqual>();
-        node = std::make_unique<RelationalExpression>(op, node, rightNode);
+        std::shared_ptr<RelationalOp> op = std::make_shared<GreaterThanOrEqual>();
+        node = std::make_shared<RelationalExpression>(op, node, rightNode);
         nextToken();
         break;
       }
       
       case T_O_PLUS:
       {
-        std::unique_ptr<AddOp> op = std::make_unique<Add>();
-        node = std::make_unique<AdditiveExpression>(op, node, rightNode);
+        std::shared_ptr<AddOp> op = std::make_shared<Add>();
+        node = std::make_shared<AdditiveExpression>(op, node, rightNode);
         nextToken();
         break;
       }
       
       case T_O_MINUS:
       {
-        std::unique_ptr<AddOp> op = std::make_unique<Subtract>();
-        node = std::make_unique<AdditiveExpression>(op, node, rightNode);
+        std::shared_ptr<AddOp> op = std::make_shared<Subtract>();
+        node = std::make_shared<AdditiveExpression>(op, node, rightNode);
         nextToken();
         break;
       }
       
       case T_O_STAR:
       {
-        std::unique_ptr<MultOp> op = std::make_unique<Multiply>();
-        node = std::make_unique<MultiplicativeExpression>(op, node, rightNode);
+        std::shared_ptr<MultOp> op = std::make_shared<Multiply>();
+        node = std::make_shared<MultiplicativeExpression>(op, node, rightNode);
         nextToken();
         break;
       }
       
       case T_O_SLASH:
       {
-        std::unique_ptr<MultOp> op = std::make_unique<Divide>();
-        node = std::make_unique<MultiplicativeExpression>(op, node, rightNode);
+        std::shared_ptr<MultOp> op = std::make_shared<Divide>();
+        node = std::make_shared<MultiplicativeExpression>(op, node, rightNode);
         nextToken();
         break;
       }
       
       case T_O_PERCENT:
       {
-        std::unique_ptr<MultOp> op = std::make_unique<Modulo>();
-        node = std::make_unique<MultiplicativeExpression>(op, node, rightNode);
+        std::shared_ptr<MultOp> op = std::make_shared<Modulo>();
+        node = std::make_shared<MultiplicativeExpression>(op, node, rightNode);
         nextToken();
         break;
       }
@@ -577,38 +570,38 @@ std::unique_ptr<Expression> Parser::parseExpression(unsigned int minPrecedence)
 }
 
 
-std::unique_ptr<Expression> Parser::parseUnaryExpression()
+std::shared_ptr<Expression> Parser::parseUnaryExpression()
 {
   if(isCurrentTokenOSKTokenOfType(T_O_EXCLM)) {
     nextToken();
-    std::unique_ptr<UnaryOp> op = std::make_unique<Negate>();
-    std::unique_ptr<Expression> expression = parseUnaryExpression();
-    return std::make_unique<UnaryLeftExpression>(op, expression);
+    std::shared_ptr<UnaryOp> op = std::make_shared<Negate>();
+    std::shared_ptr<Expression> expression = parseUnaryExpression();
+    return std::make_shared<UnaryLeftExpression>(op, expression);
   } else if(isCurrentTokenOSKTokenOfType(T_O_MINUS)) {
     nextToken();
-    std::unique_ptr<UnaryOp> op = std::make_unique<Minus>();
-    std::unique_ptr<Expression> expression = parseUnaryExpression();
-    return std::make_unique<UnaryLeftExpression>(op, expression);
+    std::shared_ptr<UnaryOp> op = std::make_shared<Minus>();
+    std::shared_ptr<Expression> expression = parseUnaryExpression();
+    return std::make_shared<UnaryLeftExpression>(op, expression);
   } else {
     return parsePostfixExpression();
   }
 }
 
-std::unique_ptr<Expression> Parser::parsePostfixExpression()
+std::shared_ptr<Expression> Parser::parsePostfixExpression()
 {
-  std::unique_ptr<Expression> expression = parsePrimaryExpression();
+  std::shared_ptr<Expression> expression = parsePrimaryExpression();
   
   while(isCurrentTokenOSKTokenOfType(T_O_DOT) || isCurrentTokenOSKTokenOfType(T_O_LBRACK)) {
     // post fix expression
-    std::unique_ptr<UnaryOp> op;
-    
+    std::shared_ptr<UnaryOp> op;
+
     if(isCurrentTokenOSKTokenOfType(T_O_DOT)) {
       // method invocation / field access
       StringIdentifier ID = getIdentifierFromNext();
       
       if(isNextTokenOSKTokenOfType(T_O_LPAREN)) {
         // method invocation
-        std::vector<std::unique_ptr<Expression>> arguments;
+        std::vector<std::shared_ptr<Expression>> arguments;
         nextToken(); // (
         
         bool continuous = false;
@@ -622,54 +615,57 @@ std::unique_ptr<Expression> Parser::parsePostfixExpression()
         }
         nextToken(); // )
         
-        op = std::make_unique<MethodInvocation>(ID, arguments);
+        op = std::make_shared<MethodInvocation>(ID, arguments);
       } else {
         // field access
-        op = std::make_unique<FieldAccess>(ID);
+        op = std::make_shared<FieldAccess>(ID);
       }
     } else { // T_O_LBRACK
       // array access
       nextToken(); // [
-      std::unique_ptr<Expression> accessExpression = parseExpression();
+      std::shared_ptr<Expression> accessExpression = parseExpression();
       assureCurrentIsOSKTokenWithType(T_O_RBRACK);
       nextToken(); // ]
       
-      op = std::make_unique<ArrayAccess>(accessExpression);
+      op = std::make_shared<ArrayAccess>(accessExpression);
     }
-    
-    expression = std::make_unique<UnaryRightExpression>(expression, op);
+    expression = std::make_shared<UnaryRightExpression>(expression, op);
   }
   
   // no more postfix expressions
   return expression;
 }
 
-std::unique_ptr<Expression> Parser::parsePrimaryExpression()
+std::shared_ptr<Expression> Parser::parsePrimaryExpression()
 {
   if(isCurrentTokenOSKTokenOfType(T_K_NULL)) {
     // null
     nextToken();
-    return std::make_unique<CNull>();
+    return std::make_shared<CNull>();
   } else if(isCurrentTokenOSKTokenOfType(T_K_FALSE)) {
     // false
     nextToken();
-    return std::make_unique<CFalse>();
+    return std::make_shared<CFalse>();
   } else if(isCurrentTokenOSKTokenOfType(T_K_TRUE)) {
     // true
     nextToken();
-    return std::make_unique<CTrue>();
+    return std::make_shared<CTrue>();
   } else if(isCurrentTokenOSKTokenOfType(T_K_THIS)) {
     // this
     nextToken();
-    return std::make_unique<CThis>();
+    return std::make_shared<CThis>();
   } else if(isCurrentTokenOfType<IntegerLiteralToken>()) {
     // integer literal
     std::string integer = dynamic_cast<IntegerLiteralToken*>(currentToken.get())->value;
     nextToken();
-    return std::make_unique<CIntegerLiteral>(integer);
+    return std::make_shared<CIntegerLiteral>(integer);
   } else if(isCurrentTokenOSKTokenOfType(T_O_LPAREN)) {
-    // can't happen, already taken care of in parseExpression()
-    error("spontaneous combustion"); // for thrills
+    // nested "real" expression
+    nextToken(); // (
+    std::shared_ptr<Expression> expression = std::move(parseExpression());
+    assureCurrentIsOSKTokenWithType(T_O_RPAREN);
+    nextToken(); // )
+    return expression;
   } else if(isCurrentTokenOSKTokenOfType(T_K_NEW)) {
     // new array/object
     nextToken();
@@ -683,14 +679,14 @@ std::unique_ptr<Expression> Parser::parsePrimaryExpression()
       // ( has already been read
       assureNextIsOSKTokenWithType(T_O_RPAREN);
       nextToken();
-      return std::make_unique<NewObject>(ID);
+      return std::make_shared<NewObject>(std::make_shared<UserType>(ID));
     } else if(isCurrentTokenOSKTokenOfType(T_O_LBRACK)) {
       // new array
-      int arrayDepth = 0;
+      int arrayDepth = 1;
       currentToken = std::move(token);
-      std::unique_ptr<BasicType> type = parseBasicType();
+      std::shared_ptr<BasicType> type = parseBasicType();
       // [ has already been read
-      std::unique_ptr<Expression> expression = parseExpression();
+      std::shared_ptr<Expression> expression = parseExpression();
       assureCurrentIsOSKTokenWithType(T_O_RBRACK);
       nextToken();
       
@@ -708,7 +704,7 @@ std::unique_ptr<Expression> Parser::parsePrimaryExpression()
         }
       }
       
-      return std::make_unique<NewArray>(type, expression, arrayDepth);
+      return std::make_shared<NewArray>(type, expression, arrayDepth);
     } else {
       error("undefined use of new");
     }
@@ -717,7 +713,7 @@ std::unique_ptr<Expression> Parser::parsePrimaryExpression()
     StringIdentifier ID = getIdentifierFromCurrent();
     if(isNextTokenOSKTokenOfType(T_O_LPAREN)) {
       // method call
-      std::vector<std::unique_ptr<Expression>> arguments;
+      std::vector<std::shared_ptr<Expression>> arguments;
       nextToken();
       
       bool continuous = false;
@@ -730,15 +726,17 @@ std::unique_ptr<Expression> Parser::parsePrimaryExpression()
         continuous = true;
       }
       nextToken(); // )
-      return std::make_unique<CallExpression>(ID, arguments);
+      return std::make_shared<CallExpression>(ID, arguments);
     } else {
       // ID
-      return std::make_unique<CRef>(ID);
+      return std::make_shared<CRef>(ID);
     }
   }
+    
+    return nullptr;
 }
 
-void Parser::getAST(std::unique_ptr<Node> &n)
+std::shared_ptr<Node> Parser::getAST()
 {
-  n = std::move(ast);
+  return ast;
 }

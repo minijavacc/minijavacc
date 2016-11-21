@@ -66,5 +66,5 @@ std::string StringTable::lookupIdentifier(StringIdentifier id)
     }
   }
   
-  throw StringTableNotFound();
+  throw StringTableNotFound("stringtable not found on lookup");
 }

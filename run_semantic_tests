@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# get path of this script file
+BASEDIR=$(dirname "$(readlink -f "$0")")
+(MJ_RUN="${BASEDIR}/run" ${BASEDIR}/tests/mjt.py --produce_no_reports semantic)

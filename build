@@ -11,7 +11,7 @@ if [ $ret -ne 0 ]; then
 fi
 
 # run make
-(cd "${BASEDIR}" && make -C "${BASEDIR}")
+(cd "${BASEDIR}" && make -j 4 -C "${BASEDIR}")
 ret=$?
 if [ $ret -ne 0 ]; then
   exit 1

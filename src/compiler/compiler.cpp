@@ -3,8 +3,11 @@
 #include "parser.h"
 #include "stringtable.h"
 #include "token.h"
+#include "checker.h"
+#include "prettyprinter.h"
 
 #include <iostream>
+#include <istream>
 #include <fstream>
 #include <string>
 
@@ -25,13 +28,13 @@ int Compiler::echo(std::ifstream &file)
 int Compiler::lextest(std::ifstream &file)
 {
   try {
-    Lexer l = Lexer();
-    l.run(file);
+    Lexer lexer;
+    lexer.run(file);
   
-    std::unique_ptr<Token> t;
-    while (l.getNextToken(t))
+    std::unique_ptr<Token> token;
+    while (lexer.getNextToken(token))
     {
-      std::cout << t->getStringValue() << "\n";
+      std::cout << token->getStringValue() << "\n";
     }
   
     std::cout << "EOF" << "\n";
@@ -41,6 +44,7 @@ int Compiler::lextest(std::ifstream &file)
   catch (SyntaxError &e) 
   {
     std::cerr << "syntax error: " << e.what() << "\n";
+    std::cerr << sourcePreview(file, e.line, e.column) << "\n";
     return 1;
   }
 }
@@ -48,22 +52,24 @@ int Compiler::lextest(std::ifstream &file)
 int Compiler::parsetest(std::ifstream &file)
 {
   try {
-    Lexer l = Lexer();
-    l.run(file);
+    Lexer lexer;
+    lexer.run(file);
   
-    Parser p = Parser(l);
-    p.run();
+    Parser parser(lexer);
+    parser.run();
   
     return 0;
   }
   catch (SyntaxError &e) 
   {
     std::cerr << "syntax error: " << e.what() << "\n";
+    std::cerr << sourcePreview(file, e.line, e.column) << "\n";
     return 1;
   }
-  catch (SemanticError &e) 
+  catch (ParserError &e) 
   {
-    std::cerr << "semantic error: " << e.what() << "\n";
+    std::cerr << "parser error: " << e.what() << "\n";
+    std::cerr << sourcePreview(file, e.line, e.column) << "\n";
     return 1;
   }
 }
@@ -71,38 +77,91 @@ int Compiler::parsetest(std::ifstream &file)
 int Compiler::printast(std::ifstream &file)
 {
   try {
-    Lexer l = Lexer();
-    l.run(file);
+    Lexer lexer;
+    lexer.run(file);
   
-    Parser p = Parser(l);
-    p.run();
+    Parser parser(lexer);
+    parser.run();
     
-    std::unique_ptr<Node> n;
-    p.getAST(n);
+    std::shared_ptr<Node> ast = parser.getAST();
     
-    PrettyPrinter r = PrettyPrinter(std::cout);
-    n->toString(r);
+    std::shared_ptr<PrettyPrinter> printer(new PrettyPrinter(std::cout));
+    ast->accept(printer);
   
     return 0;
   }
   catch (SyntaxError &e) 
   {
     std::cerr << "syntax error: " << e.what() << "\n";
+    std::cerr << sourcePreview(file, e.line, e.column) << "\n";
     return 1;
   }
-  catch (SemanticError &e) 
+  catch (ParserError &e) 
+  {
+    std::cerr << "parser error: " << e.what() << "\n";
+    std::cerr << sourcePreview(file, e.line, e.column) << "\n";
+    return 1;
+  }
+}
+
+int Compiler::semcheck(std::ifstream &file)
+{
+  try {
+    Lexer lexer;
+    lexer.run(file);
+  
+    Parser parser(lexer);
+    parser.run();
+    
+    Checker checker(parser);
+    checker.run();
+    
+    return 0;
+  }
+  catch (SyntaxError &e) 
+  {
+    std::cerr << "syntax error: " << e.what() << "\n";
+    std::cerr << sourcePreview(file, e.line, e.column) << "\n";
+    return 1;
+  }
+  catch (ParserError &e) 
+  {
+    std::cerr << "parser error: " << e.what() << "\n";
+    std::cerr << sourcePreview(file, e.line, e.column) << "\n";
+    return 1;
+  }
+  catch (SemanticError &e)
   {
     std::cerr << "semantic error: " << e.what() << "\n";
+    //std::cerr << sourcePreview(file, e.line, e.column) << "\n"; TODO: make semantic errors useful
     return 1;
   }
 }
 
-void Compiler::output(std::string msg)
+std::string Compiler::sourcePreview(std::ifstream &file, unsigned int line, unsigned int column)
 {
-  std::cout << msg << "\n";
-}
-
-void Compiler::error(std::string msg)
-{
-  std::cerr << msg << "\n";
+  std::string src;
+  
+  // reset ifstream to start at beginning again
+  file.clear();
+  file.seekg(0, std::ios::beg);
+  
+  for (unsigned int i = 0; i < line; i++)
+  {
+    getline(file, src);
+  }
+  
+  /* TODO: implement marker that points to column X
+   * be careful with \t and \r!
+  for (unsigned int i = 0; i < src.size(); i++)
+  {
+    // idea is to take the original string and keep characters like \t and \r
+    // otherwise the position would be wrong
+    if (i + 1 == column)
+      ptr[i] = '^';
+    else if (ptr[i] > 31 && ptr[i] < 127)
+      ptr[i] = ' ';
+  }
+  */
+  return std::to_string(line) + ":" + std::to_string(column) + ": " + src;
 }

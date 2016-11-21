@@ -33,7 +33,8 @@ namespace cmpl
         Option("--echo", Compiler::echo),
         Option("--lextest", Compiler::lextest),
         Option("--parsetest", Compiler::parsetest),
-        Option("--print-ast", Compiler::printast)
+        Option("--print-ast", Compiler::printast),
+        Option("--check", Compiler::semcheck)
       };
 
       std::vector<Option> givenOptions;

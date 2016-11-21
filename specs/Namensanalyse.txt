@@ -1,0 +1,36 @@
+Namensanalyse
+-------------
+
+CRef, FieldAccess, CallExpression, MethodInvocation, UserType und FieldAccess sind Bezeichner/_Verwender_, die auf _Deklarationen_ zeigen müssen. Deklarationen sind Field, LocalVariable(Expression)Declaration, Parameter, Method und ClassDeclaration. Nicht alle Verwender können auf jeden Typ von Deklaration zeigen. Die folgende Tabelle zeigt, wer worauf zeigen kann.
+
+Typ des Verwenders   Typ der Deklaration
+-------------------  -------------------
+CRef                 Field
+                     LocalVariableDeclaration
+                     LocalVariableExpressionDeclaration
+                     Parameter
+
+FieldAccess          Field
+
+CallExpression       Method
+
+MethodInvocation     Method
+
+UserType             ClassDeclaration
+
+
+Das ist noch überschaubar ohne große Klassenhierarchie. Ich würde deshalb sagen, wir brauchen zwei Dinge:
+
+1. Eine abstrakte Klasse "Declaration", von der alle oben genannten Deklarationen erben. Die Klasse hat kein Feld.
+
+2. In den sechs Verwenderknotentypen jeweils ein Attribut "declaration", welches auf die richtige Deklaration im AST zeigt.
+
+Die unterschiedlichen Verwender brauchen dann unterschiedliche bzw. gar keine Symboltabellen. Ein CRef-Verwender "x" darf z.B. nicht auf eine Methode mit Namen "x" zeigen. Es gibt ein paar Randfälle zu beachten:
+
+FieldAccess: Beim Ausdruck "a.b" ist für die Auflösung von b eine abgeschlossene Typanalyse vorausgesetzt. Wir müssen zunächst den Typen von a wissen (z.B. A), um dann in dessen Namensraum nach dem Feld b zu suchen.
+
+Unterschied zwischen "CRef auf Field" und "FieldAccess": Beim Ausdruck "b = x;" (b ist CRef) kann b sowohl Verwender für ein Feld im aktuellen Klassennamensraum (this.b) oder ein anderes CRef sein. Die Namensanalyse für CRef muss also nach allen vier oben aufgeführten Deklarationstypen schauen. Dahingegen ist bei "a.b = x;" klar, dass b ein FieldAccess ist. Wir können deshalb hier wie oben vorgehen. Wir brauchen also für CRef und FieldAccess zwei unterschiedliche Symboltabellen, wobei wir beim Besuch eines Field-Knotens diesen Knoten in beide Symboltabellen einfügen müssen.
+
+CallExpression: Der Ausdruck "foo()" bedeutet "this.foo()". Wir können also einfach nach foo in der Symboltabelle für Methods schauen.
+
+Unterschied CallExpression und MethodInvocation: Beim Ausdruck "a.x()" muss wieder zuerst der Typ von a ermittelt werden. Beim Ausdruck "x()" ist der Typ schon klar.
