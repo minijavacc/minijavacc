@@ -8,13 +8,14 @@
 
 #pragma once
 
-#include "ast.h"
+#include "../parser/ast.h"
 #include "checker.h"
 
 namespace cmpl {
   
   class TypeChecker : public Dispatcher, public std::enable_shared_from_this<TypeChecker> {
     private:
+      // scopes
       std::shared_ptr<Program> currentProgram;
       std::shared_ptr<ClassDeclaration> currentClassDeclaration;
       std::shared_ptr<Method> currentMethod;
@@ -24,9 +25,9 @@ namespace cmpl {
       void fatalError(const std::string &err);  // error occured because of missing data in AST
       
       // singletons for Types containing BasicTypes except UserType
-      std::shared_ptr<Type> voidNode = std::make_shared<Type>(std::make_shared<TypeVoid>(), 0);
-      std::shared_ptr<Type> intNode = std::make_shared<Type>(std::make_shared<TypeInt>(), 0);
-      std::shared_ptr<Type> booleanNode = std::make_shared<Type>(std::make_shared<TypeBoolean>(), 0);
+      const std::shared_ptr<Type> voidNode = std::make_shared<Type>(std::make_shared<TypeVoid>(), 0);
+      const std::shared_ptr<Type> intNode = std::make_shared<Type>(std::make_shared<TypeInt>(), 0);
+      const std::shared_ptr<Type> booleanNode = std::make_shared<Type>(std::make_shared<TypeBoolean>(), 0);
       
     public:
       void dispatch(std::shared_ptr<Type> n);

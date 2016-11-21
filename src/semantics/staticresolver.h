@@ -1,14 +1,14 @@
-//
-//  staticresolver.h
-//  mjcc
-//
-//  Created by Markus Schlegel on 17/11/16.
-//  Copyright © 2016 Markus Schlegel. All rights reserved.
-//
+/*
+ * Static Resolver
+ * - assures identifiers of parameters are unique
+ * - points UserType to representative class declaration
+ * - points CallExpression  to representative method declaration
+ * - points CRef to representative class declaration
+ */
 
 #pragma once
 
-#include "ast.h"
+#include "../parser/ast.h"
 #include "symboltable.h"
 #include "checker.h"
 

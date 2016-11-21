@@ -23,6 +23,7 @@ void MainMethodChecker::dispatch(std::shared_ptr<ClassDeclaration> n) {
 };
 
 void MainMethodChecker::dispatch(std::shared_ptr<MainMethod> n) {
+  currentMainMethod = n;
   mainMethods++;
   if(mainMethods > 1)  {
     error("Found multiple MainMethod definitions!");
@@ -33,6 +34,12 @@ void MainMethodChecker::dispatch(std::shared_ptr<MainMethod> n) {
 void MainMethodChecker::dispatch(std::shared_ptr<Block> n) {
   for (auto const& s: n->statements) {
     s->accept(shared_from_this());
+  }
+};
+
+void MainMethodChecker::dispatch(std::shared_ptr<CRef> n) {
+  if(n->ID == currentMainMethod->parameterID) {
+    error("Parameter of main method must not be used!");
   }
 };
 
@@ -142,7 +149,6 @@ void MainMethodChecker::dispatch(std::shared_ptr<LocalVariableDeclaration> n) { 
 void MainMethodChecker::dispatch(std::shared_ptr<EmptyStatement> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<ReturnStatement> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<FieldAccess> n) { };
-void MainMethodChecker::dispatch(std::shared_ptr<CRef> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<NewObject> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<Type> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<UserType> n) { };

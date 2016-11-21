@@ -24,8 +24,6 @@ inline void StaticResolver::fatalError(const std::string &err)
   throw ResolverError(("fatal error: " + err).c_str());
 }
 
-
-
 void StaticResolver::dispatch(std::shared_ptr<Program> n) {
   currentProgram = n;
   for(auto const& c: n->classDeclarations) {
@@ -36,11 +34,6 @@ void StaticResolver::dispatch(std::shared_ptr<Program> n) {
 void StaticResolver::dispatch(std::shared_ptr<ClassDeclaration> n) {
   // set declaration pointer in own type
   auto userType = dynamic_cast<UserType*>(n->type->basicType.get());
-  
-  if (!userType)
-  {
-    error("basicType of ClassDeclaration is not UserType");
-  }
   
   userType->declaration = n;
   
@@ -66,6 +59,7 @@ void StaticResolver::dispatch(std::shared_ptr<Method> n) {
 
 void StaticResolver::dispatch(std::shared_ptr<MainMethod> n) {
   currentSymbolTable.reset(new SymbolTable());
+  currentSymbolTable->insert(n->parameterID, n); // TODO make sure n is never used
   n->block->accept(shared_from_this());
 };
 
@@ -84,7 +78,6 @@ void StaticResolver::dispatch(std::shared_ptr<LocalVariableDeclaration> n) {
   
   if (currentSymbolTable->hasValueFor(n->ID)) {
     error("Multiple declarations of local variable ...");
-    return;
   }
   
   currentSymbolTable->insert(n->ID, n);
@@ -187,8 +180,8 @@ void StaticResolver::dispatch(std::shared_ptr<CallExpression> n) {
   
   n->declaration = currentClassDeclaration->methods[n->ID];
   
-  for (int i = 0; i < n->arguments.size(); i++) {
-    n->arguments[i]->accept(shared_from_this());
+  for (auto const& a : n->arguments) {
+    a->accept(shared_from_this());
   }
 };
 
@@ -201,20 +194,15 @@ void StaticResolver::dispatch(std::shared_ptr<UnaryRightExpression> n) {
 };
 
 void StaticResolver::dispatch(std::shared_ptr<CRef> n) {
-  // Try local declarations first
+  // Try local declarations first (including parameters)
   if (!currentSymbolTable->lookup(n->ID, n->declaration)) {
-    // try parameters
-    if (currentMethod->parameterMap.count(n->ID) > 0) {
-      n->declaration = currentMethod->parameterMap[n->ID];
+    // try fields (implicit this)
+    if (currentClassDeclaration->fields.count(n->ID)!=1) {
+      error("could not resolve CRef"); // TODO with ID " + n->ID);
     } else {
-      // try fields (implicit this)
-      if (!currentClassDeclaration->fields.count(n->ID)) {
-        error("could not resolve CRef"); // todo reverse ID lookup etc.
-      } else {
-        n->declaration = currentClassDeclaration->fields[n->ID];
-      }
+      n->declaration = currentClassDeclaration->fields[n->ID];
     }
-  }
+  } // else: declaration has successfully been set implicitly.
 };
 
 void StaticResolver::dispatch(std::shared_ptr<NewObject> n) {
@@ -223,12 +211,7 @@ void StaticResolver::dispatch(std::shared_ptr<NewObject> n) {
 
 void StaticResolver::dispatch(std::shared_ptr<NewArray> n) {
   n->expression->accept(shared_from_this());
-  
-  // static cast because we know every CRef is an Expression
-  // necessary to access fields of base class TypedNode
-  Expression* expr = static_cast<Expression*>(n.get());
-  
-  expr->type->accept(shared_from_this());
+  n->type->accept(shared_from_this());
 };
 
 void StaticResolver::dispatch(std::shared_ptr<Type> n) {
@@ -244,7 +227,7 @@ void StaticResolver::dispatch(std::shared_ptr<UserType> n) {
     }
   }
   
-  error("No declaration for basic type"); // TODO: reverse lookup ID
+  error("No declaration for basic type " + n->ID); // TODO: reverse lookup ID
 };
 
 void StaticResolver::dispatch(std::shared_ptr<CThis> n) {

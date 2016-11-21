@@ -17,6 +17,7 @@ namespace cmpl {
     void error(const std::string &err);
   public:
     int mainMethods=0;
+    std::shared_ptr<MainMethod> currentMainMethod;
     
     void dispatch(std::shared_ptr<Type> n);
     void dispatch(std::shared_ptr<UserType> n);

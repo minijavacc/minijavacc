@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "ast.h"
+#include "../parser/ast.h"
 #include "checker.h"
 
 namespace cmpl {
@@ -80,9 +80,6 @@ namespace cmpl {
   {
     public:
       MissingReturnPathError(const char* err) : SemanticError(err) { }
-      
-      unsigned int line;
-      unsigned int column;
   };
 
 }

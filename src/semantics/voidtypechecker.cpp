@@ -40,6 +40,7 @@ void VoidTypeChecker::dispatch(std::shared_ptr<Block> n) {
 void VoidTypeChecker::dispatch(std::shared_ptr<Method> n) {
   // only place where void is allowed is as method type
   //TODO void[]
+  
   for (auto const& p: n->parameters) {
     p->accept(shared_from_this());
   }

@@ -8,10 +8,7 @@
 
 #include "typechecker.h"
 
-
 using namespace cmpl;
-
-
 
 // helpers
 
@@ -43,13 +40,13 @@ void TypeChecker::dispatch(std::shared_ptr<ClassDeclaration> n) {
 };
 
 void TypeChecker::dispatch(std::shared_ptr<MainMethod> n) {
+  // currentMethod doesn't need to be set
   n->block->accept(shared_from_this());
 };
 
 void TypeChecker::dispatch(std::shared_ptr<Method> n) {
   currentMethod = n;
   
-  n->block->accept(shared_from_this());
   n->block->accept(shared_from_this());
 };
 
@@ -131,7 +128,7 @@ void TypeChecker::dispatch(std::shared_ptr<IfElseStatement> n) {
 void TypeChecker::dispatch(std::shared_ptr<ReturnStatement> n) {
   if (!currentMethod->type->equals(voidNode))
   {
-    error("method must return type, but returns void");
+    error("method must return type, but no return statement profided");
   }
 };
 

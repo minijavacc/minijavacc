@@ -21,8 +21,6 @@ void StaticDeclarationsCollector::dispatch(std::shared_ptr<Program> n) {
 };
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<ClassDeclaration> n) {
-  
-  
   currentClassDeclaration = n;
   for (auto const& c : n->classMembers) {
     c->accept(shared_from_this());
