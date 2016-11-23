@@ -4,7 +4,7 @@ using namespace cmpl;
 
 inline void MainMethodChecker::error(const std::string &err)
 {
-  throw MainMethodError(err.c_str());
+  throw MainMethodError(("mainmethodchecker: " + err).c_str());
 }
 
 void MainMethodChecker::dispatch(std::shared_ptr<Program> n) {
@@ -127,9 +127,7 @@ void MainMethodChecker::dispatch(std::shared_ptr<MultiplicativeExpression> n) {
 };
 
 void MainMethodChecker::dispatch(std::shared_ptr<CallExpression> n) {
-  for(auto const& arg: n->arguments) {
-    arg->accept(shared_from_this());
-  }
+  error("can not call method from static context");
 };
 
 void MainMethodChecker::dispatch(std::shared_ptr<UnaryLeftExpression> n) {

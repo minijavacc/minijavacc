@@ -9,7 +9,7 @@ using namespace cmpl;
 
 inline void StaticDeclarationsCollector::error(const std::string &err)
 {
-  throw CollectorError(err.c_str());
+  throw CollectorError(("staticdeclarationscollector: " + err).c_str());
 }
 
 
@@ -17,13 +17,21 @@ inline void StaticDeclarationsCollector::error(const std::string &err)
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Program> n) {
   for(auto const& c: n->classDeclarations) {
     c->accept(shared_from_this());
+	classes.emplace(c->ID,c); 
   }
 };
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<ClassDeclaration> n) {
   currentClassDeclaration = n;
-  for (auto const& c : n->classMembers) {
-    c->accept(shared_from_this());
+  if(classes.count(n->ID)>0)
+  {
+	  error("cannot have multiple class declarations with the same name");
+  }
+  else
+  {
+	for (auto const& c : n->classMembers) {
+		c->accept(shared_from_this());
+	}
   }
 };
 

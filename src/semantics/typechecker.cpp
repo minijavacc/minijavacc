@@ -14,12 +14,12 @@ using namespace cmpl;
 
 inline void TypeChecker::error(const std::string &err)
 {
-  throw TypeError(err.c_str());
+  throw TypeError(("typechecker: " + err).c_str());
 }
 
 inline void TypeChecker::fatalError(const std::string &err)
 {
-  throw TypeError(("fatal error: " + err).c_str());
+  throw TypeError(("typechecker: #fatal " + err).c_str());
 }
 
 void TypeChecker::dispatch(std::shared_ptr<Program> n) {
@@ -125,17 +125,16 @@ void TypeChecker::dispatch(std::shared_ptr<IfElseStatement> n) {
   }
 };
 
-void TypeChecker::dispatch(std::shared_ptr<ReturnStatement> n) {
-  if (!currentMethod->type->equals(voidNode))
-  {
-    error("method must return type, but no return statement profided");
-  }
-};
+void TypeChecker::dispatch(std::shared_ptr<ReturnStatement> n) { };
 
 void TypeChecker::dispatch(std::shared_ptr<ReturnExpressionStatement> n) {
   n->expression->accept(shared_from_this());
-  
-  if (!currentMethod->type->equals(n->expression->type))
+    //check first if its a void method, then return EXPR is invalid in java!
+  if(currentMethod->type->equals(voidNode))
+  {
+	error("void methods can't return an expression");
+  }
+  else if (!currentMethod->type->equals(n->expression->type))
   {
     error("expression type in return statement doesn't match method return type");
   }

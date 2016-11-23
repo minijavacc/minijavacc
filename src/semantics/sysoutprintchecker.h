@@ -1,24 +1,26 @@
 /*
- * Return Checker
- * - checks whether every execution path contains a return statement
- * - main-method doesn't need to have a return statement
- * - checks only the presence of the return statement, not the type!
+ * System.out.println Checker
+ * - checks for the special subtree and replaces it by another AST-node
  */
 
 #pragma once
 
-#include "../parser/ast.h"
 #include "checker.h"
 
 namespace cmpl {
 
-  class ReturnChecker : public Dispatcher, public std::enable_shared_from_this<ReturnChecker> {
+  class SysOutPrintChecker : public Dispatcher, public std::enable_shared_from_this<SysOutPrintChecker> {
   private:
-    const std::shared_ptr<Type> voidNode = std::make_shared<Type>(std::make_shared<TypeVoid>(), 0);
-    bool currentMethodIsVoid = false;
     void error(const std::string &err);
+    std::shared_ptr<Expression> tmpExpression; // used in UnaryRightExpression
+    
+    std::shared_ptr<Expression> cRefSystem;
+    std::shared_ptr<Expression> exprSystemOut;
+    std::shared_ptr<UnaryOp> fieldAccessOut;
+    std::shared_ptr<UnaryOp> methodInvocationPrintln;
+    std::shared_ptr<Expression> printlnParamExpr;
+    
   public:
-    bool valid = false;
     
     void dispatch(std::shared_ptr<Type> n);
     void dispatch(std::shared_ptr<UserType> n);
@@ -77,10 +79,9 @@ namespace cmpl {
     void dispatch(std::shared_ptr<Minus> n);
   };
   
-  class MissingReturnPathError : public SemanticError
+  class SysOutPrintError : public SemanticError
   {
     public:
-      MissingReturnPathError(const char* err) : SemanticError(err) { }
+      SysOutPrintError(const char* err) : SemanticError(err) { }
   };
-
 }

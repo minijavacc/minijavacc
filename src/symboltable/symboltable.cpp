@@ -47,6 +47,8 @@ void SymbolTable::enterScope() {
 void SymbolTable::leaveScope() {
   if (current) {
     current = current->parent;
+  } else {
+    std::cerr << "fatal: trying to leave scope, but already on top level" << std::endl;
   }
 }
 
@@ -61,6 +63,8 @@ bool SymbolTable::lookup(StringIdentifier name, std::weak_ptr<Node> &res) {
 void SymbolTable::insert(StringIdentifier name, std::weak_ptr<Node> decl) {
   if (current) {
     current->insert(name, decl);
+  } else {
+    std::cerr << "fatal: trying to insert " + StringTable::lookupIdentifier(name) + " into scope, but there is no scope." << std::endl;
   }
 }
 

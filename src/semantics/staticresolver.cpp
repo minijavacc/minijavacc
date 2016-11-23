@@ -16,12 +16,7 @@ using namespace cmpl;
 
 inline void StaticResolver::error(const std::string &err)
 {
-  throw ResolverError(err.c_str());
-}
-
-inline void StaticResolver::fatalError(const std::string &err)
-{
-  throw ResolverError(("fatal error: " + err).c_str());
+  throw ResolverError(("staticresolver: " + err).c_str());
 }
 
 void StaticResolver::dispatch(std::shared_ptr<Program> n) {
@@ -48,6 +43,7 @@ void StaticResolver::dispatch(std::shared_ptr<Field> n) { };
 void StaticResolver::dispatch(std::shared_ptr<Method> n) {
   currentMethod = n;
   currentSymbolTable.reset(new SymbolTable());
+  currentSymbolTable->enterScope();
   
   for (auto const& p : n->parameters)
   {
@@ -55,12 +51,16 @@ void StaticResolver::dispatch(std::shared_ptr<Method> n) {
   }
   
   n->block->accept(shared_from_this());
+  
+  currentSymbolTable->leaveScope();
 };
 
 void StaticResolver::dispatch(std::shared_ptr<MainMethod> n) {
   currentSymbolTable.reset(new SymbolTable());
-  currentSymbolTable->insert(n->parameterID, n); // TODO make sure n is never used
+  currentSymbolTable->enterScope();
+  currentSymbolTable->insert(n->parameterID, n); // add parameter ID to find conflicting redefinitions TODO make sure n is never used
   n->block->accept(shared_from_this());
+  currentSymbolTable->leaveScope();
 };
 
 void StaticResolver::dispatch(std::shared_ptr<Block> n) {
@@ -112,6 +112,7 @@ void StaticResolver::dispatch(std::shared_ptr<ExpressionStatement> n) {
 
 void StaticResolver::dispatch(std::shared_ptr<WhileStatement> n) {
   n->expression->accept(shared_from_this());
+  n->statement->accept(shared_from_this());
 };
 
 void StaticResolver::dispatch(std::shared_ptr<EmptyStatement> n) { };
@@ -198,7 +199,7 @@ void StaticResolver::dispatch(std::shared_ptr<CRef> n) {
   if (!currentSymbolTable->lookup(n->ID, n->declaration)) {
     // try fields (implicit this)
     if (currentClassDeclaration->fields.count(n->ID)!=1) {
-      error("could not resolve CRef"); // TODO with ID " + n->ID);
+      error("could not resolve CRef " + StringTable::lookupIdentifier(n->ID));
     } else {
       n->declaration = currentClassDeclaration->fields[n->ID];
     }
@@ -227,7 +228,7 @@ void StaticResolver::dispatch(std::shared_ptr<UserType> n) {
     }
   }
   
-  error("No declaration for basic type " + n->ID); // TODO: reverse lookup ID
+  error("No declaration for basic type " + StringTable::lookupIdentifier(n->ID));
 };
 
 void StaticResolver::dispatch(std::shared_ptr<CThis> n) {

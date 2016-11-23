@@ -6,67 +6,48 @@ using namespace cmpl;
 
 inline void ReturnChecker::error(const std::string &err)
 {
-  throw MissingReturnPathError(err.c_str());
+  throw MissingReturnPathError(("returnchecker: " + err).c_str());
 }
 
-std::shared_ptr<Type> ReturnChecker::voidNode() {
-  return std::make_shared<Type>(std::make_shared<TypeVoid>(), 0);
-}
-  
 void ReturnChecker::dispatch(std::shared_ptr<Program> n) {
-  valid = true;
-  
   for(auto const& c: n->classDeclarations) {
     c->accept(shared_from_this());
-    if (!c->returns) {
-      valid = false;
-      break;
-    }
   }
 };
 
 void ReturnChecker::dispatch(std::shared_ptr<ClassDeclaration> n) {
-  n->returns = true;
-  
   for (auto const& m: n->classMembers) {
-    m->accept(shared_from_this()); // sets returns
-    if (!m->returns) {
-      n->returns = false;
-      break;
-    }
+    m->accept(shared_from_this());
   }
 };
 
-void ReturnChecker::dispatch(std::shared_ptr<MainMethod> n) { n->returns = true; };
-void ReturnChecker::dispatch(std::shared_ptr<Field> n) { n->returns = true; };
+void ReturnChecker::dispatch(std::shared_ptr<MainMethod> n) { };
+void ReturnChecker::dispatch(std::shared_ptr<Field> n) { };
 
-// Returns if either or both:
-// a) has return type void
-// b) the implementation block returns
+/* Checks whether
+ a) method has type void and no return statement
+ b) method has other type and the method returns on all paths */
 void ReturnChecker::dispatch(std::shared_ptr<Method> n) {
-  n->type->accept(shared_from_this());
-  if (!n->type->equals(voidNode())) {
-    n->block->accept(shared_from_this()); // sets returns
-    n->returns = n->block->returns; // propagate upwards
-    
-    if (!n->returns)
-    {
-      error("Method has missing return paths");
+  currentMethodIsVoid = n->type->equals(voidNode);
+  
+  n->block->accept(shared_from_this());
+  
+  if (n->block->returns) { // did return
+    if(currentMethodIsVoid) {
+      error("Method " + StringTable::lookupIdentifier(n->ID) + " of type void would return a value");
     }
   } else {
-    n->returns = true;
+    if(!currentMethodIsVoid) {
+      error("Method " + StringTable::lookupIdentifier(n->ID) + " has missing return paths");
+    }
   }
 };
 
-void ReturnChecker::dispatch(std::shared_ptr<Type> n) {
-  n->basicType->accept(shared_from_this());
-};
-
+void ReturnChecker::dispatch(std::shared_ptr<Type> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<UserType> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<TypeInt> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<TypeBoolean> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<TypeVoid> n) { };
-
 void ReturnChecker::dispatch(std::shared_ptr<Parameter> n) { };
 
 // Returns if one of the statements returns
@@ -79,7 +60,7 @@ void ReturnChecker::dispatch(std::shared_ptr<Block> n) {
       n->returns = true;
       break;
     }
-  }
+  } // dead code recognition could be done here
 };
 
 // Do not return
@@ -100,7 +81,9 @@ void ReturnChecker::dispatch(std::shared_ptr<IfElseStatement> n) {
 
 // Always returns
 void ReturnChecker::dispatch(std::shared_ptr<ReturnStatement> n) {
-  n->returns = true;
+  if (!currentMethodIsVoid) { // blank return statement is only allowed in void methods
+    error("blank return statement in non-void method");
+  }
 };
 
 void ReturnChecker::dispatch(std::shared_ptr<ReturnExpressionStatement> n) {

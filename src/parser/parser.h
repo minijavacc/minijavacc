@@ -2,6 +2,7 @@
 
 #include "lexer.h"
 #include "ast.h"
+#include "stringtable.h"
 
 #include <memory>
 #include <stdexcept>
@@ -14,6 +15,7 @@ namespace cmpl
     public:
       Parser(Lexer &lexer) : lexer(lexer) { };
       void run();
+      bool addPrintln();
       std::shared_ptr<Node> getAST();
     
     private:
