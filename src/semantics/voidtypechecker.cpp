@@ -4,7 +4,7 @@ using namespace cmpl;
 
 /***** helper functions *****/
 inline void VoidTypeChecker::error(const std::string &err) {
-  throw VoidTypeError(err.c_str());
+  throw VoidTypeError(("staticdeclarationscollector: " + err).c_str());
 }
 
 inline void VoidTypeChecker::assureNotVoid(const std::shared_ptr<Type> &type) {

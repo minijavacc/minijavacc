@@ -6,7 +6,7 @@ using namespace cmpl;
 
 inline void ReturnChecker::error(const std::string &err)
 {
-  throw MissingReturnPathError(err.c_str());
+  throw MissingReturnPathError(("returnchecker: " + err).c_str());
 }
 
 std::shared_ptr<Type> ReturnChecker::voidNode() {

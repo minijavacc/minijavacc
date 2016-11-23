@@ -14,12 +14,12 @@ using namespace cmpl;
 
 inline void TypeChecker::error(const std::string &err)
 {
-  throw TypeError(err.c_str());
+  throw TypeError(("typechecker: " + err).c_str());
 }
 
 inline void TypeChecker::fatalError(const std::string &err)
 {
-  throw TypeError(("fatal error: " + err).c_str());
+  throw TypeError(("typechecker: #fatal " + err).c_str());
 }
 
 void TypeChecker::dispatch(std::shared_ptr<Program> n) {

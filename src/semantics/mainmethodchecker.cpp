@@ -4,7 +4,7 @@ using namespace cmpl;
 
 inline void MainMethodChecker::error(const std::string &err)
 {
-  throw MainMethodError(err.c_str());
+  throw MainMethodError(("mainmethodchecker: " + err).c_str());
 }
 
 void MainMethodChecker::dispatch(std::shared_ptr<Program> n) {

@@ -16,12 +16,7 @@ using namespace cmpl;
 
 inline void StaticResolver::error(const std::string &err)
 {
-  throw ResolverError(err.c_str());
-}
-
-inline void StaticResolver::fatalError(const std::string &err)
-{
-  throw ResolverError(("fatal error: " + err).c_str());
+  throw ResolverError(("staticresolver: " + err).c_str());
 }
 
 void StaticResolver::dispatch(std::shared_ptr<Program> n) {
@@ -198,7 +193,7 @@ void StaticResolver::dispatch(std::shared_ptr<CRef> n) {
   if (!currentSymbolTable->lookup(n->ID, n->declaration)) {
     // try fields (implicit this)
     if (currentClassDeclaration->fields.count(n->ID)!=1) {
-      error("could not resolve CRef"); // TODO with ID " + n->ID);
+      error("could not resolve CRef " + StringTable::lookupIdentifier(n->ID));
     } else {
       n->declaration = currentClassDeclaration->fields[n->ID];
     }
@@ -227,7 +222,7 @@ void StaticResolver::dispatch(std::shared_ptr<UserType> n) {
     }
   }
   
-  error("No declaration for basic type " + n->ID); // TODO: reverse lookup ID
+  error("No declaration for basic type " + StringTable::lookupIdentifier(n->ID));
 };
 
 void StaticResolver::dispatch(std::shared_ptr<CThis> n) {

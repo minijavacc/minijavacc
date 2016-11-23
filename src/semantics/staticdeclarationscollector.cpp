@@ -9,7 +9,7 @@ using namespace cmpl;
 
 inline void StaticDeclarationsCollector::error(const std::string &err)
 {
-  throw CollectorError(err.c_str());
+  throw CollectorError(("staticdeclarationscollector: " + err).c_str());
 }
 
 
