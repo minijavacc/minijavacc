@@ -152,15 +152,15 @@ namespace cmpl
       std::shared_ptr<Type> type;
   };
   
-  class ClassMember    : public Node                 { public: bool returns = false; };
+  class ClassMember    : public Node                 { };
   class BlockStatement : public Node                 { public: bool returns = false; };
-  class Statement      : public BlockStatement       { public:  };
-  class Op             : public Node                 { public: };
-  class EqualityOp     : public Op                   { public: };
-  class RelationalOp   : public Op                   { public: };
-  class AddOp          : public Op                   { public: };
-  class MultOp         : public Op                   { public: };
-  class UnaryOp        : public Op, public TypedNode { public: };
+  class Statement      : public BlockStatement       { };
+  class Op             : public Node                 { };
+  class EqualityOp     : public Op                   { };
+  class RelationalOp   : public Op                   { };
+  class AddOp          : public Op                   { };
+  class MultOp         : public Op                   { };
+  class UnaryOp        : public Op, public TypedNode { };
   
   
   // helper classes for typechecker
@@ -245,7 +245,7 @@ namespace cmpl
       std::weak_ptr<ClassDeclaration> declaration;
       
       UserType(StringIdentifier &ID) : ID(ID) { }
-    
+      
       void accept (std::shared_ptr<Dispatcher> d) override {
         d->dispatch(shared_from_this());
       }
