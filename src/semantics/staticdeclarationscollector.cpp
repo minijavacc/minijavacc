@@ -16,8 +16,8 @@ inline void StaticDeclarationsCollector::error(const std::string &err)
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Program> n) {
   for(auto const& c: n->classDeclarations) {
-	classes.emplace(c->ID,c);  
     c->accept(shared_from_this());
+	classes.emplace(c->ID,c); 
   }
 };
 
