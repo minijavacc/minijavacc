@@ -112,6 +112,7 @@ void StaticResolver::dispatch(std::shared_ptr<ExpressionStatement> n) {
 
 void StaticResolver::dispatch(std::shared_ptr<WhileStatement> n) {
   n->expression->accept(shared_from_this());
+  n->statement->accept(shared_from_this());
 };
 
 void StaticResolver::dispatch(std::shared_ptr<EmptyStatement> n) { };

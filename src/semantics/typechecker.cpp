@@ -129,8 +129,12 @@ void TypeChecker::dispatch(std::shared_ptr<ReturnStatement> n) { };
 
 void TypeChecker::dispatch(std::shared_ptr<ReturnExpressionStatement> n) {
   n->expression->accept(shared_from_this());
-  
-  if (!currentMethod->type->equals(n->expression->type))
+    //check first if its a void method, then return EXPR is invalid in java!
+  if(currentMethod->type->equals(voidNode))
+  {
+	error("void methods can't return an expression");
+  }
+  else if (!currentMethod->type->equals(n->expression->type))
   {
     error("expression type in return statement doesn't match method return type");
   }
