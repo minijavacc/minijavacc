@@ -1,12 +1,14 @@
-project(compiler)
+project(minijavacc)
 cmake_minimum_required(VERSION 2.8.7)
 
 set(CMAKE_BINARY_DIR bin)
 set(CMAKE_SOURCE_DIR src)
+set(CMAKE_LIBRARY_PATH lib)
 set(EXECUTABLE_OUTPUT_PATH bin)
 
+add_subdirectory(lib/libfirm)
+
 include_directories(
-  src
   src/main
   src/compiler
   src/lexer
@@ -14,6 +16,13 @@ include_directories(
   src/parser
   src/semantics
   src/symboltable
+  src/graphcreator
+  lib/libfirm/include
+  lib/libfirm/gen/include/libfirm
+)
+
+link_directories(
+  lib/libfirm
 )
 
 # source files
@@ -26,4 +35,5 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED on)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
-add_executable (compiler ${compiler_SRCS})
+add_executable(minijavacc ${compiler_SRCS})
+target_link_libraries(minijavacc LINK_PUBLIC firm)
