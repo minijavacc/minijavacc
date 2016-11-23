@@ -16,14 +16,22 @@ inline void StaticDeclarationsCollector::error(const std::string &err)
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Program> n) {
   for(auto const& c: n->classDeclarations) {
+	classes.emplace(c->ID,c);  
     c->accept(shared_from_this());
   }
 };
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<ClassDeclaration> n) {
   currentClassDeclaration = n;
-  for (auto const& c : n->classMembers) {
-    c->accept(shared_from_this());
+  if(classes.count(n->ID)>0)
+  {
+	  error("cannot have multiple class declarations with the same name");
+  }
+  else
+  {
+	for (auto const& c : n->classMembers) {
+		c->accept(shared_from_this());
+	}
   }
 };
 

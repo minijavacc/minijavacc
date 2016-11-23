@@ -910,7 +910,7 @@ namespace cmpl
   {
     public:
       std::vector<std::shared_ptr<ClassDeclaration>> classDeclarations;
-      
+     
       Program(std::vector<std::shared_ptr<ClassDeclaration>> &classDeclarations) :
                 classDeclarations(std::move(classDeclarations)) { };
     
