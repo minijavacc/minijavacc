@@ -6,7 +6,11 @@ set(CMAKE_SOURCE_DIR src)
 set(CMAKE_LIBRARY_PATH lib)
 set(EXECUTABLE_OUTPUT_PATH bin)
 
-add_subdirectory(lib/libfirm)
+add_custom_target(libfirm
+  COMMAND $(MAKE) --silent
+  WORKING_DIRECTORY lib/libfirm
+  COMMENT Building libfirm
+)
 
 include_directories(
   src/main
@@ -18,11 +22,11 @@ include_directories(
   src/symboltable
   src/graphcreator
   lib/libfirm/include
-  lib/libfirm/gen/include/libfirm
+  lib/libfirm/build/gen/include/libfirm
 )
 
 link_directories(
-  lib/libfirm
+  lib/libfirm/build/debug
 )
 
 # source files
@@ -35,5 +39,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED on)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
+
 add_executable(minijavacc ${compiler_SRCS})
+add_dependencies(minijavacc libfirm)
 target_link_libraries(minijavacc LINK_PUBLIC firm)
