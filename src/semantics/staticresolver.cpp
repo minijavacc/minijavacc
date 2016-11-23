@@ -43,6 +43,7 @@ void StaticResolver::dispatch(std::shared_ptr<Field> n) { };
 void StaticResolver::dispatch(std::shared_ptr<Method> n) {
   currentMethod = n;
   currentSymbolTable.reset(new SymbolTable());
+  currentSymbolTable->enterScope();
   
   for (auto const& p : n->parameters)
   {
@@ -50,12 +51,16 @@ void StaticResolver::dispatch(std::shared_ptr<Method> n) {
   }
   
   n->block->accept(shared_from_this());
+  
+  currentSymbolTable->leaveScope();
 };
 
 void StaticResolver::dispatch(std::shared_ptr<MainMethod> n) {
   currentSymbolTable.reset(new SymbolTable());
-  currentSymbolTable->insert(n->parameterID, n); // TODO make sure n is never used
+  currentSymbolTable->enterScope();
+  currentSymbolTable->insert(n->parameterID, n); // add parameter ID to find conflicting redefinitions TODO make sure n is never used
   n->block->accept(shared_from_this());
+  currentSymbolTable->leaveScope();
 };
 
 void StaticResolver::dispatch(std::shared_ptr<Block> n) {

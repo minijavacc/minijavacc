@@ -125,12 +125,7 @@ void TypeChecker::dispatch(std::shared_ptr<IfElseStatement> n) {
   }
 };
 
-void TypeChecker::dispatch(std::shared_ptr<ReturnStatement> n) {
-  if (!currentMethod->type->equals(voidNode))
-  {
-    error("method must return type, but no return statement profided");
-  }
-};
+void TypeChecker::dispatch(std::shared_ptr<ReturnStatement> n) { };
 
 void TypeChecker::dispatch(std::shared_ptr<ReturnExpressionStatement> n) {
   n->expression->accept(shared_from_this());
