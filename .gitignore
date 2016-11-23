@@ -12,3 +12,10 @@ doc
 .codelite
 minijavacc.workspace
 compilation.db
+experiments/markus/libfirmexp/libfirmexp/libfirm.a
+experiments/markus/libfirmexp/libfirmexp.xcodeproj/project.pbxproj
+experiments/markus/libfirmexp/libfirmexp.xcodeproj/project.xcworkspace/contents.xcworkspacedata
+experiments/markus/libfirmexp/libfirmexp.xcodeproj/project.xcworkspace/xcshareddata/libfirmexp.xcscmblueprint
+experiments/markus/libfirmexp/libfirmexp.xcodeproj/project.xcworkspace/xcuserdata/markusschlegel.xcuserdatad/UserInterfaceState.xcuserstate
+experiments/markus/libfirmexp/libfirmexp.xcodeproj/xcuserdata/markusschlegel.xcuserdatad/xcschemes/libfirmexp.xcscheme
+experiments/markus/libfirmexp/libfirmexp.xcodeproj/xcuserdata/markusschlegel.xcuserdatad/xcschemes/xcschememanagement.plist
