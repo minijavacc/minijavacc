@@ -58,6 +58,9 @@ void StaticDeclarationsCollector::dispatch(std::shared_ptr<Method> n) {
   for (auto const& p : n->parameters) {
     p->accept(shared_from_this());
   }
+  
+  // collect local variables
+  n->block->accept(shared_from_this());
 };
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Parameter> n) {
@@ -69,20 +72,57 @@ void StaticDeclarationsCollector::dispatch(std::shared_ptr<Parameter> n) {
   currentMethod->parameterMap.emplace(n->ID, n);
 };
 
-void StaticDeclarationsCollector::dispatch(std::shared_ptr<MainMethod> n) { };
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<MainMethod> n) {
+  mainMethod = n;
+  
+  // collect local variables
+  n->block->accept(shared_from_this());
+  
+  mainMethod = nullptr;
+};
+
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<Block> n) {
+  for (auto const& s: n->statements) {
+    s->accept(shared_from_this());
+  }
+};
+
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<LocalVariableDeclaration> n) {
+  if (mainMethod) {
+    mainMethod->localVariables.push_back(n);
+  } else {
+    currentMethod->localVariables.push_back(n);
+  }
+};
+
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) {
+  if (mainMethod) {
+    mainMethod->localVariables.push_back(n);
+  } else {
+    currentMethod->localVariables.push_back(n);
+  }
+};
+
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<IfStatement> n) {
+  n->ifStatement->accept(shared_from_this());
+};
+
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<WhileStatement> n) {
+  n->statement->accept(shared_from_this());
+};
+
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<IfElseStatement> n) {
+  n->ifStatement->accept(shared_from_this());
+  n->elseStatement->accept(shared_from_this());
+};
+
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Type> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<UserType> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<TypeInt> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<TypeBoolean> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<TypeVoid> n) { };
-void StaticDeclarationsCollector::dispatch(std::shared_ptr<Block> n) { };
-void StaticDeclarationsCollector::dispatch(std::shared_ptr<IfStatement> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<ExpressionStatement> n) { };
-void StaticDeclarationsCollector::dispatch(std::shared_ptr<WhileStatement> n) { };
-void StaticDeclarationsCollector::dispatch(std::shared_ptr<LocalVariableDeclaration> n) { };
-void StaticDeclarationsCollector::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<EmptyStatement> n) { };
-void StaticDeclarationsCollector::dispatch(std::shared_ptr<IfElseStatement> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<ReturnStatement> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<ReturnExpressionStatement> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<MethodInvocation> n) { };

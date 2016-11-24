@@ -1,6 +1,7 @@
 /*
  * Static Declarations Collector
  * - collects all static declarations and stores them in 'methods', 'fields' and 'parameterMap' in the ClassDeclaration-Node
+ * - collects all local variables inside methods and stores them in 'localVariables' in the Method node
  * - checks for multiple methods/fields with the same name (no overloading allowed)
  */
 
@@ -16,7 +17,8 @@ namespace cmpl {
     private:
       shared_ptr<ClassDeclaration> currentClassDeclaration;
       shared_ptr<Method> currentMethod;
-	  std::map<StringIdentifier, std::weak_ptr<ClassDeclaration>> classes;
+      shared_ptr<MainMethod> mainMethod;
+      std::map<StringIdentifier, std::weak_ptr<ClassDeclaration>> classes;
 	  
       void error(const std::string &err);
 

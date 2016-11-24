@@ -857,6 +857,7 @@ namespace cmpl
     public:
       StringIdentifier                        ID;
       std::vector<std::shared_ptr<Parameter>> parameters;
+      std::vector<std::shared_ptr<Node>>      localVariables;
       std::shared_ptr<Block>                  block;
       std::map<StringIdentifier, std::weak_ptr<Parameter>> parameterMap;
       
@@ -876,7 +877,8 @@ namespace cmpl
       StringIdentifier       ID;
       StringIdentifier       parameterID;
       std::shared_ptr<Block> block;
-      
+      std::vector<std::shared_ptr<Node>>      localVariables;
+    
       MainMethod(StringIdentifier &ID, StringIdentifier &parameterID, std::shared_ptr<Block> &block) :
                    ID(ID), parameterID(std::move(parameterID)), block(std::move(block)) { };
     
