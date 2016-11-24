@@ -22,15 +22,11 @@ namespace cmpl {
       std::shared_ptr<Expression> tmpExpression; // used in UnaryRightExpression
       
       void error(const std::string &err);       // program is semantically incorrect
-      void fatalError(const std::string &err);  // error occured because of missing data in AST
-      
-      // singletons for Types containing BasicTypes except UserType
-      const std::shared_ptr<Type> voidNode = std::make_shared<Type>(std::make_shared<TypeVoid>(), 0);
-      const std::shared_ptr<Type> intNode = std::make_shared<Type>(std::make_shared<TypeInt>(), 0);
-      const std::shared_ptr<Type> booleanNode = std::make_shared<Type>(std::make_shared<TypeBoolean>(), 0);
-      
+      void error(const std::string &err, const std::shared_ptr<Node> &n);
+      void fatalError(const std::string &err, const std::shared_ptr<Node> &n);
     public:
       void dispatch(std::shared_ptr<Type> n);
+      void dispatch(std::shared_ptr<FakeType> n);
       void dispatch(std::shared_ptr<UserType> n);
       void dispatch(std::shared_ptr<TypeInt> n);
       void dispatch(std::shared_ptr<TypeBoolean> n);
@@ -92,5 +88,4 @@ namespace cmpl {
     public:
       TypeError(const char* err) : SemanticError(err) { }
   };
-  
 }

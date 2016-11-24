@@ -17,13 +17,13 @@ namespace cmpl {
     private:
       shared_ptr<ClassDeclaration> currentClassDeclaration;
       shared_ptr<Method> currentMethod;
-      shared_ptr<MainMethod> mainMethod;
       std::map<StringIdentifier, std::weak_ptr<ClassDeclaration>> classes;
-	  
-      void error(const std::string &err);
+      shared_ptr<MainMethod> mainMethod;
+      void errorMultipleNames(const std::string &err, StringIdentifier ID);
 
     public:
       void dispatch(std::shared_ptr<Type> n);
+      void dispatch(std::shared_ptr<FakeType> n);
       void dispatch(std::shared_ptr<UserType> n);
       void dispatch(std::shared_ptr<TypeInt> n);
       void dispatch(std::shared_ptr<TypeBoolean> n);

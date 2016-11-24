@@ -34,7 +34,8 @@ namespace cmpl
         Option("--lextest", Compiler::lextest),
         Option("--parsetest", Compiler::parsetest),
         Option("--print-ast", Compiler::printast),
-        Option("--check", Compiler::semcheck)
+        Option("--check", Compiler::semcheck),
+        Option("--graph", Compiler::creategraph)
       };
 
       std::vector<Option> givenOptions;

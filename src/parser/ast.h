@@ -19,6 +19,7 @@ namespace cmpl
   class TypeBoolean;
   class TypeInt;
   class TypeVoid;
+  class FakeType;
   class UserType;
   class Program;
   class ClassDeclaration;
@@ -78,6 +79,7 @@ namespace cmpl
     virtual void dispatch(std::shared_ptr<TypeBoolean> n) = 0;
     virtual void dispatch(std::shared_ptr<TypeInt> n) = 0;
     virtual void dispatch(std::shared_ptr<TypeVoid> n) = 0;
+    virtual void dispatch(std::shared_ptr<FakeType> n) = 0;
     virtual void dispatch(std::shared_ptr<UserType> n) = 0;
     virtual void dispatch(std::shared_ptr<Program> n) = 0;
     virtual void dispatch(std::shared_ptr<ClassDeclaration> n) = 0;
@@ -238,13 +240,27 @@ namespace cmpl
       }
   };
   
+  class FakeType : public BasicType, public std::enable_shared_from_this<FakeType>
+  {
+    public:
+      FakeType() { }
+      
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
+    
+      bool equals(std::shared_ptr<BasicType> other) override {
+        return false;
+      }
+  };
+  
   class UserType : public BasicType, public std::enable_shared_from_this<UserType>
   {
     public:
       StringIdentifier ID;
       std::weak_ptr<ClassDeclaration> declaration;
       
-      UserType(StringIdentifier &ID) : ID(ID) { }
+      UserType(StringIdentifier ID) : ID(ID) { }
       
       void accept (std::shared_ptr<Dispatcher> d) override {
         d->dispatch(shared_from_this());
@@ -256,11 +272,11 @@ namespace cmpl
         } else {
           return false;
       }
-    }
-    
-    bool operator!= (std::shared_ptr<UserType> t) {
-      return !(shared_from_this() == t);
-    }
+      }
+      
+      bool operator!= (std::shared_ptr<UserType> t) {
+        return !(shared_from_this() == t);
+      }
   };
   
   // other nodes
@@ -708,9 +724,9 @@ namespace cmpl
   {
     public:
       std::vector<std::shared_ptr<BlockStatement>> statements;
-	 
+      
       Block(std::vector<std::shared_ptr<BlockStatement>> &statements) : statements(std::move(statements)) { };
-    
+      
       void accept (std::shared_ptr<Dispatcher> d) override {
         d->dispatch(shared_from_this());
       }
@@ -811,6 +827,7 @@ namespace cmpl
   {
     public:
       StringIdentifier ID;
+      bool isLValue = true;
       
       LocalVariableDeclaration(std::shared_ptr<Type> &type, StringIdentifier &ID) :
                                  TypedNode(type), ID(ID) { };
@@ -825,6 +842,7 @@ namespace cmpl
     public:
       StringIdentifier            ID;
       std::shared_ptr<Expression> expression;
+      // bool isLValue = true; TODO why does this cause errors?
       
       LocalVariableExpressionDeclaration(std::shared_ptr<Type> &type, StringIdentifier &ID,
                                          std::shared_ptr<Expression> &expression) :
@@ -842,7 +860,8 @@ namespace cmpl
   class Field : public ClassMember, public TypedNode, public std::enable_shared_from_this<Field>
   {
     public:
-      StringIdentifier      ID;
+      StringIdentifier ID;
+      bool isLValue = true;
       
       Field(std::shared_ptr<Type> &type, StringIdentifier &ID) :
             TypedNode(type), ID(ID) { };

@@ -9,8 +9,8 @@
 #pragma once
 
 #include <stdio.h>
-#include "parser.h"
 
+#include "../parser/parser.h"
 
 namespace cmpl
 {
@@ -20,6 +20,7 @@ namespace cmpl
     public:
       Checker(Parser &parser) : parser(parser) { };
       void run();
+      static std::string printNode(const std::shared_ptr<Node> &n);
     private:
       Parser &parser;
   };

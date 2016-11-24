@@ -7,15 +7,18 @@
 //
 
 #include "checker.h"
+#include "mainmethodchecker.h"
 #include "returnchecker.h"
 #include "staticdeclarationscollector.h"
 #include "staticresolver.h"
-#include "voidtypechecker.h"
 #include "typechecker.h"
-#include "mainmethodchecker.h"
-#include "ast.h"
+#include "voidtypechecker.h"
+
+#include "../parser/ast.h"
+#include "../parser/prettyprinter.h"
 
 #include <iostream>
+#include <sstream>
 
 using namespace cmpl;
 
@@ -54,3 +57,10 @@ void Checker::run() {
 
   std::cout << "all semantic checks passed\n";
 }
+
+std::string Checker::printNode(const std::shared_ptr<Node> &n) {
+  std::stringstream stream;
+  std::shared_ptr<Dispatcher> pp = std::make_shared<PrettyPrinter>(stream);
+  n->accept(pp);
+  return stream.str();
+};

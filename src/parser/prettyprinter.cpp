@@ -1,5 +1,6 @@
 #include "prettyprinter.h"
 
+#include <assert.h>
 #include <iostream>
 
 using namespace cmpl;
@@ -164,6 +165,10 @@ void PrettyPrinter::dispatch(std::shared_ptr<Type> n) {
   for(int i=0; i<n->arrayDepth; i++) {
     print("[]");
   }
+};
+
+void PrettyPrinter::dispatch(std::shared_ptr<FakeType> n) {
+  assert(false);
 };
 
 void PrettyPrinter::dispatch(std::shared_ptr<UserType> n) {

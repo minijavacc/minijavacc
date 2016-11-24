@@ -51,13 +51,6 @@ void StaticDeclarationsCollector::dispatch(std::shared_ptr<MainMethod> n) {
     std::shared_ptr<Block> block = std::make_shared<Block>(statements);
     currentClassDeclaration->methods.emplace(std::make_shared<Method>(fakeType, n->ID, parameters, block));
     */
-    
-    mainMethod = n;
-    
-    // collect local variables
-    n->block->accept(shared_from_this());
-    
-    mainMethod = nullptr;
   }
 };
 
@@ -86,6 +79,16 @@ void StaticDeclarationsCollector::dispatch(std::shared_ptr<Parameter> n) {
   } else {
     currentMethod->parameterMap.emplace(n->ID, n);
   }
+};
+
+<<<<<<< HEAD
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<MainMethod> n) {
+  mainMethod = n;
+  
+  // collect local variables
+  n->block->accept(shared_from_this());
+  
+  mainMethod = nullptr;
 };
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Block> n) {
@@ -123,6 +126,8 @@ void StaticDeclarationsCollector::dispatch(std::shared_ptr<IfElseStatement> n) {
   n->elseStatement->accept(shared_from_this());
 };
 
+=======
+>>>>>>> b7f3e613258d2695ec9834ba82c524f4b1b18166
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Type> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<FakeType> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<UserType> n) { };

@@ -1,32 +1,16 @@
-/*
- * Static Resolver
- * - assures identifiers of parameters are unique
- * - points UserType to representative class declaration
- * - points CallExpression  to representative method declaration
- * - points CRef to representative class declaration
- */
-
 #pragma once
 
-#include "../parser/ast.h"
-#include "symboltable.h"
-#include "checker.h"
+#include "ast.h"
+#include "creator.h"
 
-using namespace std;
+#include <libfirm/firm.h>
 
 namespace cmpl {
-  
-  class StaticResolver : public Dispatcher, public std::enable_shared_from_this<StaticResolver> {
+
+  class TypeCreator : public Dispatcher, public std::enable_shared_from_this<TypeCreator> {
   private:
     void error(const std::string &err);
-    
-    std::shared_ptr<Program> currentProgram;
-    std::shared_ptr<ClassDeclaration> currentClassDeclaration;
-    std::shared_ptr<Method> currentMethod;
-    std::unique_ptr<SymbolTable> currentSymbolTable;
-    bool valid = false;
-    
-  public:
+  public:   
     void dispatch(std::shared_ptr<Type> n);
     void dispatch(std::shared_ptr<FakeType> n);
     void dispatch(std::shared_ptr<UserType> n);
@@ -85,9 +69,10 @@ namespace cmpl {
     void dispatch(std::shared_ptr<Minus> n);
   };
   
-  class ResolverError : public SemanticError
+  class TypeCreatorError : public CreatorError 
   {
     public:
-      ResolverError(const char* err) : SemanticError(err) { }
+      TypeCreatorError(const char* err) : CreatorError(err) { }
   };
+
 }

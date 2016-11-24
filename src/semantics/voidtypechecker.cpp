@@ -1,14 +1,20 @@
 #include "voidtypechecker.h"
+#include "singleton.h"
 
 using namespace cmpl;
 
 /***** helper functions *****/
 inline void VoidTypeChecker::error(const std::string &err) {
-  throw VoidTypeError(("staticdeclarationscollector: " + err).c_str());
+  throw VoidTypeError(("voidtypechecker: " + err).c_str());
+}
+
+inline void VoidTypeChecker::error(const std::string &err, const std::shared_ptr<Node> &n)
+{
+  throw VoidTypeError(("voidtypechecker: " + err + ": " + Checker::printNode(n)).c_str());
 }
 
 inline void VoidTypeChecker::assureNotVoid(const std::shared_ptr<Type> &type) {
-  if(type->basicType->equals(voidNode)) {
+  if(type->basicType->equals(voidBasicNode)) {
     error("Only methods can be of type void.");
   }
 }
@@ -39,7 +45,10 @@ void VoidTypeChecker::dispatch(std::shared_ptr<Block> n) {
 
 void VoidTypeChecker::dispatch(std::shared_ptr<Method> n) {
   // only place where void is allowed is as method type
-  //TODO void[]
+  // assure no weird things like void[]
+  if(n->type->basicType->equals(voidBasicNode) && n->type->arrayDepth>0) {
+    error("A void array? Seriously? Not even telling you where it is.");
+  }
   
   for (auto const& p: n->parameters) {
     p->accept(shared_from_this());
@@ -99,6 +108,7 @@ void VoidTypeChecker::dispatch(std::shared_ptr<FieldAccess> n) { };
 void VoidTypeChecker::dispatch(std::shared_ptr<CRef> n) { };
 void VoidTypeChecker::dispatch(std::shared_ptr<NewObject> n) { };
 void VoidTypeChecker::dispatch(std::shared_ptr<Type> n) { };
+void VoidTypeChecker::dispatch(std::shared_ptr<FakeType> n) { };
 void VoidTypeChecker::dispatch(std::shared_ptr<UserType> n) { };
 void VoidTypeChecker::dispatch(std::shared_ptr<TypeInt> n) { };
 void VoidTypeChecker::dispatch(std::shared_ptr<TypeBoolean> n) { };

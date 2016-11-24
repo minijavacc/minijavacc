@@ -14,6 +14,7 @@ namespace cmpl {
       static int parsetest(std::ifstream &file);
       static int printast(std::ifstream &file);
       static int semcheck(std::ifstream &file);
+      static int creategraph(std::ifstream &file);
       
       static std::string sourcePreview(std::ifstream &file, unsigned int line, unsigned int column);
   };
