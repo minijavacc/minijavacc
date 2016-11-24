@@ -258,6 +258,9 @@ void TypeChecker::dispatch(std::shared_ptr<LogicalAndExpression> n) {
   n->expression1->accept(shared_from_this());
   n->expression2->accept(shared_from_this());
   
+  assert(n->expression1->type != nullptr);
+  assert(n->expression2->type != nullptr);
+  
   if (!n->expression1->type->equals(booleanNode) ||
       !n->expression2->type->equals(booleanNode)) {
     error("type mismatch in And expression", n);
@@ -269,6 +272,9 @@ void TypeChecker::dispatch(std::shared_ptr<LogicalAndExpression> n) {
 void TypeChecker::dispatch(std::shared_ptr<EqualityExpression> n) {
   n->expression1->accept(shared_from_this());
   n->expression2->accept(shared_from_this());
+  
+  assert(n->expression1->type != nullptr);
+  assert(n->expression2->type != nullptr);
   
   if (!n->expression1->type->equals(n->expression2->type)) {
     error("type mismatch in equality expression", n);
@@ -359,7 +365,7 @@ void TypeChecker::dispatch(std::shared_ptr<UnaryRightExpression> n) {
 };
 
 void TypeChecker::dispatch(std::shared_ptr<CNull> n) {
-  // TODO: add singleton for special UserType nulltpr?
+  n->type = std
 };
 
 void TypeChecker::dispatch(std::shared_ptr<CThis> n) {

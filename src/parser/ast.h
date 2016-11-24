@@ -21,6 +21,7 @@ namespace cmpl
   class TypeInt;
   class TypeVoid;
   class FakeType;
+  class NullType;
   class UserType;
   class Program;
   class ClassDeclaration;
@@ -81,6 +82,7 @@ namespace cmpl
     virtual void dispatch(std::shared_ptr<TypeInt> n) = 0;
     virtual void dispatch(std::shared_ptr<TypeVoid> n) = 0;
     virtual void dispatch(std::shared_ptr<FakeType> n) = 0;
+    virtual void dispatch(std::shared_ptr<NullType> n) = 0;
     virtual void dispatch(std::shared_ptr<UserType> n) = 0;
     virtual void dispatch(std::shared_ptr<Program> n) = 0;
     virtual void dispatch(std::shared_ptr<ClassDeclaration> n) = 0;
@@ -165,28 +167,6 @@ namespace cmpl
   class MultOp         : public Op                   { };
   class UnaryOp        : public Op, public TypedNode { };
   
-  
-  // helper classes for typechecker
-  
-  class Type : public Node, public std::enable_shared_from_this<Type>
-  {
-    public:
-      std::shared_ptr<BasicType> basicType;
-      int                        arrayDepth;
-      
-      Type(std::shared_ptr<BasicType> const& basicType, int const& arrayDepth) : basicType(std::move(basicType)), arrayDepth(arrayDepth) { };
-    
-      void accept (std::shared_ptr<Dispatcher> d) override {
-        d->dispatch(shared_from_this());
-      }
-    
-      bool equals(std::shared_ptr<Type> t) {
-        assert(t != nullptr);
-        assert(t->basicType != nullptr);
-        return shared_from_this()->arrayDepth == t->arrayDepth && shared_from_this()->basicType->equals(t->basicType);
-      }
-  };
-  
   // basic types (created in AST)
   
   class TypeInt : public BasicType, public std::enable_shared_from_this<TypeInt>
@@ -257,6 +237,20 @@ namespace cmpl
       }
   };
   
+  class NullType : public BasicType, public std::enable_shared_from_this<NullType>
+  {
+    public:
+      NullType() { }
+      
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
+    
+      bool equals(std::shared_ptr<BasicType> other) override {
+        return false;
+      }
+  };
+  
   class UserType : public BasicType, public std::enable_shared_from_this<UserType>
   {
     public:
@@ -279,6 +273,51 @@ namespace cmpl
       
       bool operator!= (std::shared_ptr<UserType> t) {
         return !(shared_from_this() == t);
+      }
+  };
+  
+  // helper classes for typechecker
+  
+  class Type : public Node, public std::enable_shared_from_this<Type>
+  {
+    public:
+      std::shared_ptr<BasicType> basicType;
+      int                        arrayDepth;
+      
+      Type(std::shared_ptr<BasicType> const& basicType, int const& arrayDepth) : basicType(std::move(basicType)), arrayDepth(arrayDepth) {
+        // Null with arrayDepth > 0 must not exist
+        assert(!dynamic_cast<NullType*>(basicType.get()) || arrayDepth == 0);
+      };
+    
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
+    
+      bool equals(std::shared_ptr<Type> t) {
+        assert(t != nullptr);
+        assert(t->basicType != nullptr);
+        
+        // NULL check
+        if (dynamic_cast<NullType*>(shared_from_this().get()))
+        {
+          if (dynamic_cast<UserType*>(t->basicType.get()))
+            return true;
+          else if (t->arrayDepth > 0)
+            return true;
+          else
+            return false;
+        }
+        else if (dynamic_cast<NullType*>(t.get()))
+        {
+          if (dynamic_cast<UserType*>(shared_from_this()->basicType.get()))
+            return true;
+          else if (shared_from_this()->arrayDepth > 0)
+            return true;
+          else
+            return false;
+        }
+        
+        return shared_from_this()->arrayDepth == t->arrayDepth && shared_from_this()->basicType->equals(t->basicType);
       }
   };
   

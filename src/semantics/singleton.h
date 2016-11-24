@@ -10,6 +10,8 @@ namespace cmpl
   template <StringIdentifier ID, int arrayDepth>
   const std::shared_ptr<Type> userNode    = std::make_shared<Type>(std::make_shared<UserType>(ID), arrayDepth);
   
+  const std::shared_ptr<Type> nullNode    = std::make_shared<Type>(std::make_shared<NullType>(), 0);
+  
   const std::shared_ptr<BasicType> voidBasicNode = std::make_shared<TypeVoid>();
   const std::shared_ptr<BasicType> fakeBasicType = std::make_shared<FakeType>();
 }
