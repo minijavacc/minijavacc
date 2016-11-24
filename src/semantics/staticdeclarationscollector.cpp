@@ -1,52 +1,56 @@
 #include "staticdeclarationscollector.h"
 
+#include "../stringtable/stringtable.h"
+
 #include <iostream>
 
 using namespace cmpl;
 
-
-// helpers
-
-inline void StaticDeclarationsCollector::error(const std::string &err)
-{
-  throw CollectorError(("staticdeclarationscollector: " + err).c_str());
+// helper
+inline void StaticDeclarationsCollector::errorMultipleNames(const std::string &err, StringIdentifier ID) {
+  throw CollectorError(("staticdeclarationscollector: cannot have multiple " + err + " with the same name " + StringTable::lookupIdentifier(ID)).c_str());
 }
-
 
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Program> n) {
   for(auto const& c: n->classDeclarations) {
     c->accept(shared_from_this());
-	classes.emplace(c->ID,c); 
+    classes.emplace(c->ID,c);
   }
 };
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<ClassDeclaration> n) {
   currentClassDeclaration = n;
-  if(classes.count(n->ID)>0)
-  {
-	  error("cannot have multiple class declarations with the same name");
-  }
-  else
-  {
-	for (auto const& c : n->classMembers) {
-		c->accept(shared_from_this());
-	}
+  
+  if(classes.count(n->ID)>0) {
+    errorMultipleNames("class declarations", n->ID);
+  } else {
+    for (auto const& c : n->classMembers) {
+      c->accept(shared_from_this());
+    }
   }
 };
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Field> n) {
   if (currentClassDeclaration->fields.count(n->ID) > 0) {
-    error("cannot have multiple fields with the same name");
-    return;
+    errorMultipleNames("fields", n->ID);
+  } else {
+    currentClassDeclaration->fields.emplace(n->ID, n);
   }
-  
-  currentClassDeclaration->fields.emplace(n->ID, n);
+};
+
+
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<MainMethod> n) {
+  if (currentClassDeclaration->methods.count(n->ID) > 0) {
+    errorMultipleNames("methods", n->ID);
+  } else {
+// TODO    currentClassDeclaration->methods.emplace(std::make_shared<Method>(n->ID, {}, fakeType, {}));
+  }
 };
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Method> n) {
   if (currentClassDeclaration->methods.count(n->ID) > 0) {
-    error("cannot have multiple methods with the same name");
+    errorMultipleNames("methods", n->ID);
     return;
   }
   
@@ -62,14 +66,12 @@ void StaticDeclarationsCollector::dispatch(std::shared_ptr<Method> n) {
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Parameter> n) {
   if (currentMethod->parameterMap.count(n->ID) > 0) {
-    error("cannot have multiple parameters with the same name");
-    return;
+    errorMultipleNames("parameters", n->ID);
+  } else {
+    currentMethod->parameterMap.emplace(n->ID, n);
   }
-  
-  currentMethod->parameterMap.emplace(n->ID, n);
 };
 
-void StaticDeclarationsCollector::dispatch(std::shared_ptr<MainMethod> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Type> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<UserType> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<TypeInt> n) { };

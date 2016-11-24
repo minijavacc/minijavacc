@@ -16,9 +16,9 @@ namespace cmpl {
     private:
       shared_ptr<ClassDeclaration> currentClassDeclaration;
       shared_ptr<Method> currentMethod;
-	  std::map<StringIdentifier, std::weak_ptr<ClassDeclaration>> classes;
-	  
-      void error(const std::string &err);
+      std::map<StringIdentifier, std::weak_ptr<ClassDeclaration>> classes;
+      
+      void errorMultipleNames(const std::string &err, StringIdentifier ID);
 
     public:
       void dispatch(std::shared_ptr<Type> n);
