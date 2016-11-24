@@ -7,6 +7,7 @@
 //
 
 #include "typechecker.h"
+#include "singleton.h"
 
 using namespace cmpl;
 
@@ -17,9 +18,14 @@ inline void TypeChecker::error(const std::string &err)
   throw TypeError(("typechecker: " + err).c_str());
 }
 
-inline void TypeChecker::fatalError(const std::string &err)
+inline void TypeChecker::error(const std::string &err, const std::shared_ptr<Node> &n)
 {
-  throw TypeError(("typechecker: #fatal " + err).c_str());
+  throw TypeError(("typechecker: " + err + ": " + Checker::printNode(n)).c_str());
+}
+
+inline void TypeChecker::fatalError(const std::string &err, const std::shared_ptr<Node> &n)
+{
+  throw std::logic_error("typechecker: #fatal " + err + ": " + Checker::printNode(n));
 }
 
 void TypeChecker::dispatch(std::shared_ptr<Program> n) {
@@ -103,7 +109,7 @@ void TypeChecker::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n
   // check if type matches the type of the expression
   if (!n->type->equals(n->expression->type))
   {
-    error("expression in LocalVariableExpressionDeclaration has wrong type");
+    error("expression in LocalVariableExpressionDeclaration has wrong type", n);
   }
   
   // REVIEW: declares every LocalVariableExpressionDeclaration an lvalue type?
@@ -121,7 +127,7 @@ void TypeChecker::dispatch(std::shared_ptr<IfElseStatement> n) {
   // check if expression is boolean
   if (!n->expression->type->equals(booleanNode))
   {
-    error("expression in IfElseStatement must be of type boolean");
+    error("expression in IfElseStatement must be of type boolean", n->expression);
   }
 };
 
@@ -132,11 +138,11 @@ void TypeChecker::dispatch(std::shared_ptr<ReturnExpressionStatement> n) {
     //check first if its a void method, then return EXPR is invalid in java!
   if(currentMethod->type->equals(voidNode))
   {
-	error("void methods can't return an expression");
+    error("void methods can't return an expression", n);
   }
   else if (!currentMethod->type->equals(n->expression->type))
   {
-    error("expression type in return statement doesn't match method return type");
+    error("expression type in return statement doesn't match method return type", n);
   }
 };
 
@@ -145,14 +151,14 @@ void TypeChecker::dispatch(std::shared_ptr<MethodInvocation> n) {
   
   if (!userType)
   {
-    error("method invocation on non-UserType");
+    error("method invocation on non-UserType", n);
   }
   
   auto classDecl = userType->declaration.lock();
   
   if (!classDecl)
   {
-    fatalError("declaration missing for UserType in MethodInvocation");
+    fatalError("declaration missing for UserType in MethodInvocation", n);
   }
   
   // check for method ID in class given by expression
@@ -166,14 +172,14 @@ void TypeChecker::dispatch(std::shared_ptr<MethodInvocation> n) {
   // check arguments
   // Check number of arguments equals number of parameters
   if (n->arguments.size() != methodDecl->parameters.size()) {
-    error("number of arguments MethodInvocation <-> Method does not match");
+    error("number of arguments MethodInvocation <-> Method does not match", n);
   }
   
   for (int i = 0; i < n->arguments.size(); i++) {
     n->arguments[i]->accept(shared_from_this());
     
     if (!n->arguments[i]->type->equals(methodDecl->parameters[i]->type)) {
-      error("type mismatch of MethodInvocation parameters");
+      error("type mismatch of MethodInvocation parameters", n);
     }
   }
   
@@ -183,7 +189,7 @@ void TypeChecker::dispatch(std::shared_ptr<MethodInvocation> n) {
 void TypeChecker::dispatch(std::shared_ptr<ArrayAccess> n) {
   if (tmpExpression->type->arrayDepth < 1)
   {
-    error("trying to access something that is not an array");
+    error("trying to access something that is not an array", n);
     return;
   }
   
@@ -191,7 +197,7 @@ void TypeChecker::dispatch(std::shared_ptr<ArrayAccess> n) {
   
   if (!n->expression->type->equals(intNode))
   {
-    error("array index in ArrayAccess must be integer");
+    error("array index in ArrayAccess must be integer", n);
   }
   
   n->type = std::make_shared<Type>(tmpExpression->type->basicType, tmpExpression->type->arrayDepth - 1);
@@ -205,20 +211,20 @@ void TypeChecker::dispatch(std::shared_ptr<FieldAccess> n) {
   
   if (!userType)
   {
-    error("field access on non-UserType");
+    error("field access on non-UserType", n);
   }
   
   auto classDecl = userType->declaration.lock();
   
   if (!classDecl)
   {
-    fatalError("declaration missing for UserType in FieldAccess");
+    fatalError("declaration missing for UserType in FieldAccess", n);
   }
   
   // check for field ID in class given by expression
   if (classDecl->fields.count(n->ID) != 1)
   {
-    error("field access to unknown field (could not find field in UserType)");
+    error("field access to unknown field (could not find field in UserType)", n);
   }
   
   auto fieldDecl = classDecl->fields[n->ID].lock();
@@ -235,13 +241,13 @@ void TypeChecker::dispatch(std::shared_ptr<AssignmentExpression> n) {
   
   // Check left side for lvalueness
   if (!n->expression1->isLValue) {
-    error("required lvalue");
+    error("required lvalue for expression " + Checker::printNode(n->expression1) + " in", n);
   }
   
   // check if left and right expression have same type
   if (!n->expression1->type->equals(n->expression2->type))
   {
-    error("assignment type mismatch");
+    error("assignment type mismatch in " + Checker::printNode(n->expression2) + " in ", n);
   }
   
   n->type = n->expression2->type;
@@ -253,7 +259,7 @@ void TypeChecker::dispatch(std::shared_ptr<LogicalOrExpression> n) {
   
   if (!n->expression1->type->equals(booleanNode) ||
       !n->expression2->type->equals(booleanNode)) {
-    error("type mismatch or");
+    error("type mismatch in Or expression", n);
   }
   
   n->type = booleanNode;
@@ -265,7 +271,7 @@ void TypeChecker::dispatch(std::shared_ptr<LogicalAndExpression> n) {
   
   if (!n->expression1->type->equals(booleanNode) ||
       !n->expression2->type->equals(booleanNode)) {
-    error("type mismatch and");
+    error("type mismatch in And expression", n);
   }
   
   n->type = booleanNode;
@@ -276,7 +282,7 @@ void TypeChecker::dispatch(std::shared_ptr<EqualityExpression> n) {
   n->expression2->accept(shared_from_this());
   
   if (!n->expression1->type->equals(n->expression2->type)) {
-    error("type mismatch eq");
+    error("type mismatch in equality expression", n);
   }
   
   n->type = booleanNode;
@@ -288,7 +294,7 @@ void TypeChecker::dispatch(std::shared_ptr<RelationalExpression> n) {
   
   if (!n->expression1->type->equals(intNode) ||
       !n->expression2->type->equals(intNode)) {
-    error("type mismatch rel");
+    error("type mismatch in relational expression", n);
   }
   
   n->type = booleanNode;
@@ -300,7 +306,7 @@ void TypeChecker::dispatch(std::shared_ptr<AdditiveExpression> n) {
   
   if (!n->expression1->type->equals(intNode) ||
       !n->expression2->type->equals(intNode)) {
-    error("type mismatch add");
+    error("type mismatch in additive expression", n);
   }
   
   n->type = intNode;
@@ -313,7 +319,7 @@ void TypeChecker::dispatch(std::shared_ptr<MultiplicativeExpression> n) {
   
   if (!n->expression1->type->equals(intNode) ||
       !n->expression2->type->equals(intNode)) {
-    error("type mismatch mult");
+    error("type mismatch in multiplicative expression", n);
   }
   
  n->type = intNode;
@@ -324,7 +330,7 @@ void TypeChecker::dispatch(std::shared_ptr<CallExpression> n) {
   auto decl = n->declaration.lock();
   
   if (!decl) {
-    fatalError("declaration on CallExpression has to be set before type analysis"); // TODO: better exception type
+    fatalError("declaration on CallExpression has to be set before type analysis", n);
   }
   
   // Check number of arguments equals number of parameters
@@ -350,7 +356,7 @@ void TypeChecker::dispatch(std::shared_ptr<UnaryLeftExpression> n) {
   // expression must be boolean
   if (!n->expression->type->equals(n->op->type))
   {
-    error("type mismatch UnaryLeftExpression");
+    error("type mismatch in UnaryLeftExpression", n);
   }
   
   n->type = n->op->type;
@@ -378,12 +384,12 @@ void TypeChecker::dispatch(std::shared_ptr<CThis> n) {
   
   if (!decl || !(typedNode = dynamic_cast<TypedNode*>(decl.get())))
   {
-    fatalError("declaration on CThis is missing or not TypedNode"); // TODO: better exception type
+    fatalError("declaration on CThis is missing or not TypedNode", n);
   }
   
   if (!typedNode->type || !typedNode->type->basicType)
   {
-    fatalError("CThis points to declaration with missing type or missing basicType"); // TODO: better exception type
+    fatalError("CThis points to declaration with missing type or missing basicType", n);
   }
   
   n->type = typedNode->type;
@@ -409,12 +415,12 @@ void TypeChecker::dispatch(std::shared_ptr<CRef> n) {
   
   if (!decl || !(typedNode = dynamic_cast<TypedNode*>(decl.get())))
   {
-    fatalError("declaration on CRef is missing or not TypedNode"); // TODO: better exception type
+    fatalError("declaration on CRef is missing or not TypedNode", n);
   }
   
   if (!typedNode->type || !typedNode->type->basicType)
   {
-    fatalError("CRef points to declaration with missing or incomplete type"); // TODO: better exception type
+    fatalError("CRef points to declaration with missing or incomplete type", n);
   }
   
   expr->type = std::make_shared<Type>(typedNode->type->basicType, typedNode->type->arrayDepth);
@@ -429,7 +435,7 @@ void TypeChecker::dispatch(std::shared_ptr<CIntegerLiteral> n) {
   }
   catch (std::invalid_argument &e)
   {
-    error("CIntegerLiteral can't be converted to 32bit integer");
+    error("CIntegerLiteral can't be converted to 32bit integer", n);
   }
   
   n->type = intNode;
@@ -442,7 +448,7 @@ void TypeChecker::dispatch(std::shared_ptr<NewObject> n) {
   
   if (!n->userType)
   {
-    fatalError("fatal error: missing userType");
+    fatalError("fatal error: missing userType", n);
   }
   
   expr->type = std::make_shared<Type>(n->userType, 0);
@@ -454,7 +460,7 @@ void TypeChecker::dispatch(std::shared_ptr<NewArray> n) {
   
   if (!n->expression->type->equals(intNode))
   {
-    error("array size in NewArray must be integer");
+    error("array size in NewArray must be integer", n);
   }
 };
 
