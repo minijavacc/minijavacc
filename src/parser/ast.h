@@ -724,9 +724,9 @@ namespace cmpl
   {
     public:
       std::vector<std::shared_ptr<BlockStatement>> statements;
-	 
+      
       Block(std::vector<std::shared_ptr<BlockStatement>> &statements) : statements(std::move(statements)) { };
-    
+      
       void accept (std::shared_ptr<Dispatcher> d) override {
         d->dispatch(shared_from_this());
       }
@@ -827,6 +827,7 @@ namespace cmpl
   {
     public:
       StringIdentifier ID;
+      bool isLValue = true;
       
       LocalVariableDeclaration(std::shared_ptr<Type> &type, StringIdentifier &ID) :
                                  TypedNode(type), ID(ID) { };
@@ -841,6 +842,7 @@ namespace cmpl
     public:
       StringIdentifier            ID;
       std::shared_ptr<Expression> expression;
+      // bool isLValue = true; TODO why does this cause errors?
       
       LocalVariableExpressionDeclaration(std::shared_ptr<Type> &type, StringIdentifier &ID,
                                          std::shared_ptr<Expression> &expression) :
@@ -858,7 +860,7 @@ namespace cmpl
   class Field : public ClassMember, public TypedNode, public std::enable_shared_from_this<Field>
   {
     public:
-      StringIdentifier      ID;
+      StringIdentifier ID;
       bool isLValue = true;
       
       Field(std::shared_ptr<Type> &type, StringIdentifier &ID) :

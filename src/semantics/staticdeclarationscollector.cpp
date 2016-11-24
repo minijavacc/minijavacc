@@ -3,6 +3,7 @@
 #include "../stringtable/stringtable.h"
 
 #include <iostream>
+#include "singleton.h"
 
 using namespace cmpl;
 
@@ -44,7 +45,12 @@ void StaticDeclarationsCollector::dispatch(std::shared_ptr<MainMethod> n) {
   if (currentClassDeclaration->methods.count(n->ID) > 0) {
     errorMultipleNames("methods", n->ID);
   } else {
-// TODO    currentClassDeclaration->methods.emplace(std::make_shared<Method>(n->ID, {}, fakeType, {}));
+    /* TODO add identifier of main into current methods, so that name conflicts can be noticed
+    std::vector<std::shared_ptr<Parameter>> parameters;
+    std::vector<std::shared_ptr<BlockStatement>> statements;
+    std::shared_ptr<Block> block = std::make_shared<Block>(statements);
+    currentClassDeclaration->methods.emplace(std::make_shared<Method>(fakeType, n->ID, parameters, block));
+    */
   }
 };
 

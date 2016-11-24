@@ -95,15 +95,10 @@ void TypeChecker::dispatch(std::shared_ptr<WhileStatement> n) {
 
 void TypeChecker::dispatch(std::shared_ptr<LocalVariableDeclaration> n) {
   // type has been set by parser
-  
-  // REVIEW: declares every LocalVariableDeclaration an lvalue type?
-  // set isLValue=true
-  n->isLValue = true;
 };
 
 void TypeChecker::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) {
   // type has been set by parser
-  
   // get type of expression
   n->expression->accept(shared_from_this());
   
@@ -115,7 +110,11 @@ void TypeChecker::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n
   
   // REVIEW: declares every LocalVariableExpressionDeclaration an lvalue type?
   // set isLValue=true
-  n->isLValue = true;
+  //TODO why do we need this?
+  if(!n->isLValue) {
+    n->isLValue = true;
+  }
+  
 };
 
 void TypeChecker::dispatch(std::shared_ptr<EmptyStatement> n) { };
@@ -311,7 +310,6 @@ void TypeChecker::dispatch(std::shared_ptr<AdditiveExpression> n) {
   }
   
   n->type = intNode;
-  n->isLValue = false;
 };
 
 void TypeChecker::dispatch(std::shared_ptr<MultiplicativeExpression> n) {
@@ -323,8 +321,7 @@ void TypeChecker::dispatch(std::shared_ptr<MultiplicativeExpression> n) {
     error("type mismatch in multiplicative expression", n);
   }
   
- n->type = intNode;
-  n->isLValue = false;
+  n->type = intNode;
 };
 
 void TypeChecker::dispatch(std::shared_ptr<CallExpression> n) {
@@ -406,26 +403,19 @@ void TypeChecker::dispatch(std::shared_ptr<CFalse> n) {
 
 void TypeChecker::dispatch(std::shared_ptr<CRef> n) {
   // type of CRef is type of declaration
-  
-  // static cast because we know every CRef is an Expression
-  // necessary to access fields of base class TypedNode
-  Expression* expr = static_cast<Expression*>(n.get());
-  
   auto decl = n->declaration.lock();
   TypedNode* typedNode;
   
-  if (!decl || !(typedNode = dynamic_cast<TypedNode*>(decl.get())))
-  {
+  if (!decl || !(typedNode = dynamic_cast<TypedNode*>(decl.get()))) {
     fatalError("declaration on CRef is missing or not TypedNode", n);
   }
   
-  if (!typedNode->type || !typedNode->type->basicType)
-  {
+  if (!typedNode->type || !typedNode->type->basicType) {
     fatalError("CRef points to declaration with missing or incomplete type", n);
   }
   
-  expr->type = std::make_shared<Type>(typedNode->type->basicType, typedNode->type->arrayDepth);
-  expr->isLValue = typedNode->isLValue;
+  n->type = std::make_shared<Type>(typedNode->type->basicType, typedNode->type->arrayDepth);
+  n->isLValue = typedNode->isLValue;
 }
 
 void TypeChecker::dispatch(std::shared_ptr<CIntegerLiteral> n) {

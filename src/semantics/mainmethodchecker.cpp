@@ -56,9 +56,7 @@ void MainMethodChecker::dispatch(std::shared_ptr<CThis> n) {
 };
 
 
-void MainMethodChecker::dispatch(std::shared_ptr<Method> n) {
-  //dont look in other methods, only main method
-};
+void MainMethodChecker::dispatch(std::shared_ptr<Method> n) { };
 
 
 void MainMethodChecker::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) {
