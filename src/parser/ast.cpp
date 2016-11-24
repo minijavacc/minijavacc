@@ -174,6 +174,10 @@ void NewArray::accept(std::shared_ptr<Dispatcher> d) {
   d->dispatch(shared_from_this());
 }
 
+void StaticLibraryCallExpression::accept(std::shared_ptr<Dispatcher> d) {
+  d->dispatch(shared_from_this());
+}
+
 void Parameter::accept(std::shared_ptr<Dispatcher> d) {
   d->dispatch(shared_from_this());
 }

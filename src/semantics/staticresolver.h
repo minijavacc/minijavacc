@@ -19,6 +19,7 @@ namespace cmpl {
   class StaticResolver : public Dispatcher, public std::enable_shared_from_this<StaticResolver> {
   private:
     void error(const std::string &err);
+    void error(const std::string &err, const std::shared_ptr<Node> &n);
     
     std::shared_ptr<Program> currentProgram;
     std::shared_ptr<ClassDeclaration> currentClassDeclaration;

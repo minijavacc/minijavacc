@@ -209,7 +209,7 @@ void PrettyPrinter::dispatch(std::shared_ptr<Block> n) {
   }
   else
   {
-    print("{ }");
+    println("{ }");
   }
 };
 

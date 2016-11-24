@@ -31,6 +31,10 @@ void Checker::run() {
   
   std::shared_ptr<Node> n = parser.getAST();
   
+  // recongnise System.out.println and substitute with single AST-node
+  std::shared_ptr<ReturnChecker> rc(new ReturnChecker());
+  n->accept(rc);
+  
   // check for missing return paths
   std::shared_ptr<ReturnChecker> rc(new ReturnChecker());
   n->accept(rc);
