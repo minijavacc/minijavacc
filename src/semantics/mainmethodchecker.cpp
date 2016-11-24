@@ -12,7 +12,7 @@ void MainMethodChecker::dispatch(std::shared_ptr<Program> n) {
     c->accept(shared_from_this());
   }
   if (mainMethods==0) {
-    error("Found no MainMethod definition!");
+    error("No main method definition found!");
   }
 };
 
@@ -24,9 +24,12 @@ void MainMethodChecker::dispatch(std::shared_ptr<ClassDeclaration> n) {
 
 void MainMethodChecker::dispatch(std::shared_ptr<MainMethod> n) {
   currentMainMethod = n;
+  if(StringTable::lookupIdentifier(n->ID).compare("main")) {
+    error("static method needs to be named \"main\"!");
+  }
   mainMethods++;
   if(mainMethods > 1)  {
-    error("Found multiple MainMethod definitions!");
+    error("multiple main method definitions found!");
   }
   n->block->accept(shared_from_this());
 };
@@ -40,11 +43,16 @@ void MainMethodChecker::dispatch(std::shared_ptr<Block> n) {
 void MainMethodChecker::dispatch(std::shared_ptr<CRef> n) {
   if(n->ID == currentMainMethod->parameterID) {
     error("Parameter of main method must not be used!");
+  } else {
+    auto shared = n->declaration.lock();
+    if(dynamic_cast<Field*>(shared.get())) {
+      error("Can not reference field from static context!");
+    }
   }
 };
 
 void MainMethodChecker::dispatch(std::shared_ptr<CThis> n) {
-  error("Found \"this\" in MainMethod!");
+  error("Can not reference \"this\" in static context!");
 };
 
 
