@@ -7,6 +7,7 @@
 #include <vector>
 #include <algorithm>
 #include <stdint.h>
+#include <cassert>
 
 namespace cmpl
 {
@@ -180,6 +181,8 @@ namespace cmpl
       }
     
       bool equals(std::shared_ptr<Type> t) {
+        assert(t != nullptr);
+        assert(t->basicType != nullptr);
         return shared_from_this()->arrayDepth == t->arrayDepth && shared_from_this()->basicType->equals(t->basicType);
       }
   };

@@ -23,11 +23,6 @@ inline void TypeChecker::error(const std::string &err, const std::shared_ptr<Nod
   throw TypeError(("typechecker: " + err + ": " + Checker::printNode(n)).c_str());
 }
 
-inline void TypeChecker::fatalError(const std::string &err, const std::shared_ptr<Node> &n)
-{
-  throw std::logic_error("typechecker: #fatal " + err + ": " + Checker::printNode(n));
-}
-
 void TypeChecker::dispatch(std::shared_ptr<Program> n) {
   currentProgram = n;
   
@@ -156,10 +151,7 @@ void TypeChecker::dispatch(std::shared_ptr<MethodInvocation> n) {
   
   auto classDecl = userType->declaration.lock();
   
-  if (!classDecl)
-  {
-    fatalError("declaration missing for UserType in MethodInvocation", n);
-  }
+  assert(classDecl != nullptr);
   
   // check for method ID in class given by expression
   if (classDecl->methods.count(n->ID) != 1)
@@ -216,10 +208,7 @@ void TypeChecker::dispatch(std::shared_ptr<FieldAccess> n) {
   
   auto classDecl = userType->declaration.lock();
   
-  if (!classDecl)
-  {
-    fatalError("declaration missing for UserType in FieldAccess", n);
-  }
+  assert(classDecl != nullptr);
   
   // check for field ID in class given by expression
   if (classDecl->fields.count(n->ID) != 1)
@@ -327,9 +316,7 @@ void TypeChecker::dispatch(std::shared_ptr<MultiplicativeExpression> n) {
 void TypeChecker::dispatch(std::shared_ptr<CallExpression> n) {
   auto decl = n->declaration.lock();
   
-  if (!decl) {
-    fatalError("declaration on CallExpression has to be set before type analysis", n);
-  }
+  assert(decl != nullptr);
   
   // Check number of arguments equals number of parameters
   if (n->arguments.size() != decl->parameters.size()) {
@@ -380,15 +367,10 @@ void TypeChecker::dispatch(std::shared_ptr<CThis> n) {
   
   TypedNode* typedNode;
   
-  if (!decl || !(typedNode = dynamic_cast<TypedNode*>(decl.get())))
-  {
-    fatalError("declaration on CThis is missing or not TypedNode", n);
-  }
-  
-  if (!typedNode->type || !typedNode->type->basicType)
-  {
-    fatalError("CThis points to declaration with missing type or missing basicType", n);
-  }
+  assert(decl != nullptr);
+  assert((typedNode = dynamic_cast<TypedNode*>(decl.get())) != nullptr);
+  assert(typedNode->type != nullptr);
+  assert(typedNode->type->basicType != nullptr);
   
   n->type = typedNode->type;
 };
@@ -406,13 +388,10 @@ void TypeChecker::dispatch(std::shared_ptr<CRef> n) {
   auto decl = n->declaration.lock();
   TypedNode* typedNode;
   
-  if (!decl || !(typedNode = dynamic_cast<TypedNode*>(decl.get()))) {
-    fatalError("declaration on CRef is missing or not TypedNode", n);
-  }
-  
-  if (!typedNode->type || !typedNode->type->basicType) {
-    fatalError("CRef points to declaration with missing or incomplete type", n);
-  }
+  assert(decl != nullptr);
+  assert((typedNode = dynamic_cast<TypedNode*>(decl.get())) != nullptr);
+  assert(typedNode->type != nullptr);
+  assert(typedNode->type->basicType != nullptr);
   
   n->type = std::make_shared<Type>(typedNode->type->basicType, typedNode->type->arrayDepth);
   n->isLValue = typedNode->isLValue;
@@ -428,6 +407,10 @@ void TypeChecker::dispatch(std::shared_ptr<CIntegerLiteral> n) {
   {
     error("CIntegerLiteral can't be converted to 32bit integer", n);
   }
+  catch (std::out_of_range &e)
+  {
+    error("CIntegerLiteral can't be converted to 32bit integer", n);
+  }
   
   n->type = intNode;
 };
@@ -437,10 +420,7 @@ void TypeChecker::dispatch(std::shared_ptr<NewObject> n) {
   // necessary to access fields of base class TypedNode
   Expression* expr = static_cast<Expression*>(n.get());
   
-  if (!n->userType)
-  {
-    fatalError("fatal error: missing userType", n);
-  }
+  assert(n->userType != nullptr);
   
   expr->type = std::make_shared<Type>(n->userType, 0);
 };

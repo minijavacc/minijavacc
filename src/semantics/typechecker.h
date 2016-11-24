@@ -10,6 +10,7 @@
 
 #include "../parser/ast.h"
 #include "checker.h"
+#include <cassert>
 
 namespace cmpl {
   
@@ -23,7 +24,6 @@ namespace cmpl {
       
       void error(const std::string &err);       // program is semantically incorrect
       void error(const std::string &err, const std::shared_ptr<Node> &n);
-      void fatalError(const std::string &err, const std::shared_ptr<Node> &n);
     public:
       void dispatch(std::shared_ptr<Type> n);
       void dispatch(std::shared_ptr<FakeType> n);
