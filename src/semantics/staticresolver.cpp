@@ -223,6 +223,7 @@ void StaticResolver::dispatch(std::shared_ptr<Type> n) {
   n->basicType->accept(shared_from_this());
 };
 
+
 void StaticResolver::dispatch(std::shared_ptr<UserType> n) {
   // search all class declarations
   for (auto const& c : currentProgram->classDeclarations) {
@@ -249,6 +250,7 @@ void StaticResolver::dispatch(std::shared_ptr<Parameter> n) {
   currentSymbolTable->insert(n->ID, n);
 };
 
+void StaticResolver::dispatch(std::shared_ptr<FakeType> n) { };
 void StaticResolver::dispatch(std::shared_ptr<TypeInt> n) { };
 void StaticResolver::dispatch(std::shared_ptr<TypeBoolean> n) { };
 void StaticResolver::dispatch(std::shared_ptr<TypeVoid> n) { };

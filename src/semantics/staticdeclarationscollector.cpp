@@ -73,6 +73,7 @@ void StaticDeclarationsCollector::dispatch(std::shared_ptr<Parameter> n) {
 };
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Type> n) { };
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<FakeType> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<UserType> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<TypeInt> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<TypeBoolean> n) { };

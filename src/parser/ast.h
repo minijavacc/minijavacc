@@ -19,6 +19,7 @@ namespace cmpl
   class TypeBoolean;
   class TypeInt;
   class TypeVoid;
+  class FakeType;
   class UserType;
   class Program;
   class ClassDeclaration;
@@ -78,6 +79,7 @@ namespace cmpl
     virtual void dispatch(std::shared_ptr<TypeBoolean> n) = 0;
     virtual void dispatch(std::shared_ptr<TypeInt> n) = 0;
     virtual void dispatch(std::shared_ptr<TypeVoid> n) = 0;
+    virtual void dispatch(std::shared_ptr<FakeType> n) = 0;
     virtual void dispatch(std::shared_ptr<UserType> n) = 0;
     virtual void dispatch(std::shared_ptr<Program> n) = 0;
     virtual void dispatch(std::shared_ptr<ClassDeclaration> n) = 0;
@@ -238,6 +240,20 @@ namespace cmpl
       }
   };
   
+  class FakeType : public BasicType, public std::enable_shared_from_this<FakeType>
+  {
+    public:
+      FakeType() { }
+      
+      void accept (std::shared_ptr<Dispatcher> d) override {
+        d->dispatch(shared_from_this());
+      }
+    
+      bool equals(std::shared_ptr<BasicType> other) override {
+        return false;
+      }
+  };
+  
   class UserType : public BasicType, public std::enable_shared_from_this<UserType>
   {
     public:
@@ -256,11 +272,11 @@ namespace cmpl
         } else {
           return false;
       }
-    }
-    
-    bool operator!= (std::shared_ptr<UserType> t) {
-      return !(shared_from_this() == t);
-    }
+      }
+      
+      bool operator!= (std::shared_ptr<UserType> t) {
+        return !(shared_from_this() == t);
+      }
   };
   
   // other nodes

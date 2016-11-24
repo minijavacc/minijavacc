@@ -60,6 +60,7 @@ void TypeChecker::dispatch(std::shared_ptr<Field> n) { };
 
 void TypeChecker::dispatch(std::shared_ptr<Type> n) { };
 
+void TypeChecker::dispatch(std::shared_ptr<FakeType> n) { };
 void TypeChecker::dispatch(std::shared_ptr<UserType> n) { };
 void TypeChecker::dispatch(std::shared_ptr<TypeInt> n) { };
 void TypeChecker::dispatch(std::shared_ptr<TypeBoolean> n) { };
