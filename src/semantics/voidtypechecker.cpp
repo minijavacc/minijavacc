@@ -109,6 +109,7 @@ void VoidTypeChecker::dispatch(std::shared_ptr<CRef> n) { };
 void VoidTypeChecker::dispatch(std::shared_ptr<NewObject> n) { };
 void VoidTypeChecker::dispatch(std::shared_ptr<Type> n) { };
 void VoidTypeChecker::dispatch(std::shared_ptr<FakeType> n) { };
+void VoidTypeChecker::dispatch(std::shared_ptr<NullType> n) { };
 void VoidTypeChecker::dispatch(std::shared_ptr<UserType> n) { };
 void VoidTypeChecker::dispatch(std::shared_ptr<TypeInt> n) { };
 void VoidTypeChecker::dispatch(std::shared_ptr<TypeBoolean> n) { };

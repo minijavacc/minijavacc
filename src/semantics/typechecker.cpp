@@ -56,6 +56,7 @@ void TypeChecker::dispatch(std::shared_ptr<Field> n) { };
 void TypeChecker::dispatch(std::shared_ptr<Type> n) { };
 
 void TypeChecker::dispatch(std::shared_ptr<FakeType> n) { };
+void TypeChecker::dispatch(std::shared_ptr<NullType> n) { };
 void TypeChecker::dispatch(std::shared_ptr<UserType> n) { };
 void TypeChecker::dispatch(std::shared_ptr<TypeInt> n) { };
 void TypeChecker::dispatch(std::shared_ptr<TypeBoolean> n) { };
@@ -101,13 +102,6 @@ void TypeChecker::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n
   if (!n->type->equals(n->expression->type))
   {
     error("expression in LocalVariableExpressionDeclaration has wrong type", n);
-  }
-  
-  // REVIEW: declares every LocalVariableExpressionDeclaration an lvalue type?
-  // set isLValue=true
-  //TODO why do we need this?
-  if(!n->isLValue) {
-    n->isLValue = true;
   }
   
 };
@@ -233,13 +227,24 @@ void TypeChecker::dispatch(std::shared_ptr<AssignmentExpression> n) {
     error("required lvalue for expression " + Checker::printNode(n->expression1) + " in", n);
   }
   
+  // check if one of both types is null
+  // - only UserTypes and Arrays can be null
+  if (dynamic_cast<NullType*>(n->expression2->type->basicType.get()))
+  {
+    if (n->expression1->type->arrayDepth == 0 && 
+      !dynamic_cast<UserType*>(n->expression1->type->basicType.get()))
+    {
+      error("only Arrays and UserTypes can be assigned with null", n);
+    }
+  }
   // check if left and right expression have same type
-  if (!n->expression1->type->equals(n->expression2->type))
+  else if (!n->expression1->type->equals(n->expression2->type))
   {
     error("assignment type mismatch in " + Checker::printNode(n->expression2) + " in ", n);
   }
   
   n->type = n->expression2->type;
+  return;
 };
 
 void TypeChecker::dispatch(std::shared_ptr<LogicalOrExpression> n) {
@@ -276,11 +281,31 @@ void TypeChecker::dispatch(std::shared_ptr<EqualityExpression> n) {
   assert(n->expression1->type != nullptr);
   assert(n->expression2->type != nullptr);
   
-  if (!n->expression1->type->equals(n->expression2->type)) {
-    error("type mismatch in equality expression", n);
+  bool expr1IsNull = (dynamic_cast<NullType*>(n->expression1->type->basicType.get()) != nullptr);
+  bool expr2IsNull = (dynamic_cast<NullType*>(n->expression2->type->basicType.get()) != nullptr);
+  
+  // check if one of both types is null
+  if (expr1IsNull || expr2IsNull)
+  {
+    // - only UserTypes and Arrays can be null
+    if ((expr1IsNull && 
+      n->expression2->type->arrayDepth == 0 && 
+      !dynamic_cast<UserType*>(n->expression2->type->basicType.get())) || 
+      
+      (expr2IsNull && 
+      n->expression1->type->arrayDepth == 0 && 
+      !dynamic_cast<UserType*>(n->expression1->type->basicType.get())))
+    {
+      error("only Arrays and UserTypes can be compared with null", n);
+    }
+  }
+  // check if types are not equal
+  else if (!n->expression1->type->equals(n->expression2->type)) {
+    error("type mismatch in EqualityExpression", n);
   }
   
   n->type = booleanNode;
+  return;
 };
 
 void TypeChecker::dispatch(std::shared_ptr<RelationalExpression> n) {
@@ -365,7 +390,7 @@ void TypeChecker::dispatch(std::shared_ptr<UnaryRightExpression> n) {
 };
 
 void TypeChecker::dispatch(std::shared_ptr<CNull> n) {
-  n->type = std
+  n->type = nullNode;
 };
 
 void TypeChecker::dispatch(std::shared_ptr<CThis> n) {
@@ -374,7 +399,10 @@ void TypeChecker::dispatch(std::shared_ptr<CThis> n) {
   TypedNode* typedNode;
   
   assert(decl != nullptr);
-  assert((typedNode = dynamic_cast<TypedNode*>(decl.get())) != nullptr);
+  
+  typedNode = dynamic_cast<TypedNode*>(decl.get());
+  
+  assert(typedNode != nullptr);
   assert(typedNode->type != nullptr);
   assert(typedNode->type->basicType != nullptr);
   
@@ -395,12 +423,15 @@ void TypeChecker::dispatch(std::shared_ptr<CRef> n) {
   TypedNode* typedNode;
   
   assert(decl != nullptr);
-  assert((typedNode = dynamic_cast<TypedNode*>(decl.get())) != nullptr);
+  
+  typedNode = dynamic_cast<TypedNode*>(decl.get());
+  
+  assert(typedNode != nullptr);
   assert(typedNode->type != nullptr);
   assert(typedNode->type->basicType != nullptr);
   
-  n->type = std::make_shared<Type>(typedNode->type->basicType, typedNode->type->arrayDepth);
-  n->isLValue = typedNode->isLValue;
+  n->type = typedNode->type;
+  n->isLValue = true;
 }
 
 void TypeChecker::dispatch(std::shared_ptr<CIntegerLiteral> n) {

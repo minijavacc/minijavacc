@@ -251,6 +251,7 @@ void StaticResolver::dispatch(std::shared_ptr<Parameter> n) {
 };
 
 void StaticResolver::dispatch(std::shared_ptr<FakeType> n) { };
+void StaticResolver::dispatch(std::shared_ptr<NullType> n) { };
 void StaticResolver::dispatch(std::shared_ptr<TypeInt> n) { };
 void StaticResolver::dispatch(std::shared_ptr<TypeBoolean> n) { };
 void StaticResolver::dispatch(std::shared_ptr<TypeVoid> n) { };

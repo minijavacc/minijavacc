@@ -170,6 +170,7 @@ void SysOutPrintChecker::dispatch(std::shared_ptr<FieldAccess> n) {
 void SysOutPrintChecker::dispatch(std::shared_ptr<NewObject> n) { };
 void SysOutPrintChecker::dispatch(std::shared_ptr<Type> n) { };
 void SysOutPrintChecker::dispatch(std::shared_ptr<FakeType> n) { };
+void SysOutPrintChecker::dispatch(std::shared_ptr<NullType> n) { };
 void SysOutPrintChecker::dispatch(std::shared_ptr<UserType> n) { };
 void SysOutPrintChecker::dispatch(std::shared_ptr<Field> n) { };
 void SysOutPrintChecker::dispatch(std::shared_ptr<Parameter> n) { };

@@ -156,6 +156,7 @@ void MainMethodChecker::dispatch(std::shared_ptr<FieldAccess> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<NewObject> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<Type> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<FakeType> n) { };
+void MainMethodChecker::dispatch(std::shared_ptr<NullType> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<UserType> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<Field> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<Parameter> n) { };

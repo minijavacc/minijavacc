@@ -297,26 +297,6 @@ namespace cmpl
         assert(t != nullptr);
         assert(t->basicType != nullptr);
         
-        // NULL check
-        if (dynamic_cast<NullType*>(shared_from_this().get()))
-        {
-          if (dynamic_cast<UserType*>(t->basicType.get()))
-            return true;
-          else if (t->arrayDepth > 0)
-            return true;
-          else
-            return false;
-        }
-        else if (dynamic_cast<NullType*>(t.get()))
-        {
-          if (dynamic_cast<UserType*>(shared_from_this()->basicType.get()))
-            return true;
-          else if (shared_from_this()->arrayDepth > 0)
-            return true;
-          else
-            return false;
-        }
-        
         return shared_from_this()->arrayDepth == t->arrayDepth && shared_from_this()->basicType->equals(t->basicType);
       }
   };

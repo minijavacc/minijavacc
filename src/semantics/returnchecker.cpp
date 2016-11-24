@@ -45,6 +45,7 @@ void ReturnChecker::dispatch(std::shared_ptr<Method> n) {
 
 void ReturnChecker::dispatch(std::shared_ptr<Type> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<FakeType> n) { };
+void ReturnChecker::dispatch(std::shared_ptr<NullType> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<UserType> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<TypeInt> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<TypeBoolean> n) { };

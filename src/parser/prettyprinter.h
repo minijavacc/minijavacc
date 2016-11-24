@@ -22,6 +22,7 @@ namespace cmpl {
     
     void dispatch(std::shared_ptr<Type> n);
     void dispatch(std::shared_ptr<FakeType> n);
+    void dispatch(std::shared_ptr<NullType> n);
     void dispatch(std::shared_ptr<UserType> n);
     void dispatch(std::shared_ptr<TypeInt> n);
     void dispatch(std::shared_ptr<TypeBoolean> n);

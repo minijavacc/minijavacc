@@ -171,6 +171,10 @@ void PrettyPrinter::dispatch(std::shared_ptr<FakeType> n) {
   assert(false);
 };
 
+void PrettyPrinter::dispatch(std::shared_ptr<NullType> n) {
+  assert(false);
+};
+
 void PrettyPrinter::dispatch(std::shared_ptr<UserType> n) {
   print(StringTable::lookupIdentifier(n->ID));
 };

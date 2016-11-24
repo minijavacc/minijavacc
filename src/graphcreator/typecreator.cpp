@@ -21,6 +21,7 @@ void TypeCreator::dispatch(std::shared_ptr<Field> n) { };
 void TypeCreator::dispatch(std::shared_ptr<Method> n) { };
 void TypeCreator::dispatch(std::shared_ptr<Type> n) { };
 void TypeCreator::dispatch(std::shared_ptr<FakeType> n) { };
+void TypeCreator::dispatch(std::shared_ptr<NullType> n) { };
 void TypeCreator::dispatch(std::shared_ptr<UserType> n) { };
 void TypeCreator::dispatch(std::shared_ptr<TypeInt> n) { };
 void TypeCreator::dispatch(std::shared_ptr<TypeBoolean> n) { };
