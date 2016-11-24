@@ -23,6 +23,7 @@ void MethodCreator::dispatch(std::shared_ptr<MainMethod> n) { };
 void MethodCreator::dispatch(std::shared_ptr<Field> n) { };
 void MethodCreator::dispatch(std::shared_ptr<Method> n) { };
 void MethodCreator::dispatch(std::shared_ptr<Type> n) { };
+void MethodCreator::dispatch(std::shared_ptr<FakeType> n) { };
 void MethodCreator::dispatch(std::shared_ptr<UserType> n) { };
 void MethodCreator::dispatch(std::shared_ptr<TypeInt> n) { };
 void MethodCreator::dispatch(std::shared_ptr<TypeBoolean> n) { };

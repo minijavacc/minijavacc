@@ -20,6 +20,7 @@ void ExpressionCreator::dispatch(std::shared_ptr<MainMethod> n) { };
 void ExpressionCreator::dispatch(std::shared_ptr<Field> n) { };
 void ExpressionCreator::dispatch(std::shared_ptr<Method> n) { };
 void ExpressionCreator::dispatch(std::shared_ptr<Type> n) { };
+void ExpressionCreator::dispatch(std::shared_ptr<FakeType> n) { };
 void ExpressionCreator::dispatch(std::shared_ptr<UserType> n) { };
 void ExpressionCreator::dispatch(std::shared_ptr<TypeInt> n) { };
 void ExpressionCreator::dispatch(std::shared_ptr<TypeBoolean> n) { };

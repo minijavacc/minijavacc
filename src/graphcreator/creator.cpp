@@ -16,7 +16,7 @@ Creator::~Creator()
 void Creator::run()
 {
   // check for missing return paths
-  std::shared_ptr<TypeCreator> tc(new TypeCreator());
+  std::shared_ptr<TypeCreator> tc = std::make_shared<TypeCreator>();
   ast->accept(tc);
 }
 
