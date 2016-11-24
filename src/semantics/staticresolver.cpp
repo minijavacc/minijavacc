@@ -38,9 +38,13 @@ void StaticResolver::dispatch(std::shared_ptr<ClassDeclaration> n) {
   }
 };
 
-void StaticResolver::dispatch(std::shared_ptr<Field> n) { };
+void StaticResolver::dispatch(std::shared_ptr<Field> n) {
+  n->type->accept(shared_from_this());
+};
 
 void StaticResolver::dispatch(std::shared_ptr<Method> n) {
+  n->type->accept(shared_from_this());
+  
   currentMethod = n;
   currentSymbolTable.reset(new SymbolTable());
   currentSymbolTable->enterScope();
@@ -58,7 +62,7 @@ void StaticResolver::dispatch(std::shared_ptr<Method> n) {
 void StaticResolver::dispatch(std::shared_ptr<MainMethod> n) {
   currentSymbolTable.reset(new SymbolTable());
   currentSymbolTable->enterScope();
-  currentSymbolTable->insert(n->parameterID, n); // add parameter ID to find conflicting redefinitions TODO make sure n is never used
+  currentSymbolTable->insert(n->parameterID, n); // mainmethodchecker assures that parameterID is never used
   n->block->accept(shared_from_this());
   currentSymbolTable->leaveScope();
 };
@@ -84,15 +88,15 @@ void StaticResolver::dispatch(std::shared_ptr<LocalVariableDeclaration> n) {
 };
 
 void StaticResolver::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) {
-  n->expression->accept(shared_from_this());
   n->type->accept(shared_from_this());
-  
+  // declaration can already be used in following expression
   if (currentSymbolTable->hasValueFor(n->ID)) {
     error("Multiple declarations of local variable ...");
     return;
   }
-  
   currentSymbolTable->insert(n->ID, n);
+  
+  n->expression->accept(shared_from_this());
 };
 
 void StaticResolver::dispatch(std::shared_ptr<IfStatement> n) {
