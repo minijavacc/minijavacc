@@ -843,6 +843,7 @@ namespace cmpl
   {
     public:
       StringIdentifier      ID;
+      bool isLValue = true;
       
       Field(std::shared_ptr<Type> &type, StringIdentifier &ID) :
             TypedNode(type), ID(ID) { };
