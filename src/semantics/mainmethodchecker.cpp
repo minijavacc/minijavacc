@@ -149,6 +149,7 @@ void MainMethodChecker::dispatch(std::shared_ptr<NewArray> n) {
   n->expression->accept(shared_from_this());
 };
 
+void MainMethodChecker::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<LocalVariableDeclaration> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<EmptyStatement> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<ReturnStatement> n) { };

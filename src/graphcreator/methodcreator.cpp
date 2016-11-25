@@ -61,6 +61,7 @@ void MethodCreator::dispatch(std::shared_ptr<CRef> n) { };
 void MethodCreator::dispatch(std::shared_ptr<CIntegerLiteral> n) { };
 void MethodCreator::dispatch(std::shared_ptr<NewObject> n) { };
 void MethodCreator::dispatch(std::shared_ptr<NewArray> n) { };
+void MethodCreator::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) { };
 void MethodCreator::dispatch(std::shared_ptr<Equals> n) { };
 void MethodCreator::dispatch(std::shared_ptr<NotEquals> n) { };
 void MethodCreator::dispatch(std::shared_ptr<LessThan> n) { };

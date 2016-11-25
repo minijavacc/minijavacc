@@ -122,6 +122,7 @@ namespace cmpl
     virtual void dispatch(std::shared_ptr<CIntegerLiteral> n) = 0;
     virtual void dispatch(std::shared_ptr<NewObject> n) = 0;
     virtual void dispatch(std::shared_ptr<NewArray> n) = 0;
+    virtual void dispatch(std::shared_ptr<StaticLibraryCallExpression> n) = 0;
     virtual void dispatch(std::shared_ptr<Equals> n) = 0;
     virtual void dispatch(std::shared_ptr<NotEquals> n) = 0;
     virtual void dispatch(std::shared_ptr<LessThan> n) = 0;

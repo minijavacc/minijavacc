@@ -114,6 +114,7 @@ void ReturnChecker::dispatch(std::shared_ptr<CRef> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<CIntegerLiteral> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<NewObject> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<NewArray> n) { };
+void ReturnChecker::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<Equals> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<NotEquals> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<LessThan> n) { };

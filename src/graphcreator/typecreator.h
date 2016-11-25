@@ -55,6 +55,7 @@ namespace cmpl {
     void dispatch(std::shared_ptr<CIntegerLiteral> n);
     void dispatch(std::shared_ptr<NewObject> n);
     void dispatch(std::shared_ptr<NewArray> n);
+    void dispatch(std::shared_ptr<StaticLibraryCallExpression> n);
     void dispatch(std::shared_ptr<Equals> n);
     void dispatch(std::shared_ptr<NotEquals> n);
     void dispatch(std::shared_ptr<LessThan> n);

@@ -188,7 +188,16 @@ void ExpressionCreator::dispatch(std::shared_ptr<CTrue> n) { };
 void ExpressionCreator::dispatch(std::shared_ptr<CFalse> n) { };
 void ExpressionCreator::dispatch(std::shared_ptr<NewObject> n) { };
 void ExpressionCreator::dispatch(std::shared_ptr<NewArray> n) { };
+<<<<<<< 9091acd475d91a13e2663abcb2947549b25574c7
+=======
 void ExpressionCreator::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) { };
+void ExpressionCreator::dispatch(std::shared_ptr<Equals> n) { };
+void ExpressionCreator::dispatch(std::shared_ptr<NotEquals> n) { };
+void ExpressionCreator::dispatch(std::shared_ptr<LessThan> n) { };
+void ExpressionCreator::dispatch(std::shared_ptr<LessThanOrEqual> n) { };
+void ExpressionCreator::dispatch(std::shared_ptr<GreaterThan> n) { };
+void ExpressionCreator::dispatch(std::shared_ptr<GreaterThanOrEqual> n) { };
+>>>>>>> added sysoutprintchecker to recongnise library call and replace with StaticLibraryCallExpression
 void ExpressionCreator::dispatch(std::shared_ptr<Add> n) { };
 void ExpressionCreator::dispatch(std::shared_ptr<Subtract> n) { };
 void ExpressionCreator::dispatch(std::shared_ptr<Multiply> n) { };

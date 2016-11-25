@@ -102,6 +102,7 @@ void VoidTypeChecker::dispatch(std::shared_ptr<CallExpression> n) { };
 void VoidTypeChecker::dispatch(std::shared_ptr<UnaryLeftExpression> n) { };
 void VoidTypeChecker::dispatch(std::shared_ptr<UnaryRightExpression> n) { };
 void VoidTypeChecker::dispatch(std::shared_ptr<NewArray> n) { };
+void VoidTypeChecker::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) { };
 void VoidTypeChecker::dispatch(std::shared_ptr<EmptyStatement> n) { };
 void VoidTypeChecker::dispatch(std::shared_ptr<ReturnStatement> n) { };
 void VoidTypeChecker::dispatch(std::shared_ptr<FieldAccess> n) { };

@@ -155,6 +155,7 @@ void StaticDeclarationsCollector::dispatch(std::shared_ptr<CRef> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<CIntegerLiteral> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<NewObject> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<NewArray> n) { };
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Equals> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<NotEquals> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<LessThan> n) { };

@@ -224,6 +224,10 @@ void StaticResolver::dispatch(std::shared_ptr<NewArray> n) {
   n->type->accept(shared_from_this());
 };
 
+void StaticResolver::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) {
+  n->expression->accept(shared_from_this());
+};
+
 void StaticResolver::dispatch(std::shared_ptr<Type> n) {
   n->basicType->accept(shared_from_this());
 };

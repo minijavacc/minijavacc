@@ -13,6 +13,7 @@
 #include "staticresolver.h"
 #include "typechecker.h"
 #include "voidtypechecker.h"
+#include "sysoutprintchecker.h"
 
 #include "../parser/ast.h"
 #include "../parser/prettyprinter.h"
@@ -25,15 +26,7 @@ using namespace cmpl;
 
 void Checker::run() {
   
-  if(parser.addPrintln()) {
-    // successfully added things needed for println, TODO preprocess
-  }
-  
   std::shared_ptr<Node> n = parser.getAST();
-  
-  // recongnise System.out.println and substitute with single AST-node
-  std::shared_ptr<ReturnChecker> rc(new ReturnChecker());
-  n->accept(rc);
   
   // check for missing return paths
   std::shared_ptr<ReturnChecker> rc(new ReturnChecker());
@@ -42,6 +35,10 @@ void Checker::run() {
   // collect static declarations and check for duplicated methods and classes
   std::shared_ptr<StaticDeclarationsCollector> coll(new StaticDeclarationsCollector());
   n->accept(coll);
+  
+  // recongnise System.out.println and substitute with single AST-node
+  std::shared_ptr<SysOutPrintChecker> sys(new SysOutPrintChecker());
+  n->accept(sys);
   
   // resolve all static references (CRefs)
   std::shared_ptr<StaticResolver> res(new StaticResolver());

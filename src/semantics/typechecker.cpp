@@ -75,7 +75,7 @@ void TypeChecker::dispatch(std::shared_ptr<IfStatement> n) {
   // check if expression is boolean
   if (!n->expression->type->equals(booleanNode))
   {
-    error("expression in IfElseStatement must be of type boolean");
+    error("expression in IfElseStatement must be of type boolean", n);
   }
 };
 
@@ -85,6 +85,12 @@ void TypeChecker::dispatch(std::shared_ptr<ExpressionStatement> n) {
 
 void TypeChecker::dispatch(std::shared_ptr<WhileStatement> n) {
   n->expression->accept(shared_from_this());
+  
+  // check if expression is boolean
+  if (!n->expression->type->equals(booleanNode))
+  {
+    error("expression in WhileStatement must be of type boolean", n);
+  }
   
   n->statement->accept(shared_from_this());
 };
@@ -471,6 +477,16 @@ void TypeChecker::dispatch(std::shared_ptr<NewArray> n) {
     error("array size in NewArray must be integer", n);
   }
 };
+
+void TypeChecker::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) {
+  if (!n->expression->type->equals(intNode))
+  {
+    error("library call parameter must be integer", n);
+  }
+  
+  n->type = voidNode;
+};
+
 
 void TypeChecker::dispatch(std::shared_ptr<Equals> n) { };
 void TypeChecker::dispatch(std::shared_ptr<NotEquals> n) { };

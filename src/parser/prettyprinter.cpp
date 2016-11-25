@@ -437,6 +437,7 @@ void PrettyPrinter::dispatch(std::shared_ptr<NewArray> n) {
   }
 };
 
+void PrettyPrinter::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) { };
 void PrettyPrinter::dispatch(std::shared_ptr<Equals> n)             { print("=="); };
 void PrettyPrinter::dispatch(std::shared_ptr<NotEquals> n)          { print("!="); };
 void PrettyPrinter::dispatch(std::shared_ptr<LessThan> n)           { print("<"); };

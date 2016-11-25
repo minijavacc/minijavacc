@@ -120,48 +120,6 @@ void Parser::run()
   ast = parseProgram();
 }
 
-bool Parser::addPrintln(){
-  // first token is always Program
-  Program* program = static_cast<Program*>(ast.get());
-  
-  for(auto const& classDecl : program->classDeclarations) {
-    if(StringTable::lookupIdentifier(classDecl->ID) == "System") {
-      return false; // System has been user-definied, so no println needed
-    }
-  }
-  
-  // println method
-  std::shared_ptr<BasicType> printBasicType = std::make_shared<TypeVoid>();
-  std::shared_ptr<Type> printType = std::make_shared<Type>(printBasicType, 0);
-  std::shared_ptr<Token> tokenPrint = StringTable::insertString("println",0,0);
-  StringIdentifier IDPrint = dynamic_cast<IdentifierToken*>(tokenPrint.get())->id;
-  std::vector<std::shared_ptr<Parameter>> parameters;
-  parameters.push_back(std::make_shared<Parameter>(std::make_shared<Type>(std::make_shared<TypeInt>(), 0), 0)); // TODO: use StringTable::invalidIdentifier
-  std::vector<std::shared_ptr<BlockStatement>> statements;
-  std::shared_ptr<Block> block = std::make_shared<Block>(statements);
-  std::shared_ptr<Method> println = std::make_shared<Method>(printType, IDPrint, parameters, block);
-  
-  // system class
-  std::shared_ptr<Token> tokenSystem = StringTable::insertString("System",0,0);
-  StringIdentifier IDSystem = dynamic_cast<IdentifierToken*>(tokenSystem.get())->id;
-  std::vector<std::shared_ptr<ClassMember>> classMembersSystem;
-  
-  // magic object
-  std::shared_ptr<Token> tokenOut = StringTable::insertString("out",0,0);
-  StringIdentifier IDOut = dynamic_cast<IdentifierToken*>(tokenOut.get())->id;
-  std::shared_ptr<BasicType> magicBasicType = std::make_shared<UserType>(IDSystem);
-  std::shared_ptr<Type> magicType = std::make_shared<Type>(magicBasicType, 0);
-  std::shared_ptr<Field> out = std::make_shared<Field>(magicType, IDOut);
-  
-  // add to class
-  classMembersSystem.push_back(std::move(out));
-  classMembersSystem.push_back(std::move(println));
-  std::shared_ptr<ClassDeclaration> classSystem = std::make_shared<ClassDeclaration>(IDSystem, classMembersSystem);
-  program->classDeclarations.push_back(std::move(classSystem));
-  
-  return true;
-}
-
 /* dyast: current = "class" */
 std::shared_ptr<Program> Parser::parseProgram()
 {
