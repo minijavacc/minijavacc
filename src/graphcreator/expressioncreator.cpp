@@ -103,14 +103,14 @@ void ExpressionCreator::dispatch(std::shared_ptr<EqualityExpression> n) {
   n->expression1->accept(shared_from_this());
   n->expression2->accept(shared_from_this());
   n->op->accept(shared_from_this());
-  n->firm_node = new_Cmp(n->expression1->firm_node, n->expression2->firm_node, n->op->ir_relation);
+  n->firm_node = new_Cmp(n->expression1->firm_node, n->expression2->firm_node, n->op->firm_relation);
 };
 
 void ExpressionCreator::dispatch(std::shared_ptr<RelationalExpression> n) {
   n->expression1->accept(shared_from_this());
   n->expression2->accept(shared_from_this());
   n->op->accept(shared_from_this());
-  n->firm_node = new_Cmp(n->expression1->firm_node, n->expression2->firm_node, n->op->ir_relation);
+  n->firm_node = new_Cmp(n->expression1->firm_node, n->expression2->firm_node, n->op->firm_relation);
 };
 
 void ExpressionCreator::dispatch(std::shared_ptr<AdditiveExpression> n) {
@@ -174,12 +174,12 @@ void ExpressionCreator::dispatch(std::shared_ptr<CRef> n) {
   n->firm_node = d->firm_node;
 };
 
-void ExpressionCreator::dispatch(std::shared_ptr<Equals> n) { n->ir_relation = ir_relation_equal; };
-void ExpressionCreator::dispatch(std::shared_ptr<NotEquals> n) { n->ir_relation = ir_relation_less_greater; };
-void ExpressionCreator::dispatch(std::shared_ptr<LessThan> n) { n->ir_relation = ir_relation_less; };
-void ExpressionCreator::dispatch(std::shared_ptr<LessThanOrEqual> n) { n->ir_relation = ir_relation_less_equal; };
-void ExpressionCreator::dispatch(std::shared_ptr<GreaterThan> n) { n->ir_relation = ir_relation_greater; };
-void ExpressionCreator::dispatch(std::shared_ptr<GreaterThanOrEqual> n) { n->ir_relation = ir_relation_greater_equal; };
+void ExpressionCreator::dispatch(std::shared_ptr<Equals> n) { n->firm_relation = ir_relation_equal; };
+void ExpressionCreator::dispatch(std::shared_ptr<NotEquals> n) { n->firm_relation = ir_relation_less_greater; };
+void ExpressionCreator::dispatch(std::shared_ptr<LessThan> n) { n->firm_relation = ir_relation_less; };
+void ExpressionCreator::dispatch(std::shared_ptr<LessThanOrEqual> n) { n->firm_relation = ir_relation_less_equal; };
+void ExpressionCreator::dispatch(std::shared_ptr<GreaterThan> n) { n->firm_relation = ir_relation_greater; };
+void ExpressionCreator::dispatch(std::shared_ptr<GreaterThanOrEqual> n) { n->firm_relation = ir_relation_greater_equal; };
 
 void ExpressionCreator::dispatch(std::shared_ptr<UnaryRightExpression> n) { };
 void ExpressionCreator::dispatch(std::shared_ptr<CNull> n) { };

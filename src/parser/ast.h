@@ -169,7 +169,7 @@ namespace cmpl
   class ClassMember    : public Node                 { };
   class BlockStatement : public Node                 { public: bool returns = false; };
   class Statement      : public BlockStatement       { };
-  class Op             : public Node                 { public: ir_relation ir_relation;};
+  class Op             : public Node                 { public: ir_relation firm_relation;};
   class EqualityOp     : public Op                   { };
   class RelationalOp   : public Op                   { };
   class AddOp          : public Op                   { };
