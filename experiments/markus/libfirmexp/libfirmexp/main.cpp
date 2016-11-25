@@ -57,16 +57,39 @@ int main(int argc, const char * argv[]) {
   
   
   // handle body
-  ir_tarval *tv = new_tarval_from_long(42, mode_Is);
-  ir_node *lhs = new_Const(tv);
+//  static int glob = 0;
+//  
+//  int main(int argc, char** argv) {
+//    if (glob = 1 + glob) return 1; else return 2;
+//  }
   
-  ir_node *rhs = proj;
+  // make static glob entity
+  ir_entity *glob = new_entity(get_glob_type(), new_id_from_str("glob"), int_type);
   
-  ir_node *node = new_Add(lhs, rhs);
+  // load from glob
+  ir_node *a = new_Address(glob);
+  ir_node *l = new_Load(get_store(), a, mode_Is, int_type, cons_none);
+  ir_node *lhs = new_Proj(l, mode_Is, pn_Load_res);
+  
+  // 1
+  ir_tarval *tv = new_tarval_from_long(1, mode_Is);
+  ir_node *rhs = new_Const(tv);
+  
+  // glob + 1
+  ir_node *add = new_Add(lhs, rhs);
+  
+  // glob = glob + 1
+  ir_node *m = new_Proj(l, mode_M, pn_Load_M);
+  ir_node *a1 = new_Address(glob);
+  ir_node *st = new_Store(m, a1, add, int_type, cons_none);
+  ir_node *m1 = new_Proj(st, mode_M, pn_Store_M);
+  set_store(m1);
   
   
-  // the result of the function is the result of the body
-  ir_node *results[1] = { node };
+  // the result of the function is just 1
+  ir_tarval *tv1 = new_tarval_from_long(1, mode_Is);
+  ir_node *one = new_Const(tv1);
+  ir_node *results[1] = { one };
   ir_node *store = get_store();
   ir_node *ret = new_Return(store, 1, results);               // create a return node
   ir_node *end = get_irg_end_block(fun_graph);                // get hold of the end block
