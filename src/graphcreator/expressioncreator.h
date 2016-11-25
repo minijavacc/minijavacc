@@ -10,6 +10,7 @@ namespace cmpl {
   class ExpressionCreator : public Dispatcher, public std::enable_shared_from_this<ExpressionCreator> {
   private:
     void error(const std::string &err);
+    ir_type *currentType;
   public:   
     void dispatch(std::shared_ptr<Type> n);
     void dispatch(std::shared_ptr<FakeType> n);
