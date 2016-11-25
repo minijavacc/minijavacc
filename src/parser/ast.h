@@ -61,6 +61,7 @@ namespace cmpl
   class CIntegerLiteral;
   class NewObject;
   class NewArray;
+  class StaticLibraryCallExpression;
   class Equals;
   class NotEquals;
   class LessThan;
@@ -571,13 +572,13 @@ namespace cmpl
     void accept(std::shared_ptr<Dispatcher> d) override;
   };
 
-  class StaticLibraryCallExpression : public Expression, public std::enable_shared_from_this<NewArray>
+  class StaticLibraryCallExpression : public Expression, public std::enable_shared_from_this<StaticLibraryCallExpression>
   {
     public:
       std::shared_ptr<Expression> expression;
       
-      StaticLibraryCallExpression(std::shared_ptr<Type> type, std::shared_ptr<Expression> &expression)
-        : Expression(type), expression(std::move(expression)) { }; 
+      StaticLibraryCallExpression(std::shared_ptr<Expression> &expression)
+        : Expression(), expression(std::move(expression)) { }; 
       void accept (std::shared_ptr<Dispatcher> d) override;
   };
   
