@@ -307,6 +307,9 @@ void PrettyPrinter::dispatch(std::shared_ptr<MethodInvocation> n) {
     if(continous) {
       print(", ");
     }
+    
+    assert(argument != nullptr);
+    
     argument->accept(shared_from_this());
     continous = true;
   }
@@ -437,7 +440,12 @@ void PrettyPrinter::dispatch(std::shared_ptr<NewArray> n) {
   }
 };
 
-void PrettyPrinter::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) { };
+void PrettyPrinter::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) {
+  print("System.out.println(");
+  n->expression->accept(shared_from_this());
+  print(")");
+};
+
 void PrettyPrinter::dispatch(std::shared_ptr<Equals> n)             { print("=="); };
 void PrettyPrinter::dispatch(std::shared_ptr<NotEquals> n)          { print("!="); };
 void PrettyPrinter::dispatch(std::shared_ptr<LessThan> n)           { print("<"); };

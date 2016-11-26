@@ -17,6 +17,8 @@ void MainMethodChecker::dispatch(std::shared_ptr<Program> n) {
 };
 
 void MainMethodChecker::dispatch(std::shared_ptr<ClassDeclaration> n) {
+  currentClassDeclaration = n;
+  
   for (auto const& m: n->classMembers) {
     m->accept(shared_from_this());
   }
@@ -27,10 +29,18 @@ void MainMethodChecker::dispatch(std::shared_ptr<MainMethod> n) {
   if(StringTable::lookupIdentifier(n->ID).compare("main")) {
     error("static method needs to be named \"main\"!");
   }
+  
   mainMethods++;
+  
   if(mainMethods > 1)  {
     error("multiple main method definitions found!");
   }
+  
+  if (currentClassDeclaration->methods.count(n->ID) > 0)
+  {
+    error("a method named 'main' is not allowed if the class also contains the static main method");
+  }
+  
   n->block->accept(shared_from_this());
 };
 
@@ -149,7 +159,10 @@ void MainMethodChecker::dispatch(std::shared_ptr<NewArray> n) {
   n->expression->accept(shared_from_this());
 };
 
-void MainMethodChecker::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) { };
+void MainMethodChecker::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) {
+  n->expression->accept(shared_from_this());
+};
+
 void MainMethodChecker::dispatch(std::shared_ptr<LocalVariableDeclaration> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<EmptyStatement> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<ReturnStatement> n) { };

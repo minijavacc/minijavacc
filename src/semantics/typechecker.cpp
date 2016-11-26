@@ -479,6 +479,8 @@ void TypeChecker::dispatch(std::shared_ptr<NewArray> n) {
 };
 
 void TypeChecker::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) {
+  n->expression->accept(shared_from_this());
+  
   if (!n->expression->type->equals(intNode))
   {
     error("library call parameter must be integer", n);

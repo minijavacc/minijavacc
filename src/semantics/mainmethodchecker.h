@@ -18,6 +18,7 @@ namespace cmpl {
   public:
     int mainMethods=0;
     std::shared_ptr<MainMethod> currentMainMethod;
+    std::shared_ptr<ClassDeclaration> currentClassDeclaration;
     
     void dispatch(std::shared_ptr<Type> n);
     void dispatch(std::shared_ptr<FakeType> n);

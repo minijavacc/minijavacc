@@ -11,11 +11,7 @@ std::shared_ptr<Expression> SysOutPrintChecker::convertToStaticLibraryCallExpres
 {
   std::shared_ptr<Expression> node = std::make_shared<StaticLibraryCallExpression>(printlnParamExpr);
   
-  // clear pointer to parameter node (in case this prevents the destruction of this node)
-  MethodInvocation* mi = dynamic_cast<MethodInvocation*>(methodInvocationPrintln.get());
-  assert(mi != nullptr);
-  assert(mi->arguments.size() > 0);
-  mi->arguments[0] = nullptr;
+  return node;
 }
 
 void SysOutPrintChecker::dispatch(std::shared_ptr<Program> n) {
@@ -58,47 +54,49 @@ void SysOutPrintChecker::dispatch(std::shared_ptr<CRef> n) {
     // scopes not checked here, but the language description says:
     //   "Ist kein Bezeichner System bekannt, so erzeugt dieser Ausdruck einen 
     //    Aufruf der System.out.println-Funktion in der Standardbibliothek."
-    if (mainMethod && currentClassDeclaration->fields.count(n->ID) == 0)
+    if (currentClassDeclaration->fields.count(n->ID) == 0)
     {
-      for (const std::shared_ptr<Node> &l : mainMethod->localVariables)
+      if (mainMethod)
       {
-        if ((lvc = dynamic_cast<LocalVariableDeclaration*>(l.get())) && 
-          (StringTable::lookupIdentifier(lvc->ID) == "System"))
+        for (const std::shared_ptr<Node> &l : mainMethod->localVariables)
         {
-          identifierSystemExists = true;
-          break;
-        }
-        else if ((lvec = dynamic_cast<LocalVariableExpressionDeclaration*>(l.get())) && 
-          (StringTable::lookupIdentifier(lvec->ID) == "System"))
-        {
-          identifierSystemExists = true;
-          break;
+          if ((lvc = dynamic_cast<LocalVariableDeclaration*>(l.get())) && 
+            (StringTable::lookupIdentifier(lvc->ID) == "System"))
+          {
+            identifierSystemExists = true;
+            break;
+          }
+          else if ((lvec = dynamic_cast<LocalVariableExpressionDeclaration*>(l.get())) && 
+            (StringTable::lookupIdentifier(lvec->ID) == "System"))
+          {
+            identifierSystemExists = true;
+            break;
+          }
         }
       }
-    }
-    else if (currentClassDeclaration->fields.count(n->ID) == 0 && 
-             currentMethod->parameterMap.count(n->ID) == 0)
-    {
-      for (const std::shared_ptr<Node> &l : currentMethod->localVariables)
+      else if (currentMethod->parameterMap.count(n->ID) == 0)
       {
-        if ((lvc = dynamic_cast<LocalVariableDeclaration*>(l.get())) && 
-          (StringTable::lookupIdentifier(lvc->ID) == "System"))
+        for (const std::shared_ptr<Node> &l : currentMethod->localVariables)
         {
-          identifierSystemExists = true;
-          break;
-        }
-        else if ((lvec = dynamic_cast<LocalVariableExpressionDeclaration*>(l.get())) && 
-          (StringTable::lookupIdentifier(lvec->ID) == "System"))
-        {
-          identifierSystemExists = true;
-          break;
+          if ((lvc = dynamic_cast<LocalVariableDeclaration*>(l.get())) && 
+            (StringTable::lookupIdentifier(lvc->ID) == "System"))
+          {
+            identifierSystemExists = true;
+            break;
+          }
+          else if ((lvec = dynamic_cast<LocalVariableExpressionDeclaration*>(l.get())) && 
+            (StringTable::lookupIdentifier(lvec->ID) == "System"))
+          {
+            identifierSystemExists = true;
+            break;
+          }
         }
       }
-    }
-    
-    if (!identifierSystemExists)
-    {
-      cRefSystem = n;
+      
+      if (!identifierSystemExists)
+      {
+        cRefSystem = n;
+      }
     }
   }
 };
