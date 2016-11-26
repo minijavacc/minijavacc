@@ -711,19 +711,25 @@ namespace cmpl
   
   class Field : public ClassMember, public TypedNode, public std::enable_shared_from_this<Field>
   {
+    std::weak_ptr<ClassDeclaration> classDeclaration;
   public:
     StringIdentifier ID;
     bool isLValue = true;
     ir_entity* ent;
-      
-    Field(std::shared_ptr<Type> &type, StringIdentifier &ID) :
-            TypedNode(type), ID(ID) { };
+    
+    Field(std::shared_ptr<Type> &type,
+          StringIdentifier &ID,
+          std::weak_ptr<ClassDeclaration> clsDecl) : TypedNode(type),
+                                                     ID(ID),
+                                                     classDeclaration(clsDecl) { };
+    
     void accept(std::shared_ptr<Dispatcher> d) override;
     void assign(ir_node* n) override;
   };
   
   class Method : public ClassMember, public TypedNode, public std::enable_shared_from_this<Method>
   {
+    std::weak_ptr<ClassDeclaration> classDeclaration;
   public:
     StringIdentifier                        ID;
     std::vector<std::shared_ptr<Parameter>> parameters;
@@ -731,23 +737,36 @@ namespace cmpl
     std::shared_ptr<Block>                  block;
     std::map<StringIdentifier, std::weak_ptr<Parameter>> parameterMap;
       
-    Method(std::shared_ptr<Type> &type, StringIdentifier &ID, std::vector<std::shared_ptr<Parameter>> &parameters,
-             std::shared_ptr<Block> &block) :
-               TypedNode(type), ID(ID), parameters(std::move(parameters)), block(std::move(block)) { };
+    Method(std::shared_ptr<Type> &type,
+           StringIdentifier &ID,
+           std::vector<std::shared_ptr<Parameter>> &parameters,
+           std::shared_ptr<Block> &block,
+           std::weak_ptr<ClassDeclaration> clsDecl) : TypedNode(type),
+                                                      ID(ID),
+                                                      parameters(std::move(parameters)),
+                                                      block(std::move(block)),
+                                                      classDeclaration(clsDecl) { };
+    
     void accept(std::shared_ptr<Dispatcher> d) override;
   };
   
   /** The MainMethod is a ClassMember and therefore part of a ClassDeclaration. The MainMethod element contains two IDs (Method-identifier and parameter-identifier) and a Block (Representation of the method body) */
   class MainMethod : public ClassMember, public std::enable_shared_from_this<MainMethod>
   {
+    std::weak_ptr<ClassDeclaration> classDeclaration;
   public:
     StringIdentifier       ID;
     StringIdentifier       parameterID;
     std::shared_ptr<Block> block;
     std::vector<std::shared_ptr<Node>>      localVariables;
     
-    MainMethod(StringIdentifier &ID, StringIdentifier &parameterID, std::shared_ptr<Block> &block) :
-                   ID(ID), parameterID(std::move(parameterID)), block(std::move(block)) { };
+    MainMethod(StringIdentifier &ID,
+               StringIdentifier &parameterID,
+               std::shared_ptr<Block> &block,
+               std::weak_ptr<ClassDeclaration> clsDecl) : ID(ID),
+                                                          parameterID(std::move(parameterID)),
+                                                          block(std::move(block)),
+                                                          classDeclaration(clsDecl) { };
     
     void accept(std::shared_ptr<Dispatcher> d) override;
   };
@@ -764,8 +783,8 @@ namespace cmpl
     ir_type *declared_type;
     bool returns = false;
       
-    ClassDeclaration(StringIdentifier &ID, std::vector<std::shared_ptr<ClassMember>> &classMembers) :
-                         ID(ID), TypedNode(std::make_shared<UserType>(ID), 0), classMembers(std::move(classMembers)) { };
+    ClassDeclaration(StringIdentifier &ID) :
+                         ID(ID), TypedNode(std::make_shared<UserType>(ID), 0) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
   };
   

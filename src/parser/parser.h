@@ -26,7 +26,7 @@ namespace cmpl
        */
       std::shared_ptr<Program>          parseProgram();
       std::shared_ptr<ClassDeclaration> parseClassDeclaration();
-      std::shared_ptr<ClassMember>      parseClassMember();
+      std::shared_ptr<ClassMember>      parseClassMember(std::shared_ptr<ClassDeclaration> clsDecl);
       std::shared_ptr<Type>             parseType();
       std::shared_ptr<BasicType>        parseBasicType();
       std::shared_ptr<Parameter>        parseParameter();

@@ -138,21 +138,22 @@ std::shared_ptr<Program> Parser::parseProgram()
 std::shared_ptr<ClassDeclaration> Parser::parseClassDeclaration()
 {
   std::vector<std::shared_ptr<ClassMember>> classMembers;
-  StringIdentifier ID;
+  StringIdentifier ID = getIdentifierFromNext();
+  std::shared_ptr<ClassDeclaration> clsDecl = std::make_shared<ClassDeclaration>(ID);
   
-  ID = getIdentifierFromNext();
   assureNextIsOSKTokenWithType(T_O_LBRACE);
   nextToken();
   // multiple class members
   while(!isCurrentTokenOSKTokenOfType(T_O_RBRACE)) {
-    classMembers.push_back(std::move(parseClassMember()));
+    classMembers.push_back(std::move(parseClassMember(clsDecl)));
   }
 
-  return std::make_shared<ClassDeclaration>(ID, classMembers);
+  clsDecl->classMembers = classMembers;
+  return clsDecl;
 }
 
 /* start: current = "public" */
-std::shared_ptr<ClassMember> Parser::parseClassMember()
+std::shared_ptr<ClassMember> Parser::parseClassMember(std::shared_ptr<ClassDeclaration> clsDecl)
 {
   assureCurrentIsOSKTokenWithType(T_K_PUBLIC);
   
@@ -179,14 +180,14 @@ std::shared_ptr<ClassMember> Parser::parseClassMember()
     assureNextIsOSKTokenWithType(T_O_RPAREN);
     nextToken();
     block = parseBlock();
-    return std::make_shared<MainMethod>(ID, parameterID, block);
+    return std::make_shared<MainMethod>(ID, parameterID, block, clsDecl);
   } else {
     std::shared_ptr<Type> type = parseType();
     StringIdentifier ID = getIdentifierFromCurrent();
     if(isNextTokenOSKTokenOfType(T_O_SEMICOLON)) {
       // Field
       nextToken();
-      return std::make_shared<Field>(type, ID);
+      return std::make_shared<Field>(type, ID, clsDecl);
     } else if(isCurrentTokenOSKTokenOfType(T_O_LPAREN)) {
       // Method
       std::vector<std::shared_ptr<Parameter>> parameters;
@@ -203,7 +204,7 @@ std::shared_ptr<ClassMember> Parser::parseClassMember()
       }
       nextToken();
       block = parseBlock();
-      return std::make_shared<Method>(type, ID, parameters, block);
+      return std::make_shared<Method>(type, ID, parameters, block, clsDecl);
     } else {
       error("Neither Field nor Method definition");
     }
