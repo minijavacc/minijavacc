@@ -58,19 +58,26 @@ void SysOutPrintChecker::dispatch(std::shared_ptr<CRef> n) {
     {
       if (mainMethod)
       {
-        for (const std::shared_ptr<Node> &l : mainMethod->localVariables)
+        if (mainMethod->parameterID == n->ID)
         {
-          if ((lvc = dynamic_cast<LocalVariableDeclaration*>(l.get())) && 
-            (StringTable::lookupIdentifier(lvc->ID) == "System"))
+          identifierSystemExists = true;  
+        }
+        else
+        {
+          for (const std::shared_ptr<Node> &l : mainMethod->localVariables)
           {
-            identifierSystemExists = true;
-            break;
-          }
-          else if ((lvec = dynamic_cast<LocalVariableExpressionDeclaration*>(l.get())) && 
-            (StringTable::lookupIdentifier(lvec->ID) == "System"))
-          {
-            identifierSystemExists = true;
-            break;
+            if ((lvc = dynamic_cast<LocalVariableDeclaration*>(l.get())) && 
+              (StringTable::lookupIdentifier(lvc->ID) == "System"))
+            {
+              identifierSystemExists = true;
+              break;
+            }
+            else if ((lvec = dynamic_cast<LocalVariableExpressionDeclaration*>(l.get())) && 
+              (StringTable::lookupIdentifier(lvec->ID) == "System"))
+            {
+              identifierSystemExists = true;
+              break;
+            }
           }
         }
       }

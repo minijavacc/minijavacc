@@ -501,6 +501,11 @@ void TypeChecker::dispatch(std::shared_ptr<NewArray> n) {
   n->expression->accept(shared_from_this());
   // type already set by parser
   
+  if (n->type->basicType->equals(voidNode->basicType))
+  {
+    error("creation of void array not allowed", n);
+  }
+  
   if (!n->expression->type->equals(intNode))
   {
     error("array size in NewArray must be integer", n);

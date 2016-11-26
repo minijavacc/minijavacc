@@ -132,7 +132,6 @@ void StaticResolver::dispatch(std::shared_ptr<ReturnExpressionStatement> n) {
 };
 
 void StaticResolver::dispatch(std::shared_ptr<MethodInvocation> n) {
-  std::cout << "staticresolver on method invocation: " << std::hex << (long int) n.get() << "\n";
   for (auto const& a : n->arguments) {
     a->accept(shared_from_this());
   }
@@ -215,6 +214,8 @@ void StaticResolver::dispatch(std::shared_ptr<CRef> n) {
       n->declaration = currentClassDeclaration->fields[n->ID];
     }
   } // else: declaration has successfully been set implicitly.
+  
+  assert(n->declaration.lock().get() != nullptr);
 };
 
 void StaticResolver::dispatch(std::shared_ptr<NewObject> n) {
@@ -240,6 +241,7 @@ void StaticResolver::dispatch(std::shared_ptr<UserType> n) {
   for (auto const& c : currentProgram->classDeclarations) {
     if (c->ID == n->ID) {
       n->declaration = c;
+      assert(c != nullptr);
       return;
     }
   }
@@ -257,6 +259,8 @@ void StaticResolver::dispatch(std::shared_ptr<Parameter> n) {
     error("Multiple declarations of parameter in method signature ...", n);
     return;
   }
+  
+  n->type->accept(shared_from_this());
   
   currentSymbolTable->insert(n->ID, n);
 };
