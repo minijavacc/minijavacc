@@ -24,6 +24,15 @@ int main(int argc, const char * argv[]) {
   
   
   
+  ir_type *cls_t = new_type_class(new_id_from_str("my class"));
+//  add_class_subtype(cls_t, int_type);
+  
+  
+//  ir_entity *entt = new_entity(get_glob_type(), new_id_from_str("my instance"), cls_t);
+  
+  
+  
+  
   // new type
   // -----------------
   
@@ -35,9 +44,9 @@ int main(int argc, const char * argv[]) {
   // new simple method
   // -----------------
   
-  ir_type *t = new_type_method(1, 1, false, cc_cdecl_set, mtp_no_property);
+  ir_type *t = new_type_method(1, 0, false, cc_cdecl_set, mtp_no_property);
   set_method_param_type(t, 0, new_type_primitive(int_mode));
-  set_method_res_type(t, 0, new_type_primitive(int_mode));
+//  set_method_res_type(t, 0, NULL);
   ir_entity *ent = new_entity(get_glob_type(), new_id_from_str("james"), t);
   
   
@@ -86,16 +95,51 @@ int main(int argc, const char * argv[]) {
   set_store(m1);
   
   
+  ir_node *tv1 = new_Const(new_tarval_from_long(0, mode_Is));
+  ir_node *cmp = new_Cmp(add, tv1, ir_relation_less_greater);
+  
+  ir_node *cond = new_Cond(cmp);
+  ir_node *tt = new_Proj(cond, mode_X, true);
+  ir_node *ff = new_Proj(cond, mode_X, false);
+  
+  
+  ir_node *tts[1] = { tt };
+  ir_node *bltt = new_Block(1, tts);
+  set_r_cur_block(fun_graph, bltt);
+  
+  
   // the result of the function is just 1
-  ir_tarval *tv1 = new_tarval_from_long(1, mode_Is);
-  ir_node *one = new_Const(tv1);
+  ir_tarval *tv2 = new_tarval_from_long(1, mode_Is);
+  ir_node *one = new_Const(tv2);
   ir_node *results[1] = { one };
   ir_node *store = get_store();
-  ir_node *ret = new_Return(store, 1, results);               // create a return node
+  ir_node *ret = new_Return(store, 0, NULL);               // create a return node
   ir_node *end = get_irg_end_block(fun_graph);                // get hold of the end block
   // set the return node to be its predecessor
   add_immBlock_pred(end, ret);
+  mature_immBlock(get_r_cur_block(fun_graph));
   
+  
+  
+  
+  ir_node *ffs[1] = { ff };
+  ir_node *blff = new_Block(1, ffs);
+  set_r_cur_block(fun_graph, blff);
+  
+  // the result of the function is just 1
+  ir_tarval *tv3 = new_tarval_from_long(0, mode_Is);
+  ir_node *zero = new_Const(tv3);
+  ir_node *results1[1] = { zero };
+  ir_node *ret1 = new_Return(get_store(), 0, NULL);               // create a return node
+  ir_node *end1 = get_irg_end_block(fun_graph);                // get hold of the end block
+  // set the return node to be its predecessor
+  add_immBlock_pred(end1, ret1);
+  mature_immBlock(get_r_cur_block(fun_graph));
+  
+  
+  
+  
+  set_r_cur_block(fun_graph, block);
   mature_immBlock(get_r_cur_block(fun_graph));          // mature the current block
   
   irg_finalize_cons(fun_graph);                               // finalize the construction
