@@ -21,6 +21,7 @@ namespace cmpl {
       std::shared_ptr<ClassDeclaration> currentClassDeclaration;
       std::shared_ptr<Method> currentMethod;
       std::shared_ptr<Expression> tmpExpression; // used in UnaryRightExpression
+      std::shared_ptr<Expression> currentUnaryLeftExpressionThatNegates; // used in UnaryRightExpression
       
       void error(const std::string &err);       // program is semantically incorrect
       void error(const std::string &err, const std::shared_ptr<Node> &n);

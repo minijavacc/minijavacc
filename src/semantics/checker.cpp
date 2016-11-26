@@ -13,7 +13,7 @@
 #include "staticresolver.h"
 #include "typechecker.h"
 #include "voidtypechecker.h"
-#include "sysoutprintchecker.h"
+#include "astmodifier.h"
 
 #include "../parser/ast.h"
 #include "../parser/prettyprinter.h"
@@ -36,9 +36,11 @@ void Checker::run() {
   std::shared_ptr<StaticDeclarationsCollector> coll(new StaticDeclarationsCollector());
   n->accept(coll);
   
-  // recongnise System.out.println and substitute with single AST-node
-  std::shared_ptr<SysOutPrintChecker> sys(new SysOutPrintChecker());
-  n->accept(sys);
+  // recongnise tree patterns and replace with other AST nodes
+  // e.g. System.out.println, -CIntegerLiteral
+  // CAREFUL: this call modifies the AST!
+  std::shared_ptr<AstModifier> mod(new AstModifier());
+  n->accept(mod);
   
   // resolve all static references (CRefs)
   std::shared_ptr<StaticResolver> res(new StaticResolver());

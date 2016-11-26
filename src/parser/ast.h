@@ -536,7 +536,7 @@ namespace cmpl
   {
   public:
     std::string integer;
-    uint32_t value;
+    int32_t value;
     
     CIntegerLiteral(std::string &integer) : integer(integer) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
