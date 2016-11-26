@@ -6,6 +6,15 @@ set(CMAKE_SOURCE_DIR src)
 set(CMAKE_LIBRARY_PATH lib)
 set(EXECUTABLE_OUTPUT_PATH bin)
 
+# get current working branch from git
+execute_process(
+  COMMAND git rev-parse --abbrev-ref HEAD
+  WORKING_DIRECTORY . 
+  OUTPUT_VARIABLE GIT_BRANCH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# add libFirm
 add_custom_target(libfirm
   COMMAND $(MAKE) --silent
   WORKING_DIRECTORY lib/libfirm
@@ -37,7 +46,12 @@ file(GLOB_RECURSE compiler_SRCS
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED on)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+
+if(GIT_BRANCH STREQUAL "master")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O3")
+else()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O0 -g")
+endif()
 
 
 add_executable(minijavacc ${compiler_SRCS})
