@@ -132,6 +132,7 @@ void StaticResolver::dispatch(std::shared_ptr<ReturnExpressionStatement> n) {
 };
 
 void StaticResolver::dispatch(std::shared_ptr<MethodInvocation> n) {
+  std::cout << "staticresolver on method invocation: " << std::hex << (long int) n.get() << "\n";
   for (auto const& a : n->arguments) {
     a->accept(shared_from_this());
   }
@@ -201,6 +202,7 @@ void StaticResolver::dispatch(std::shared_ptr<UnaryLeftExpression> n) {
 
 void StaticResolver::dispatch(std::shared_ptr<UnaryRightExpression> n) {
   n->expression->accept(shared_from_this());
+  n->op->accept(shared_from_this());
 };
 
 void StaticResolver::dispatch(std::shared_ptr<CRef> n) {

@@ -107,6 +107,21 @@ void TypeChecker::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n
   // check if type matches the type of the expression
   if (!n->type->equals(n->expression->type))
   {
+    // check if Null is assigned to a UserType
+    if (dynamic_cast<NullType*>(n->expression->type->basicType.get()) && 
+        dynamic_cast<UserType*>(n->type->basicType.get()))
+    {
+      return;
+    }
+    
+    // check if null is assigned to any array
+    if (dynamic_cast<NullType*>(n->expression->type->basicType.get()) && 
+        n->type->arrayDepth > 0)
+    {
+      return;
+    }
+    
+    // no Null special case
     error("expression in LocalVariableExpressionDeclaration has wrong type", n);
   }
   
@@ -171,6 +186,20 @@ void TypeChecker::dispatch(std::shared_ptr<MethodInvocation> n) {
     n->arguments[i]->accept(shared_from_this());
     
     if (!n->arguments[i]->type->equals(methodDecl->parameters[i]->type)) {
+      // check if Null is assigned to a UserType
+      if (dynamic_cast<NullType*>(n->arguments[i]->type->basicType.get()) && 
+          dynamic_cast<UserType*>(methodDecl->parameters[i]->type->basicType.get()))
+      {
+        continue;
+      }
+      
+      // check if null is assigned to any array
+      if (dynamic_cast<NullType*>(n->arguments[i]->type->basicType.get()) && 
+          methodDecl->parameters[i]->type->arrayDepth > 0)
+      {
+        continue;
+      }
+      
       error("type mismatch of MethodInvocation parameters", n);
     }
   }
