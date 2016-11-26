@@ -18,28 +18,45 @@ void ExpressionCreator::dispatch(std::shared_ptr<Program> n) {
 };
 
 void ExpressionCreator::dispatch(std::shared_ptr<ClassDeclaration> n) {
-  n->declared_type = new_type_class(new_id_from_str(StringTable::lookupIdentifier(n->ID).c_str()));
-  
   for (auto const& c : n->classMembers) {
     c->accept(shared_from_this());
   }
 };
 
-void ExpressionCreator::dispatch(std::shared_ptr<MainMethod> n) { };
+void ExpressionCreator::dispatch(std::shared_ptr<MainMethod> n) {
+  ir_graph *g = n->getFirmGraph();
+  set_current_ir_graph(g);
+  set_r_cur_block(g, get_irg_start_block(g));
+  
+  n->block->accept(shared_from_this());
+  
+  ir_node *ret = new_Return(get_store(), 0, NULL);
+  
+  ir_node *end = get_irg_end_block(g);
+  add_immBlock_pred(end, ret);
+  mature_immBlock(get_r_cur_block(g));
+  
+  irg_finalize_cons(g);
+};
 
 void ExpressionCreator::dispatch(std::shared_ptr<Field> n) { };
 
 void ExpressionCreator::dispatch(std::shared_ptr<Method> n) {
-  ir_type *t = new_type_method(n->parameters.size(), 1, false, cc_cdecl_set, mtp_no_property);
+  ir_graph *g = n->getFirmGraph();
+  set_current_ir_graph(g);
+  set_r_cur_block(g, get_irg_start_block(g));
+  ir_node *args = get_irg_args(g);
   
   int i = 0;
   for (auto const& p : n->parameters) {
-    set_method_param_type(t, i++, p->type->firm_type);
+    p->firm_node = new_Proj(args, p->type->getFirmMode(), i++);
   }
   
-  set_method_res_type(t, 0, n->type->firm_type);
-  
   n->block->accept(shared_from_this());
+  
+  irg_finalize_cons(g);
+//  ir_node *end = get_irg_end_block(g);
+//  mature_immBlock(end);
 };
 
 void ExpressionCreator::dispatch(std::shared_ptr<Block> n) {
@@ -56,13 +73,20 @@ void ExpressionCreator::dispatch(std::shared_ptr<TypeInt> n) { };
 void ExpressionCreator::dispatch(std::shared_ptr<TypeBoolean> n) { };
 void ExpressionCreator::dispatch(std::shared_ptr<TypeVoid> n) { };
 void ExpressionCreator::dispatch(std::shared_ptr<Parameter> n) { };
-void ExpressionCreator::dispatch(std::shared_ptr<IfStatement> n) { };
+
+void ExpressionCreator::dispatch(std::shared_ptr<IfStatement> n) {
+  n->expression->accept(shared_from_this());
+  n->ifStatement->accept(shared_from_this());
+};
 
 void ExpressionCreator::dispatch(std::shared_ptr<ExpressionStatement> n) {
   n->expression->accept(shared_from_this());
 };
 
-void ExpressionCreator::dispatch(std::shared_ptr<WhileStatement> n) { };
+void ExpressionCreator::dispatch(std::shared_ptr<WhileStatement> n) {
+  n->expression->accept(shared_from_this());
+  n->statement->accept(shared_from_this());
+};
 
 void ExpressionCreator::dispatch(std::shared_ptr<LocalVariableDeclaration> n) {
 
@@ -70,20 +94,35 @@ void ExpressionCreator::dispatch(std::shared_ptr<LocalVariableDeclaration> n) {
 
 void ExpressionCreator::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) {
   n->expression->accept(shared_from_this());
-  n->assign(n->expression->firm_node);
+  n->setDefinition(n->expression->firm_node);
 };
 
 void ExpressionCreator::dispatch(std::shared_ptr<EmptyStatement> n) { };
-void ExpressionCreator::dispatch(std::shared_ptr<IfElseStatement> n) { };
+
+void ExpressionCreator::dispatch(std::shared_ptr<IfElseStatement> n) {
+  n->expression->accept(shared_from_this());
+  n->ifStatement->accept(shared_from_this());
+  n->elseStatement->accept(shared_from_this());
+};
 
 void ExpressionCreator::dispatch(std::shared_ptr<ReturnStatement> n) {
   n->firm_node = new_Return(get_store(), 0, NULL);
+  
+  ir_graph *g = get_current_ir_graph();
+  ir_node *end = get_irg_end_block(g);
+  add_immBlock_pred(end, n->firm_node);
+  mature_immBlock(get_r_cur_block(g));
 };
 
 void ExpressionCreator::dispatch(std::shared_ptr<ReturnExpressionStatement> n) {
   n->expression->accept(shared_from_this());
   ir_node *results[1] = { n->expression->firm_node };
-  n->firm_node = new_Return(get_store(), 0, results);
+  n->firm_node = new_Return(get_store(), 1, results);
+  
+  ir_graph *g = get_current_ir_graph();
+  ir_node *end = get_irg_end_block(g);
+  add_immBlock_pred(end, n->firm_node);
+  mature_immBlock(get_r_cur_block(g));
 };
 
 void ExpressionCreator::dispatch(std::shared_ptr<MethodInvocation> n) { };
@@ -114,6 +153,9 @@ void ExpressionCreator::dispatch(std::shared_ptr<RelationalExpression> n) {
 };
 
 void ExpressionCreator::dispatch(std::shared_ptr<AdditiveExpression> n) {
+  n->expression1->accept(shared_from_this());
+  n->expression2->accept(shared_from_this());
+  
   if (dynamic_cast<Add*>(n->op.get())) {
     n->firm_node = new_Add(n->expression1->firm_node, n->expression2->firm_node);
     return;
@@ -147,6 +189,8 @@ void ExpressionCreator::dispatch(std::shared_ptr<MultiplicativeExpression> n) {
     ir_node *mem = get_store();
     ir_node* div = new_Mod(mem, n->expression1->firm_node, n->expression2->firm_node, 0); // TODO: what is pin?
     n->firm_node = new_Proj(div, mode_Is, pn_Mod_res);
+    mem = new_Proj(div, mode_M, pn_Mod_M);
+    set_store(mem);
     return;
   }
   

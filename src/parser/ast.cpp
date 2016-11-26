@@ -250,39 +250,6 @@ void NullType::accept(std::shared_ptr<Dispatcher> d) {
 
 
 
-// firm types
-
-ir_type * UserType::getFirmType() {
-  auto d = declaration.lock();
-  assert(d);
-  
-  return d->declared_type;
-}
-
-ir_type * FakeType::getFirmType() {
-  return NULL; // ?
-}
-
-ir_type * TypeBoolean::getFirmType() {
-  static ir_type *int_type = new_type_primitive(mode_Bu);
-  return int_type;
-}
-
-ir_type * TypeInt::getFirmType() {
-  static ir_type *int_type = new_type_primitive(mode_Bu);
-  return int_type;
-}
-
-ir_type * TypeVoid::getFirmType() {
-  return NULL;
-}
-
-ir_type * NullType::getFirmType() {
-  return NULL;
-}
-
-
-
 
 // equals
 
@@ -342,10 +309,6 @@ bool NullType::equals(std::shared_ptr<BasicType> other) {
 
 // misc
 
-void Expression::setDefinition(void* irn) {};
-
-void Expression::assign(ir_node* n) {};
-
 bool Expression::isValidSemanticType() { // Semantic types type expressions, expressions cannot be void
   if (dynamic_cast<TypeVoid*>(type->basicType.get())) {
     return true;
@@ -354,38 +317,223 @@ bool Expression::isValidSemanticType() { // Semantic types type expressions, exp
   }
 }
 
-void CRef::assign(ir_node* irn) {
-  auto ptr = declaration.lock();
-  if (ptr) {
-    ptr->firm_node = irn;
-  }
-}
-
-void Parameter::assign(ir_node* n) {
-  firm_node = n;
-}
-
-void LocalVariableDeclaration::assign(ir_node* n) {
-  firm_node = n;
-}
-
-void LocalVariableExpressionDeclaration::assign(ir_node* n) {
-  firm_node = n;
-}
-
-void Field::assign(ir_node* n) {
-  // store node in ent
-  //        ir_node *addr = new_Address(ent);
-  //        ir_node *st = new_Store(get_store(), addr, n, this->type->firm_type, cons_none);
-  //        ir_node *m = new_Proj(st, mode_M, pn_Store_M);
-  //        set_store(m);
-}
-
-
 
 Type::Type(std::shared_ptr<BasicType> const& basicType, int const& arrayDepth) : basicType(std::move(basicType)), arrayDepth(arrayDepth) {
   // Null with arrayDepth > 0 must not exist
   assert(!dynamic_cast<NullType*>(basicType.get()) || arrayDepth == 0);
 };
+
+
+
+
+
+// assign and setDefinition
+
+void CRef::assign(ir_node* irn) {
+  auto ptr = declaration.lock();
+  assert(ptr);
+  ptr->setDefinition(irn);
+}
+
+// void FieldAccess::assign(ir_node* irn)
+// void ArrayAccess::assign(ir_node* irn)
+
+void Parameter::setDefinition(ir_node* n) {
+  firm_node = n;
+}
+
+void LocalVariableDeclaration::setDefinition(ir_node* n) {
+  firm_node = n;
+}
+
+void LocalVariableExpressionDeclaration::setDefinition(ir_node* n) {
+  firm_node = n;
+}
+
+void Field::setDefinition(ir_node* n) {
+  // store node at address relative to this
+//  ir_node *addr = new_Address(getFirmEntity());
+//  ir_node *st = new_Store(get_store(), addr, n, this->type->getFirmType(), cons_none);
+//  ir_node *m = new_Proj(st, mode_M, pn_Store_M);
+//  set_store(m);
+}
+
+
+
+
+
+
+// firm types and modes
+
+ir_mode * Type::getFirmMode() {
+  ir_mode *elem_mode = basicType->getFirmMode();
+  
+  if (arrayDepth > 0) {
+    return mode_P;
+  }
+  
+  return elem_mode;
+}
+
+ir_type * Type::getFirmType() {
+  ir_type *elem_type = basicType->getFirmType();
+  
+  ir_type *my_type = elem_type;
+  int i = arrayDepth;
+  while (i > 0) {
+    assert(my_type);
+    // i-fache Verschachtelung
+    // Beispiel: int[][][] ist
+    // new_type_array(new_type_array(new_type_array(int_type, 0), 0), 0)
+    my_type = new_type_array(my_type, 0);
+    i--;
+  }
+  
+  return my_type;
+}
+
+ir_type * UserType::getFirmType() {
+  auto d = declaration.lock();
+  assert(d);
+  
+  return new_type_pointer(d->getDeclaredType());
+}
+
+ir_mode * UserType::getFirmMode() {
+  return mode_P;
+}
+
+ir_type * FakeType::getFirmType() {
+  return NULL; // ?
+}
+
+ir_mode * FakeType::getFirmMode() {
+  return NULL; // ?
+}
+
+ir_type * TypeBoolean::getFirmType() {
+  static ir_type *int_type = new_type_primitive(mode_Bu);
+  return int_type;
+}
+
+ir_mode * TypeBoolean::getFirmMode() {
+  return mode_Bu;
+}
+
+ir_type * TypeInt::getFirmType() {
+  static ir_type *int_type = new_type_primitive(mode_Is);
+  return int_type;
+}
+
+ir_mode * TypeInt::getFirmMode() {
+  return mode_Is;
+}
+
+ir_type * TypeVoid::getFirmType() {
+  return NULL;
+}
+
+ir_mode * TypeVoid::getFirmMode() {
+  return NULL; // ?
+}
+
+ir_type * NullType::getFirmType() {
+  return NULL;
+}
+
+ir_mode * NullType::getFirmMode() {
+  return NULL; // ?
+}
+
+
+
+
+ir_type *ClassDeclaration::getDeclaredType() {
+  if (!firm_type) {
+    std::string str = StringTable::lookupIdentifier(ID);
+    firm_type = new_type_class(new_id_from_str(str.c_str()));
+  }
+  
+  return firm_type;
+}
+
+ir_type *Method::getFirmType() {
+  if (!firm_type) {
+    firm_type = new_type_method(parameters.size(), 1, false, cc_cdecl_set, mtp_no_property);
+    set_method_res_type(firm_type, 0, type->getFirmType());
+    
+    int i = 0;
+    for (auto const& p : parameters) {
+      set_method_param_type(firm_type, i++, p->type->getFirmType());
+    }
+  }
+  
+  return firm_type;
+}
+
+ir_entity *Method::getFirmEntity() {
+  if (!firm_entity) {
+    auto clsDecl = classDeclaration.lock();
+    assert(clsDecl);
+    
+    firm_entity = new_entity(clsDecl->getDeclaredType(), new_id_from_str(StringTable::lookupIdentifier(ID).c_str()), getFirmType());
+  }
+  
+  return firm_entity;
+}
+
+ir_graph *Method::getFirmGraph() {
+  if (!firm_graph) {
+    firm_graph = new_ir_graph(getFirmEntity(), 0);
+  }
+  
+  return firm_graph;
+}
+
+
+
+ir_type *MainMethod::getFirmType() {
+  if (!firm_type) {
+    firm_type = new_type_method(0, 0, false, cc_cdecl_set, mtp_no_property);
+  }
+  
+  return firm_type;
+}
+
+ir_entity *MainMethod::getFirmEntity() {
+  if (!firm_entity) {
+    auto clsDecl = classDeclaration.lock();
+    assert(clsDecl);
+    
+    firm_entity = new_entity(clsDecl->getDeclaredType(), new_id_from_str(StringTable::lookupIdentifier(ID).c_str()), getFirmType());
+  }
+  
+  return firm_entity;
+}
+
+ir_graph *MainMethod::getFirmGraph() {
+  if (!firm_graph) {
+    firm_graph = new_ir_graph(getFirmEntity(), 0);
+  }
+  
+  return firm_graph;
+}
+
+
+
+ir_type *Field::getFirmType() {
+  return type->getFirmType();
+}
+
+ir_entity *Field::getFirmEntity() {
+  if (!firm_entity) {
+    auto clsDecl = classDeclaration.lock();
+    assert(clsDecl);
+    
+    firm_entity = new_entity(clsDecl->getDeclaredType(), new_id_from_str(StringTable::lookupIdentifier(ID).c_str()), getFirmType());
+  }
+  
+  return firm_entity;
+}
 
 

@@ -142,9 +142,9 @@ namespace cmpl
   class Node
   {
   public:
-    ir_node* firm_node;
+    ir_node* firm_node = NULL;
     virtual void accept(std::shared_ptr<Dispatcher> d) = 0;
-    virtual void assign(ir_node* n) {};
+    virtual void setDefinition(ir_node* n) {};
   };
   
 /**************** actual nodes ****************/
@@ -153,6 +153,7 @@ namespace cmpl
   public:
     bool virtual equals(std::shared_ptr<BasicType> t) = 0;
     virtual ir_type * getFirmType() = 0;
+    virtual ir_mode * getFirmMode() = 0;
   };
   
   class TypedNode
@@ -185,11 +186,12 @@ namespace cmpl
   public:
     std::shared_ptr<BasicType> basicType;
     int                        arrayDepth;
-    ir_type *firm_type;
   
     Type(std::shared_ptr<BasicType> const& basicType, int const& arrayDepth);
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<Type> t);
+    ir_type *getFirmType();
+    ir_mode *getFirmMode();
   };
   
   // basic types (created in AST)
@@ -201,6 +203,7 @@ namespace cmpl
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<BasicType> t) override;
     virtual ir_type * getFirmType() override;
+    virtual ir_mode * getFirmMode() override;
   };
   
   class TypeBoolean : public BasicType, public std::enable_shared_from_this<TypeBoolean>
@@ -211,6 +214,7 @@ namespace cmpl
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<BasicType> t) override;
     virtual ir_type * getFirmType() override;
+    virtual ir_mode * getFirmMode() override;
   };
   
   class TypeVoid : public BasicType, public std::enable_shared_from_this<TypeVoid>
@@ -221,6 +225,7 @@ namespace cmpl
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<BasicType> t) override;
     virtual ir_type * getFirmType() override;
+    virtual ir_mode * getFirmMode() override;
   };
   
   class FakeType : public BasicType, public std::enable_shared_from_this<FakeType>
@@ -231,6 +236,7 @@ namespace cmpl
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<BasicType> other) override;
     virtual ir_type * getFirmType() override;
+    virtual ir_mode * getFirmMode() override;
   };
   
   class NullType : public BasicType, public std::enable_shared_from_this<NullType>
@@ -240,6 +246,7 @@ namespace cmpl
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<BasicType> other) override;
     virtual ir_type * getFirmType() override;
+    virtual ir_mode * getFirmMode() override;
   };
   
   class UserType : public BasicType, public std::enable_shared_from_this<UserType>
@@ -252,6 +259,7 @@ namespace cmpl
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<BasicType> other) override;
     virtual ir_type * getFirmType() override;
+    virtual ir_mode * getFirmMode() override;
   };
   
   // other nodes
@@ -263,8 +271,7 @@ namespace cmpl
     // necessary to allow NewArray set attributes of TypedNode in its contructor
     Expression(std::shared_ptr<BasicType> basicType, int arrayDepth) : TypedNode(basicType, arrayDepth) { };
     bool isValidSemanticType(); // Semantic types type expressions, expressions cannot be void
-    virtual void setDefinition(void* irn);
-    virtual void assign(ir_node* n);
+    virtual void assign(ir_node* n) {};
   };
 
   class NotEquals : public EqualityOp, public std::enable_shared_from_this<NotEquals>
@@ -586,12 +593,11 @@ namespace cmpl
   {
   public:
     StringIdentifier ID;
-    ir_node* firm_node;
     
     Parameter(std::shared_ptr<Type> type, StringIdentifier ID) :
             TypedNode(type), ID(ID) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
-    void assign(ir_node* n) override;
+    void setDefinition(ir_node* n) override;
   };
   
   
@@ -682,12 +688,11 @@ namespace cmpl
   public:
     StringIdentifier ID;
     bool isLValue = true;
-    ir_node *firm_node;
     
     LocalVariableDeclaration(std::shared_ptr<Type> &type, StringIdentifier &ID) :
                                  TypedNode(type), ID(ID) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
-    void assign(ir_node* n) override;
+    void setDefinition(ir_node* n) override;
   };
   
   class LocalVariableExpressionDeclaration : public BlockStatement, public TypedNode, public std::enable_shared_from_this<LocalVariableExpressionDeclaration>
@@ -695,14 +700,13 @@ namespace cmpl
   public:
     StringIdentifier            ID;
     std::shared_ptr<Expression> expression;
-    ir_node *firm_node;
     // bool isLValue = true; TODO why does this cause errors?
       
     LocalVariableExpressionDeclaration(std::shared_ptr<Type> &type, StringIdentifier &ID,
                                          std::shared_ptr<Expression> &expression) :
                                            TypedNode(type), ID(ID), expression(std::move(expression)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
-    void assign(ir_node* n) override;
+    void setDefinition(ir_node* n) override;
   };
   
   
@@ -711,6 +715,9 @@ namespace cmpl
   
   class Field : public ClassMember, public TypedNode, public std::enable_shared_from_this<Field>
   {
+  private:
+    ir_type *firm_type = NULL;
+    ir_entity *firm_entity = NULL;
     std::weak_ptr<ClassDeclaration> classDeclaration;
   public:
     StringIdentifier ID;
@@ -724,11 +731,17 @@ namespace cmpl
                                                      classDeclaration(clsDecl) { };
     
     void accept(std::shared_ptr<Dispatcher> d) override;
-    void assign(ir_node* n) override;
+    void setDefinition(ir_node* n) override;
+    ir_type *getFirmType();
+    ir_entity *getFirmEntity();
   };
   
   class Method : public ClassMember, public TypedNode, public std::enable_shared_from_this<Method>
   {
+  private:
+    ir_type *firm_type = NULL;
+    ir_entity *firm_entity = NULL;
+    ir_graph *firm_graph = NULL;
     std::weak_ptr<ClassDeclaration> classDeclaration;
   public:
     StringIdentifier                        ID;
@@ -748,11 +761,18 @@ namespace cmpl
                                                       classDeclaration(clsDecl) { };
     
     void accept(std::shared_ptr<Dispatcher> d) override;
+    ir_type *getFirmType();
+    ir_entity *getFirmEntity();
+    ir_graph *getFirmGraph();
   };
   
   /** The MainMethod is a ClassMember and therefore part of a ClassDeclaration. The MainMethod element contains two IDs (Method-identifier and parameter-identifier) and a Block (Representation of the method body) */
   class MainMethod : public ClassMember, public std::enable_shared_from_this<MainMethod>
   {
+  private:
+    ir_type *firm_type = NULL;
+    ir_entity *firm_entity = NULL;
+    ir_graph *firm_graph = NULL;
     std::weak_ptr<ClassDeclaration> classDeclaration;
   public:
     StringIdentifier       ID;
@@ -769,23 +789,29 @@ namespace cmpl
                                                           classDeclaration(clsDecl) { };
     
     void accept(std::shared_ptr<Dispatcher> d) override;
+    ir_type *getFirmType();
+    ir_entity *getFirmEntity();
+    ir_graph *getFirmGraph();
   };
   
 
   /** A ClassDeclaration consists of an ID, which is the identifier for this class and various ClassMembers, like Methods and Fields.  */
   class ClassDeclaration : public Node, public TypedNode, public std::enable_shared_from_this<ClassDeclaration>
   {
+  private:
+    ir_type *firm_type = NULL;
+    
   public:
     StringIdentifier                          ID;
     std::vector<std::shared_ptr<ClassMember>> classMembers;
     std::map<StringIdentifier, std::weak_ptr<Method>> methods;
     std::map<StringIdentifier, std::weak_ptr<Field>> fields;
-    ir_type *declared_type;
     bool returns = false;
       
     ClassDeclaration(StringIdentifier &ID) :
                          ID(ID), TypedNode(std::make_shared<UserType>(ID), 0) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    ir_type *getDeclaredType();
   };
   
   /** Always the first element in the AST. Can contain multiple ClassDeclarations. */	
