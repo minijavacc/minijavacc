@@ -7,7 +7,7 @@
 
 namespace cmpl {
 
-  class ExpressionCreator : public Dispatcher, public std::enable_shared_from_this<ExpressionCreator> {
+  class IRBuilder : public Dispatcher, public std::enable_shared_from_this<IRBuilder> {
   private:
     void error(const std::string &err);
     ir_type *currentType;
@@ -72,10 +72,10 @@ namespace cmpl {
     void dispatch(std::shared_ptr<Minus> n);
   };
   
-  class ExpressionCreatorError : public CreatorError 
+  class IRBuilderError : public CreatorError 
   {
     public:
-      ExpressionCreatorError(const char* err) : CreatorError(err) { }
+      IRBuilderError(const char* err) : CreatorError(err) { }
   };
 
 }
