@@ -1,5 +1,6 @@
 #include "creator.h"
 #include "typecreator.h"
+#include "expressioncreator.h"
 
 using namespace cmpl;
 
@@ -16,8 +17,8 @@ Creator::~Creator()
 void Creator::run()
 {
   // check for missing return paths
-  std::shared_ptr<TypeCreator> tc = std::make_shared<TypeCreator>();
-  ast->accept(tc);
+  std::shared_ptr<ExpressionCreator> c = std::make_shared<ExpressionCreator>();
+  ast->accept(c);
 }
 
 void Creator::dump()
