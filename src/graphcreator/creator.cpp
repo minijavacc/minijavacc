@@ -1,6 +1,7 @@
 #include "creator.h"
 #include "typecreator.h"
 #include "irbuilder.h"
+#include "typecreator.h"
 
 using namespace cmpl;
 
@@ -17,6 +18,9 @@ Creator::~Creator()
 void Creator::run()
 {
   // check for missing return paths
+  std::shared_ptr<TypeCreator> t = std::make_shared<TypeCreator>();
+  ast->accept(t);
+  
   std::shared_ptr<IRBuilder> c = std::make_shared<IRBuilder>();
   ast->accept(c);
 }

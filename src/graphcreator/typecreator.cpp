@@ -10,14 +10,25 @@ inline void TypeCreator::error(const std::string &err)
 }
 
 void TypeCreator::dispatch(std::shared_ptr<Program> n) {
-  ir_type *type = new_type_struct(new_id_from_str("yo"));
-  
-  // saves types in AST -> only one object per type required?
+  for (auto const& d : n->classDeclarations) {
+    d->accept(shared_from_this());
+  }
 };
 
-void TypeCreator::dispatch(std::shared_ptr<ClassDeclaration> n) { };
+void TypeCreator::dispatch(std::shared_ptr<ClassDeclaration> n) {
+  n->getDeclaredType();
+  for (auto const &m : n->classMembers) {
+    m->accept(shared_from_this());
+  }
+};
+
 void TypeCreator::dispatch(std::shared_ptr<MainMethod> n) { };
-void TypeCreator::dispatch(std::shared_ptr<Field> n) { };
+
+void TypeCreator::dispatch(std::shared_ptr<Field> n) {
+  n->getFirmType();
+  n->getFirmEntity();
+};
+
 void TypeCreator::dispatch(std::shared_ptr<Method> n) { };
 void TypeCreator::dispatch(std::shared_ptr<Type> n) { };
 void TypeCreator::dispatch(std::shared_ptr<FakeType> n) { };
