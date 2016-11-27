@@ -597,12 +597,19 @@ namespace cmpl
 
   class StaticLibraryCallExpression : public Expression, public std::enable_shared_from_this<StaticLibraryCallExpression>
   {
-    public:
-      std::shared_ptr<Expression> expression;
-      
-      StaticLibraryCallExpression(std::shared_ptr<Expression> &expression)
-        : Expression(), expression(std::move(expression)) { }; 
-      void accept (std::shared_ptr<Dispatcher> d) override;
+  private:
+    ir_type *firm_type = NULL;
+    ir_entity *firm_entity = NULL;
+    
+  public:
+    ir_type *getFirmType();
+    ir_entity *getFirmEntity();
+    
+    std::shared_ptr<Expression> expression;
+    
+    StaticLibraryCallExpression(std::shared_ptr<Expression> &expression)
+      : Expression(), expression(std::move(expression)) { }; 
+    void accept (std::shared_ptr<Dispatcher> d) override;
   };
   
   class Parameter : public Node, public TypedNode, public std::enable_shared_from_this<Parameter>

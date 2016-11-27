@@ -9,6 +9,8 @@
 #include <assert.h>
 #include <libfirm/firm.h>
 
+#include "types.h"
+
 using namespace cmpl;
   
 
@@ -545,3 +547,21 @@ ir_entity *Field::getFirmEntity() {
 }
 
 
+ir_type *StaticLibraryCallExpression::getFirmType() {
+  if (!firm_type) {
+    firm_type = new_type_method(1, 0, false, cc_cdecl_set, mtp_no_property);
+      set_method_param_type(firm_type, 0, Types::getIntNode()->getFirmType());
+  }
+  
+  return firm_type;
+}
+
+ir_entity *StaticLibraryCallExpression::getFirmEntity() {
+  if (!firm_entity) {
+    firm_entity = new_global_entity(get_glob_type(), new_id_from_str("System::out::println"),
+                                    getFirmType(), ir_visibility_external,
+                                    IR_LINKAGE_DEFAULT);
+  }
+  
+  return firm_entity;
+}
