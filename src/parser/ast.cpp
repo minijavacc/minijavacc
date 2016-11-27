@@ -412,8 +412,12 @@ ir_mode * FakeType::getFirmMode() {
 }
 
 ir_type * TypeBoolean::getFirmType() {
-  static ir_type *int_type = new_type_primitive(mode_Bu);
-  return int_type;
+  static ir_type *boo_type 
+  if(!boo_type)
+  {
+  boo_type=new_type_primitive(mode_Bu);
+  }
+  return boo_type;
 }
 
 ir_mode * TypeBoolean::getFirmMode() {
@@ -421,7 +425,11 @@ ir_mode * TypeBoolean::getFirmMode() {
 }
 
 ir_type * TypeInt::getFirmType() {
-  static ir_type *int_type = new_type_primitive(mode_Is);
+  static ir_type *int_type;
+  if(!int_type)
+  {
+	  int_type= new_type_primitive(mode_Bu);
+  }
   return int_type;
 }
 
