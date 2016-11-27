@@ -513,9 +513,6 @@ ir_entity *MainMethod::getFirmEntity() {
     assert(clsDecl);
     
     firm_entity = new_entity(clsDecl->getDeclaredType(), new_id_from_str(StringTable::lookupIdentifier(ID).c_str()), getFirmType());
-    unsigned clsSize = get_type_size(clsDecl->getDeclaredType());
-    unsigned fieldSize = get_type_size(getFirmType());
-    set_type_size(clsDecl->getDeclaredType(), clsSize + fieldSize);
   }
   
   return firm_entity;
@@ -541,6 +538,9 @@ ir_entity *Field::getFirmEntity() {
     assert(clsDecl);
     
     firm_entity = new_entity(clsDecl->getDeclaredType(), new_id_from_str(StringTable::lookupIdentifier(ID).c_str()), getFirmType());
+    unsigned clsSize = get_type_size(clsDecl->getDeclaredType());
+    unsigned fieldSize = get_type_size(getFirmType());
+    set_type_size(clsDecl->getDeclaredType(), clsSize + fieldSize);
   }
   
   return firm_entity;
