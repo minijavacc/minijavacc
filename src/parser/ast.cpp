@@ -368,7 +368,7 @@ ir_type * Type::getFirmType() {
     // i-fache Verschachtelung
     // Beispiel: int[][][] ist
     // new_type_array(new_type_array(new_type_array(int_type, 0), 0), 0)
-    my_type = new_type_array(my_type, 0);
+    my_type = new_type_pointer(my_type);
     i--;
   }
   
