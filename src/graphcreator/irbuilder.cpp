@@ -2,6 +2,7 @@
 #include <assert.h>
 #include "../stringtable/stringtable.h"
 #include <libfirm/firm.h>
+#include <iostream>
 
 
 using namespace cmpl;
@@ -73,7 +74,8 @@ void IRBuilder::dispatch(std::shared_ptr<MainMethod> n) {
   irg_finalize_cons(g);
 };
 
-void IRBuilder::dispatch(std::shared_ptr<Field> n) { };
+void IRBuilder::dispatch(std::shared_ptr<Field> n) {
+};
 
 void IRBuilder::dispatch(std::shared_ptr<Method> n) {
   ir_graph *g = n->getFirmGraph();
@@ -405,7 +407,23 @@ void IRBuilder::dispatch(std::shared_ptr<CRef> n) {
   auto d = n->declaration.lock();
   assert(d);
   
-  n->firm_node = d->firm_node;
+  if (auto decl = dynamic_cast<Field*>(d.get())) {
+    // is field access
+    ir_graph *g = get_current_ir_graph();
+    ir_node *args = get_irg_args(g);
+    ir_node *this_node = new_Proj(args, mode_P, 0);
+    
+    ir_node *irn = new_Member(this_node, decl->getFirmEntity());
+    ir_node *ld  = new_Load(get_store(), irn, decl->type->getFirmMode(), decl->type->getFirmType(), cons_none);
+    ir_node *m   = new_Proj(ld, mode_M, pn_Load_M);
+    ir_node *res = new_Proj(ld, decl->type->getFirmMode(), pn_Load_res);
+    
+    set_store(m);
+    n->firm_node = res;
+  } else {
+    // is local var access
+    n->firm_node = d->firm_node;
+  }
 };
 
 void IRBuilder::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) {
