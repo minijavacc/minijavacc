@@ -3,6 +3,7 @@
 #include "ast.h"
 #include <libfirm/firm.h>
 #include <stdexcept>
+#include <iostream>
 
 namespace cmpl
 {
@@ -14,7 +15,10 @@ namespace cmpl
     ~Creator();
     
     void run();
+    
     void dump();
+    void createAssembler();
+    int linkToRuntimeLibrary();
     
   private:
     std::shared_ptr<Node> ast;

@@ -154,6 +154,14 @@ int Compiler::creategraph(std::ifstream &file)
     Creator creator(parser.getAST());
     creator.run();
     creator.dump();
+    std::cout << "dumped graph files *.vcg\n";
+    creator.createAssembler();
+    std::cout << "create assembler file a.s\n";
+    
+    if (!creator.linkToRuntimeLibrary())
+    {
+      std::cout << "create executable file a.out\n";
+    }
     
     return 0;
   }

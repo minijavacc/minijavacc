@@ -558,7 +558,7 @@ ir_type *StaticLibraryCallExpression::getFirmType() {
 
 ir_entity *StaticLibraryCallExpression::getFirmEntity() {
   if (!firm_entity) {
-    firm_entity = new_global_entity(get_glob_type(), new_id_from_str("System::out::println"),
+    firm_entity = new_global_entity(get_glob_type(), new_id_from_str("println"),
                                     getFirmType(), ir_visibility_external,
                                     IR_LINKAGE_DEFAULT);
   }
