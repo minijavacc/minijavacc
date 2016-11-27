@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <firm.h>
+#include <assert.h>
 
 
 
@@ -29,6 +30,24 @@ int main(int argc, const char * argv[]) {
   
   
 //  ir_entity *entt = new_entity(get_glob_type(), new_id_from_str("my instance"), cls_t);
+  
+  
+  ir_type *struct_type = new_type_struct(new_id_from_str("new struct"));
+  ir_mode *struct_mode = get_type_mode(struct_type);
+  assert(struct_mode);
+  
+  
+  
+  ir_type *class_type = new_type_class(new_id_from_str("new class"));
+  ir_mode *class_mode = get_type_mode(class_type);
+  assert(class_mode);
+  
+  
+  ir_type *array_type = new_type_array(int_type, 0);
+  ir_mode *array_mode = get_type_mode(array_type);
+  assert(array_mode);
+  
+  
   
   
   
