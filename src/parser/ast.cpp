@@ -396,7 +396,7 @@ ir_type * TypeBoolean::getFirmType() {
   static ir_type *boo_type;
   if(!boo_type)
   {
-  boo_type=new_type_primitive(mode_Bu);
+  boo_type = new_type_primitive(mode_Bu);
   }
   return boo_type;
 }
@@ -409,7 +409,7 @@ ir_type * TypeInt::getFirmType() {
   static ir_type *int_type;
   if(!int_type)
   {
-	  int_type= new_type_primitive(mode_Bu);
+	  int_type = new_type_primitive(mode_Is);
   }
   return int_type;
 }
