@@ -13,26 +13,29 @@ namespace cmpl
    * - each BasicType only exists once, except the UserType, which exists once for each ID
    */
    
-  // singletons for BasicTypes
-  const std::shared_ptr<BasicType> voidBasicNode    = std::make_shared<TypeVoid>();
-  const std::shared_ptr<BasicType> intBasicNode     = std::make_shared<TypeInt>();
-  const std::shared_ptr<BasicType> fakeBasicNode    = std::make_shared<FakeType>();
-  const std::shared_ptr<BasicType> booleanBasicNode = std::make_shared<TypeBoolean>();
-  const std::shared_ptr<BasicType> nullBasicNode    = std::make_shared<NullType>();
+  // all BasicTypes are Singletons! access via <BasicType>::instance
   
   // singletons for simple Types (arrayDepth = 0)
   // not used as singletons yet, only for comparing types
-  const std::shared_ptr<Type> voidNode    = std::make_shared<Type>(voidBasicNode, 0);
-  const std::shared_ptr<Type> intNode     = std::make_shared<Type>(intBasicNode, 0);
-  const std::shared_ptr<Type> fakeType    = std::make_shared<Type>(fakeBasicNode, 0);
-  const std::shared_ptr<Type> booleanNode = std::make_shared<Type>(booleanBasicNode, 0);
-  const std::shared_ptr<Type> nullNode    = std::make_shared<Type>(nullBasicNode, 0);
+  /*
+  std::shared_ptr<Type> voidNode    = std::make_shared<Type>(TypeVoid::instance, 0);
+  std::shared_ptr<Type> intNode     = std::make_shared<Type>(TypeInt::instance, 0);
+  std::shared_ptr<Type> fakeNode    = std::make_shared<Type>(FakeType::instance, 0);
+  std::shared_ptr<Type> booleanNode = std::make_shared<Type>(TypeBoolean::instance, 0);
+  std::shared_ptr<Type> nullNode    = std::make_shared<Type>(NullType::instance, 0);
+  */
   
   class Types
   {
   public: 
+    static std::shared_ptr<Type> getVoidNode();
+    static std::shared_ptr<Type> getIntNode();
+    static std::shared_ptr<Type> getFakeNode();
+    static std::shared_ptr<Type> getBooleanNode();
+    static std::shared_ptr<Type> getNullNode();
+    
     static std::shared_ptr<UserType> getUserTypeBasicNode(StringIdentifier ID);
-  
+    
   private:
     static std::map<StringIdentifier, std::shared_ptr<UserType> > userTypesMap;
   };

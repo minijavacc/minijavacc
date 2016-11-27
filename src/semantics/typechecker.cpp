@@ -73,7 +73,7 @@ void TypeChecker::dispatch(std::shared_ptr<IfStatement> n) {
   n->expression->accept(shared_from_this());
   
   // check if expression is boolean
-  if (!n->expression->type->equals(booleanNode))
+  if (!n->expression->type->equals(Types::getBooleanNode()))
   {
     error("expression in IfElseStatement must be of type boolean", n);
   }
@@ -87,7 +87,7 @@ void TypeChecker::dispatch(std::shared_ptr<WhileStatement> n) {
   n->expression->accept(shared_from_this());
   
   // check if expression is boolean
-  if (!n->expression->type->equals(booleanNode))
+  if (!n->expression->type->equals(Types::getBooleanNode()))
   {
     error("expression in WhileStatement must be of type boolean", n);
   }
@@ -135,7 +135,7 @@ void TypeChecker::dispatch(std::shared_ptr<IfElseStatement> n) {
   n->elseStatement->accept(shared_from_this());
   
   // check if expression is boolean
-  if (!n->expression->type->equals(booleanNode))
+  if (!n->expression->type->equals(Types::getBooleanNode()))
   {
     error("expression in IfElseStatement must be of type boolean", n->expression);
   }
@@ -146,7 +146,7 @@ void TypeChecker::dispatch(std::shared_ptr<ReturnStatement> n) { };
 void TypeChecker::dispatch(std::shared_ptr<ReturnExpressionStatement> n) {
   n->expression->accept(shared_from_this());
     //check first if its a void method, then return EXPR is invalid in java!
-  if(currentMethod->type->equals(voidNode))
+  if(currentMethod->type->equals(Types::getVoidNode()))
   {
     error("void methods can't return an expression", n);
   }
@@ -216,7 +216,7 @@ void TypeChecker::dispatch(std::shared_ptr<ArrayAccess> n) {
   
   n->expression->accept(shared_from_this());
   
-  if (!n->expression->type->equals(intNode))
+  if (!n->expression->type->equals(Types::getIntNode()))
   {
     error("array index in ArrayAccess must be integer", n);
   }
@@ -286,12 +286,12 @@ void TypeChecker::dispatch(std::shared_ptr<LogicalOrExpression> n) {
   n->expression1->accept(shared_from_this());
   n->expression2->accept(shared_from_this());
   
-  if (!n->expression1->type->equals(booleanNode) ||
-      !n->expression2->type->equals(booleanNode)) {
+  if (!n->expression1->type->equals(Types::getBooleanNode()) ||
+      !n->expression2->type->equals(Types::getBooleanNode())) {
     error("type mismatch in Or expression", n);
   }
   
-  n->type = booleanNode;
+  n->type = Types::getBooleanNode();
 };
 
 void TypeChecker::dispatch(std::shared_ptr<LogicalAndExpression> n) {
@@ -301,12 +301,12 @@ void TypeChecker::dispatch(std::shared_ptr<LogicalAndExpression> n) {
   assert(n->expression1->type != nullptr);
   assert(n->expression2->type != nullptr);
   
-  if (!n->expression1->type->equals(booleanNode) ||
-      !n->expression2->type->equals(booleanNode)) {
+  if (!n->expression1->type->equals(Types::getBooleanNode()) ||
+      !n->expression2->type->equals(Types::getBooleanNode())) {
     error("type mismatch in And expression", n);
   }
   
-  n->type = booleanNode;
+  n->type = Types::getBooleanNode();
 };
 
 void TypeChecker::dispatch(std::shared_ptr<EqualityExpression> n) {
@@ -339,7 +339,7 @@ void TypeChecker::dispatch(std::shared_ptr<EqualityExpression> n) {
     error("type mismatch in EqualityExpression", n);
   }
   
-  n->type = booleanNode;
+  n->type = Types::getBooleanNode();
   return;
 };
 
@@ -347,36 +347,36 @@ void TypeChecker::dispatch(std::shared_ptr<RelationalExpression> n) {
   n->expression1->accept(shared_from_this());
   n->expression2->accept(shared_from_this());
   
-  if (!n->expression1->type->equals(intNode) ||
-      !n->expression2->type->equals(intNode)) {
+  if (!n->expression1->type->equals(Types::getIntNode()) ||
+      !n->expression2->type->equals(Types::getIntNode())) {
     error("type mismatch in relational expression", n);
   }
   
-  n->type = booleanNode;
+  n->type = Types::getBooleanNode();
 };
 
 void TypeChecker::dispatch(std::shared_ptr<AdditiveExpression> n) {
   n->expression1->accept(shared_from_this());
   n->expression2->accept(shared_from_this());
   
-  if (!n->expression1->type->equals(intNode) ||
-      !n->expression2->type->equals(intNode)) {
+  if (!n->expression1->type->equals(Types::getIntNode()) ||
+      !n->expression2->type->equals(Types::getIntNode())) {
     error("type mismatch in additive expression", n);
   }
   
-  n->type = intNode;
+  n->type = Types::getIntNode();
 };
 
 void TypeChecker::dispatch(std::shared_ptr<MultiplicativeExpression> n) {
   n->expression1->accept(shared_from_this());
   n->expression2->accept(shared_from_this());
   
-  if (!n->expression1->type->equals(intNode) ||
-      !n->expression2->type->equals(intNode)) {
+  if (!n->expression1->type->equals(Types::getIntNode()) ||
+      !n->expression2->type->equals(Types::getIntNode())) {
     error("type mismatch in multiplicative expression", n);
   }
   
-  n->type = intNode;
+  n->type = Types::getIntNode();
 };
 
 void TypeChecker::dispatch(std::shared_ptr<CallExpression> n) {
@@ -425,7 +425,7 @@ void TypeChecker::dispatch(std::shared_ptr<UnaryRightExpression> n) {
 };
 
 void TypeChecker::dispatch(std::shared_ptr<CNull> n) {
-  n->type = nullNode;
+  n->type = Types::getNullNode();
 };
 
 void TypeChecker::dispatch(std::shared_ptr<CThis> n) {
@@ -445,11 +445,11 @@ void TypeChecker::dispatch(std::shared_ptr<CThis> n) {
 };
 
 void TypeChecker::dispatch(std::shared_ptr<CTrue> n) {
-  n->type = booleanNode;
+  n->type = Types::getBooleanNode();
 };
 
 void TypeChecker::dispatch(std::shared_ptr<CFalse> n) {
-  n->type = booleanNode;
+  n->type = Types::getBooleanNode();
 };
 
 void TypeChecker::dispatch(std::shared_ptr<CRef> n) {
@@ -484,7 +484,7 @@ void TypeChecker::dispatch(std::shared_ptr<CIntegerLiteral> n) {
     error("CIntegerLiteral can't be converted to 32bit integer", n);
   }
   
-  n->type = intNode;
+  n->type = Types::getIntNode();
 };
 
 void TypeChecker::dispatch(std::shared_ptr<NewObject> n) {
@@ -501,12 +501,12 @@ void TypeChecker::dispatch(std::shared_ptr<NewArray> n) {
   n->expression->accept(shared_from_this());
   // type already set by parser
   
-  if (n->type->basicType->equals(voidNode->basicType))
+  if (n->type->basicType->equals(Types::getVoidNode()->basicType))
   {
     error("creation of void array not allowed", n);
   }
   
-  if (!n->expression->type->equals(intNode))
+  if (!n->expression->type->equals(Types::getIntNode()))
   {
     error("array size in NewArray must be integer", n);
   }
@@ -515,12 +515,12 @@ void TypeChecker::dispatch(std::shared_ptr<NewArray> n) {
 void TypeChecker::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) {
   n->expression->accept(shared_from_this());
   
-  if (!n->expression->type->equals(intNode))
+  if (!n->expression->type->equals(Types::getIntNode()))
   {
     error("library call parameter must be integer", n);
   }
   
-  n->type = voidNode;
+  n->type = Types::getVoidNode();
 };
 
 
@@ -537,10 +537,10 @@ void TypeChecker::dispatch(std::shared_ptr<Divide> n) { };
 void TypeChecker::dispatch(std::shared_ptr<Modulo> n) { };
 
 void TypeChecker::dispatch(std::shared_ptr<Negate> n) {
-  n->type = booleanNode;
+  n->type = Types::getBooleanNode();
 };
 
 void TypeChecker::dispatch(std::shared_ptr<Minus> n) {
   // expression must be int
-  n->type = intNode;
+  n->type = Types::getIntNode();
 };

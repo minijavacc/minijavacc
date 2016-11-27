@@ -14,7 +14,7 @@ inline void VoidTypeChecker::error(const std::string &err, const std::shared_ptr
 }
 
 inline void VoidTypeChecker::assureNotVoid(const std::shared_ptr<Type> &type) {
-  if(type->basicType->equals(voidBasicNode)) {
+  if(type->basicType->equals(TypeVoid::instance)) {
     error("Only methods can be of type void.");
   }
 }
@@ -46,7 +46,7 @@ void VoidTypeChecker::dispatch(std::shared_ptr<Block> n) {
 void VoidTypeChecker::dispatch(std::shared_ptr<Method> n) {
   // only place where void is allowed is as method type
   // assure no weird things like void[]
-  if(n->type->basicType->equals(voidBasicNode) && n->type->arrayDepth>0) {
+  if(n->type->basicType->equals(TypeVoid::instance) && n->type->arrayDepth>0) {
     error("A void array? Seriously? Not even telling you where it is.");
   }
   

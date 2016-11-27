@@ -230,13 +230,13 @@ std::shared_ptr<BasicType> Parser::parseBasicType()
 {
   if(isCurrentTokenOSKTokenOfType(T_K_BOOLEAN)) {
     nextToken();
-    return booleanBasicNode;
+    return TypeBoolean::instance;
   } else if(isCurrentTokenOSKTokenOfType(T_K_INT)) {
     nextToken();
-    return intBasicNode;
+    return TypeInt::instance;
   } else if(isCurrentTokenOSKTokenOfType(T_K_VOID)) {
     nextToken();
-    return voidBasicNode;
+    return TypeVoid::instance;
   } else {
     StringIdentifier ID = getIdentifierFromCurrent();
     nextToken();

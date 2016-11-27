@@ -28,7 +28,7 @@ void ReturnChecker::dispatch(std::shared_ptr<Field> n) { };
  a) method has type void and no return statement
  b) method has other type and the method returns on all paths */
 void ReturnChecker::dispatch(std::shared_ptr<Method> n) {
-  currentMethodIsVoid = n->type->equals(voidNode);
+  currentMethodIsVoid = n->type->equals(Types::getVoidNode());
   
   n->block->accept(shared_from_this());
   

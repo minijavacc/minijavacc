@@ -259,12 +259,20 @@ bool Type::equals(std::shared_ptr<Type> t) {
   
   return shared_from_this()->arrayDepth == t->arrayDepth && shared_from_this()->basicType->equals(t->basicType);
 }
+
 /*
 bool BasicType::equals(std::shared_ptr<BasicType> t)
 {
   return (this == t.get());
 }
 */
+
+const std::shared_ptr<TypeInt> TypeInt::instance = std::shared_ptr<TypeInt>(new TypeInt());
+const std::shared_ptr<TypeBoolean> TypeBoolean::instance = std::shared_ptr<TypeBoolean>(new TypeBoolean());
+const std::shared_ptr<TypeVoid> TypeVoid::instance = std::shared_ptr<TypeVoid>(new TypeVoid());
+const std::shared_ptr<FakeType> FakeType::instance = std::shared_ptr<FakeType>(new FakeType());
+const std::shared_ptr<NullType> NullType::instance = std::shared_ptr<NullType>(new NullType());
+
 
 bool TypeInt::equals(std::shared_ptr<BasicType> t) {
   if (dynamic_cast<TypeInt*>(t.get())) {
@@ -289,7 +297,6 @@ bool TypeVoid::equals(std::shared_ptr<BasicType> t) {
     return false;
   }
 }
-
 
 void FakeType::accept(std::shared_ptr<Dispatcher> d) {
   d->dispatch(shared_from_this());
@@ -326,8 +333,9 @@ bool Expression::isValidSemanticType() { // Semantic types type expressions, exp
 }
 
 
-Type::Type(std::shared_ptr<BasicType> const& basicType, int const& arrayDepth) : basicType(std::move(basicType)), arrayDepth(arrayDepth) {
+Type::Type(std::shared_ptr<BasicType> const& basicType, int const& arrayDepth) : basicType(basicType), arrayDepth(arrayDepth) {
   // Null with arrayDepth > 0 must not exist
+  assert(basicType != nullptr);
   assert(!dynamic_cast<NullType*>(basicType.get()) || arrayDepth == 0);
 };
 

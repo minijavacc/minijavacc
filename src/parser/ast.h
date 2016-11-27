@@ -199,54 +199,71 @@ namespace cmpl
   class TypeInt : public BasicType, public std::enable_shared_from_this<TypeInt>
   {
   public:
-    TypeInt() { };
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<BasicType> t) override;
     virtual ir_type * getFirmType() override;
     virtual ir_mode * getFirmMode() override;
+    
+    static const std::shared_ptr<TypeInt> instance;
+    
+  private:
+    TypeInt() { };
   };
   
   class TypeBoolean : public BasicType, public std::enable_shared_from_this<TypeBoolean>
   {
   public:
-    TypeBoolean() { };
-
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<BasicType> t) override;
     virtual ir_type * getFirmType() override;
     virtual ir_mode * getFirmMode() override;
+    
+    static const std::shared_ptr<TypeBoolean> instance;
+    
+  private:
+    TypeBoolean() { };
   };
   
   class TypeVoid : public BasicType, public std::enable_shared_from_this<TypeVoid>
   {
   public:
-    TypeVoid() { };
-    
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<BasicType> t) override;
     virtual ir_type * getFirmType() override;
     virtual ir_mode * getFirmMode() override;
+    
+    static const std::shared_ptr<TypeVoid> instance;
+    
+  private:
+    TypeVoid() { };
   };
   
   class FakeType : public BasicType, public std::enable_shared_from_this<FakeType>
   {
   public:
-    FakeType() { }
-      
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<BasicType> other) override;
     virtual ir_type * getFirmType() override;
     virtual ir_mode * getFirmMode() override;
+    
+    static const std::shared_ptr<FakeType> instance;
+    
+  private:
+    FakeType() { };
   };
   
   class NullType : public BasicType, public std::enable_shared_from_this<NullType>
   {
   public:
-    NullType() { }
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<BasicType> other) override;
     virtual ir_type * getFirmType() override;
     virtual ir_mode * getFirmMode() override;
+    
+    static const std::shared_ptr<NullType> instance;
+    
+  private:
+    NullType() { };
   };
   
   class UserType : public BasicType, public std::enable_shared_from_this<UserType>
