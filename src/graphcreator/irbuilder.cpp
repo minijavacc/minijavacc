@@ -382,7 +382,26 @@ void IRBuilder::dispatch(std::shared_ptr<CRef> n) {
   n->firm_node = d->firm_node;
 };
 
-
+void IRBuilder::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) {
+  ir_entity *meth = n->getFirmEntity();
+  
+  // println() only has one argument (no this-pointer!)
+  ir_node *addr = new_Address(meth);
+  ir_node *args[1];
+  
+  n->expression->accept(shared_from_this());
+  args[0] = n->expression->firm_node;
+  
+  ir_node *call = new_Call(get_store(), addr, 1, args, n->getFirmType());
+  ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
+  ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
+  //ir_node *res = new_Proj(tres, Types::->getFirmMode(), 0);
+  
+  set_store(mem);
+  
+  // returntype is void... what do do?
+  n->firm_node = nullptr;
+};
 
 
 
@@ -403,7 +422,6 @@ void IRBuilder::dispatch(std::shared_ptr<CNull> n) { };
 void IRBuilder::dispatch(std::shared_ptr<CThis> n) { };
 void IRBuilder::dispatch(std::shared_ptr<CTrue> n) { };
 void IRBuilder::dispatch(std::shared_ptr<CFalse> n) { };
-void IRBuilder::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) { };
 void IRBuilder::dispatch(std::shared_ptr<Add> n) { };
 void IRBuilder::dispatch(std::shared_ptr<Subtract> n) { };
 void IRBuilder::dispatch(std::shared_ptr<Multiply> n) { };
