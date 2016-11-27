@@ -448,9 +448,17 @@ ir_type *ClassDeclaration::getDeclaredType() {
 
 ir_type *Method::getFirmType() {
   if (!firm_type) {
+    int nret = 1;
+    if (dynamic_cast<TypeVoid*>(this->type->basicType.get())) {
+      nret = 0;
+    }
+    
     // + 1 for this pointer
-    firm_type = new_type_method(parameters.size() + 1, 1, false, cc_cdecl_set, mtp_no_property);
-    set_method_res_type(firm_type, 0, type->getFirmType());
+    firm_type = new_type_method(parameters.size() + 1, nret, false, cc_cdecl_set, mtp_no_property);
+    
+    if (nret > 0) {
+      set_method_res_type(firm_type, 0, type->getFirmType());
+    }
     
     // Set this type
     auto cls = classDeclaration.lock();
