@@ -144,7 +144,6 @@ namespace cmpl
   public:
     ir_node* firm_node = NULL;
     virtual void accept(std::shared_ptr<Dispatcher> d) = 0;
-    virtual void setDefinition(ir_node* n) {};
   };
   
 /**************** actual nodes ****************/
@@ -288,7 +287,6 @@ namespace cmpl
     // necessary to allow NewArray set attributes of TypedNode in its contructor
     Expression(std::shared_ptr<BasicType> basicType, int arrayDepth) : TypedNode(basicType, arrayDepth) { };
     bool isValidSemanticType(); // Semantic types type expressions, expressions cannot be void
-    virtual void assign(ir_node* n) {};
   };
 
   class NotEquals : public EqualityOp, public std::enable_shared_from_this<NotEquals>
@@ -387,6 +385,7 @@ namespace cmpl
   public:
     StringIdentifier                         ID;
     std::vector<std::shared_ptr<Expression>> arguments;
+    std::weak_ptr<Method> declaration;
       
     MethodInvocation(StringIdentifier &ID, std::vector<std::shared_ptr<Expression>> &arguments) :
                          ID(ID), arguments(std::move(arguments)) { };
@@ -397,6 +396,7 @@ namespace cmpl
   {
   public:
     StringIdentifier ID;
+    std::weak_ptr<Field> declaration;
       
     FieldAccess(StringIdentifier &ID) : ID(ID) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
@@ -574,7 +574,6 @@ namespace cmpl
     
     CRef(StringIdentifier &ID) : ID(ID) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
-    void assign(ir_node* irn) override;
   };
   
   class NewObject : public Expression, public std::enable_shared_from_this<NewObject>
@@ -614,7 +613,6 @@ namespace cmpl
     Parameter(std::shared_ptr<Type> type, StringIdentifier ID) :
             TypedNode(type), ID(ID) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
-    void setDefinition(ir_node* n) override;
   };
   
   
@@ -709,7 +707,6 @@ namespace cmpl
     LocalVariableDeclaration(std::shared_ptr<Type> &type, StringIdentifier &ID) :
                                  TypedNode(type), ID(ID) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
-    void setDefinition(ir_node* n) override;
   };
   
   class LocalVariableExpressionDeclaration : public BlockStatement, public TypedNode, public std::enable_shared_from_this<LocalVariableExpressionDeclaration>
@@ -723,7 +720,6 @@ namespace cmpl
                                          std::shared_ptr<Expression> &expression) :
                                            TypedNode(type), ID(ID), expression(std::move(expression)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
-    void setDefinition(ir_node* n) override;
   };
   
   
@@ -748,7 +744,6 @@ namespace cmpl
                                                      classDeclaration(clsDecl) { };
     
     void accept(std::shared_ptr<Dispatcher> d) override;
-    void setDefinition(ir_node* n) override;
     ir_type *getFirmType();
     ir_entity *getFirmEntity();
   };
@@ -766,6 +761,7 @@ namespace cmpl
     std::vector<std::shared_ptr<Node>>      localVariables;
     std::shared_ptr<Block>                  block;
     std::map<StringIdentifier, std::weak_ptr<Parameter>> parameterMap;
+    ir_node *this_node;
       
     Method(std::shared_ptr<Type> &type,
            StringIdentifier &ID,

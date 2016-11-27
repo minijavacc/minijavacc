@@ -343,41 +343,6 @@ Type::Type(std::shared_ptr<BasicType> const& basicType, int const& arrayDepth) :
 
 
 
-// assign and setDefinition
-
-void CRef::assign(ir_node* irn) {
-  auto ptr = declaration.lock();
-  assert(ptr);
-  ptr->setDefinition(irn);
-}
-
-// void FieldAccess::assign(ir_node* irn)
-// void ArrayAccess::assign(ir_node* irn)
-
-void Parameter::setDefinition(ir_node* n) {
-  firm_node = n;
-}
-
-void LocalVariableDeclaration::setDefinition(ir_node* n) {
-  firm_node = n;
-}
-
-void LocalVariableExpressionDeclaration::setDefinition(ir_node* n) {
-  firm_node = n;
-}
-
-void Field::setDefinition(ir_node* n) {
-  // store node at address relative to this
-//  ir_node *addr = new_Address(getFirmEntity());
-//  ir_node *st = new_Store(get_store(), addr, n, this->type->getFirmType(), cons_none);
-//  ir_node *m = new_Proj(st, mode_M, pn_Store_M);
-//  set_store(m);
-}
-
-
-
-
-
 
 // firm types and modes
 
@@ -483,10 +448,18 @@ ir_type *ClassDeclaration::getDeclaredType() {
 
 ir_type *Method::getFirmType() {
   if (!firm_type) {
-    firm_type = new_type_method(parameters.size(), 1, false, cc_cdecl_set, mtp_no_property);
+    // + 1 for this pointer
+    firm_type = new_type_method(parameters.size() + 1, 1, false, cc_cdecl_set, mtp_no_property);
     set_method_res_type(firm_type, 0, type->getFirmType());
     
-    int i = 0;
+    // Set this type
+    auto cls = classDeclaration.lock();
+    assert(cls);
+    ir_type *t = new_type_pointer(cls->getDeclaredType());
+    set_method_param_type(firm_type, 0, t);
+    
+    // Set parameter types
+    int i = 1;
     for (auto const& p : parameters) {
       set_method_param_type(firm_type, i++, p->type->getFirmType());
     }
@@ -530,6 +503,9 @@ ir_entity *MainMethod::getFirmEntity() {
     assert(clsDecl);
     
     firm_entity = new_entity(clsDecl->getDeclaredType(), new_id_from_str(StringTable::lookupIdentifier(ID).c_str()), getFirmType());
+    unsigned clsSize = get_type_size(clsDecl->getDeclaredType());
+    unsigned fieldSize = get_type_size(getFirmType());
+    set_type_size(clsDecl->getDeclaredType(), clsSize + fieldSize);
   }
   
   return firm_entity;

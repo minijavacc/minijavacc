@@ -10,8 +10,9 @@ namespace cmpl {
   class IRBuilder : public Dispatcher, public std::enable_shared_from_this<IRBuilder> {
   private:
     void error(const std::string &err);
-    ir_type *currentType;
-  public:   
+    ir_node *callCallocNode(ir_node *num, ir_type *result_type);
+    std::shared_ptr<Expression> currentExpression;
+  public:
     void dispatch(std::shared_ptr<Type> n);
     void dispatch(std::shared_ptr<FakeType> n);
     void dispatch(std::shared_ptr<NullType> n);

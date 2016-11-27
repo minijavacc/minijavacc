@@ -249,6 +249,8 @@ void TypeChecker::dispatch(std::shared_ptr<FieldAccess> n) {
   
   n->type = fieldDecl->type;
   
+  n->declaration = fieldDecl;
+  
   // REVIEW: is every field access an LValue?
   n->isLValue = true;
 };
