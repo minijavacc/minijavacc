@@ -259,6 +259,12 @@ bool Type::equals(std::shared_ptr<Type> t) {
   
   return shared_from_this()->arrayDepth == t->arrayDepth && shared_from_this()->basicType->equals(t->basicType);
 }
+/*
+bool BasicType::equals(std::shared_ptr<BasicType> t)
+{
+  return (this == t.get());
+}
+*/
 
 bool TypeInt::equals(std::shared_ptr<BasicType> t) {
   if (dynamic_cast<TypeInt*>(t.get())) {
@@ -284,9 +290,11 @@ bool TypeVoid::equals(std::shared_ptr<BasicType> t) {
   }
 }
 
+
 void FakeType::accept(std::shared_ptr<Dispatcher> d) {
   d->dispatch(shared_from_this());
 }
+
 
 bool FakeType::equals(std::shared_ptr<BasicType> other) {
   return false;
@@ -412,7 +420,7 @@ ir_mode * FakeType::getFirmMode() {
 }
 
 ir_type * TypeBoolean::getFirmType() {
-  static ir_type *boo_type 
+  static ir_type *boo_type;
   if(!boo_type)
   {
   boo_type=new_type_primitive(mode_Bu);

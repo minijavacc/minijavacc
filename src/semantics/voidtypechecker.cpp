@@ -1,5 +1,5 @@
 #include "voidtypechecker.h"
-#include "singleton.h"
+#include "types.h"
 
 using namespace cmpl;
 

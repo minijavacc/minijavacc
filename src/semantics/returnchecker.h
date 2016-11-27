@@ -14,7 +14,6 @@ namespace cmpl {
 
   class ReturnChecker : public Dispatcher, public std::enable_shared_from_this<ReturnChecker> {
   private:
-    const std::shared_ptr<Type> voidNode = std::make_shared<Type>(std::make_shared<TypeVoid>(), 0);
     bool currentMethodIsVoid = false;
     void error(const std::string &err);
   public:

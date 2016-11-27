@@ -3,7 +3,7 @@
 #include "../stringtable/stringtable.h"
 
 #include <iostream>
-#include "singleton.h"
+#include "types.h"
 
 using namespace cmpl;
 

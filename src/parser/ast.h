@@ -260,7 +260,7 @@ namespace cmpl
     bool equals(std::shared_ptr<BasicType> other) override;
     virtual ir_type * getFirmType() override;
     virtual ir_mode * getFirmMode() override;
-  };
+};
   
   // other nodes
   

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "types.h"
 #include "lexer.h"
 #include "ast.h"
 #include "stringtable.h"
