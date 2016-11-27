@@ -23,16 +23,16 @@ ir_node *IRBuilder::callCallocNode(ir_node *num, ir_type *result_type) {
   if (!calloc_ent) {
     calloc_type = new_type_method(2, 1, false, cc_cdecl_set, mtp_no_property);
     set_method_res_type(calloc_type, 0, result_type);
-    set_method_param_type(calloc_type, 0, new_type_primitive(mode_Iu));
-    set_method_param_type(calloc_type, 1, new_type_primitive(mode_Iu));
+    set_method_param_type(calloc_type, 0, new_type_primitive(mode_Is));
+    set_method_param_type(calloc_type, 1, new_type_primitive(mode_Is));
     calloc_ent = new_entity(get_glob_type(), new_id_from_str("calloc"), calloc_type);
     set_entity_visibility(calloc_ent, ir_visibility_external);
   }
   
   ir_node *addr = new_Address(calloc_ent);
-  ir_type *clsType = get_pointer_points_to_type(result_type);
-  int s = get_type_size(clsType);
-  ir_node *size_node = new_Const(new_tarval_from_long(s, mode_Iu));
+  ir_type *elem_type = get_pointer_points_to_type(result_type);
+  int s = get_type_size(elem_type);
+  ir_node *size_node = new_Const(new_tarval_from_long(s, mode_Is));
   ir_node *results1[2] = { num, size_node };
   ir_node *call = new_Call(get_store(), addr, 2, results1, calloc_type);
   
@@ -367,7 +367,7 @@ void IRBuilder::dispatch(std::shared_ptr<CallExpression> n) {
 };
 
 void IRBuilder::dispatch(std::shared_ptr<NewObject> n) {
-  ir_node *num = new_Const(new_tarval_from_long(1, mode_Iu));
+  ir_node *num = new_Const(new_tarval_from_long(1, mode_Is));
   ir_node *call = callCallocNode(num, n->type->getFirmType());
   ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
   ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
@@ -378,6 +378,16 @@ void IRBuilder::dispatch(std::shared_ptr<NewObject> n) {
 };
 
 void IRBuilder::dispatch(std::shared_ptr<NewArray> n) {
+  n->expression->accept(shared_from_this());
+  
+  ir_node *num = n->expression->firm_node;
+  ir_node *call = callCallocNode(num, n->type->getFirmType());
+  ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
+  ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
+  ir_node *res = new_Proj(tres, mode_P, 0);
+  
+  set_store(mem);
+  n->firm_node = res;
 };
 
 
