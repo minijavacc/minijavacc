@@ -4,7 +4,7 @@
 BASEDIR=$(dirname "$(readlink -f "$0")")
 
 # run cmake
-(cd "${BASEDIR}" && cmake "${BASEDIR}")
+(cd "${BASEDIR}" && cmake "${BASEDIR}" -DCMAKE_BUILD_TYPE=Release)
 ret=$?
 if [ $ret -ne 0 ]; then
   exit 1
