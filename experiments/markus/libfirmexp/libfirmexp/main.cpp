@@ -32,20 +32,39 @@ int main(int argc, const char * argv[]) {
 //  ir_entity *entt = new_entity(get_glob_type(), new_id_from_str("my instance"), cls_t);
   
   
-  ir_type *struct_type = new_type_struct(new_id_from_str("new struct"));
-  ir_mode *struct_mode = get_type_mode(struct_type);
-  assert(struct_mode);
   
   
+  // new simple method
+  // -----------------
   
-  ir_type *class_type = new_type_class(new_id_from_str("new class"));
-  ir_mode *class_mode = get_type_mode(class_type);
-  assert(class_mode);
-  
-  
+  ir_type *t = new_type_method(1, 0, false, cc_cdecl_set, mtp_no_property);
   ir_type *array_type = new_type_array(int_type, 0);
+  set_method_param_type(t, 0, new_type_pointer(array_type));
+//  set_method_res_type(t, 0, NULL);
+  ir_entity *ent = new_entity(get_glob_type(), new_id_from_str("james"), t);
+  
+  ir_graph *g = new_ir_graph(ent, 0);
+  set_current_ir_graph(g);
+  
+  
+  
+//  ir_type *struct_type = new_type_struct(new_id_from_str("new struct"));
+//  ir_mode *struct_mode = get_type_mode(struct_type);
+//  assert(struct_mode);
+//  
+//  
+//  
+//  ir_type *class_type = new_type_class(new_id_from_str("new class"));
+//  ir_mode *class_mode = get_type_mode(class_type);
+//  assert(class_mode);
+  
+  
+  ir_node *args = get_irg_args(g);
   ir_mode *array_mode = get_type_mode(array_type);
-  assert(array_mode);
+//  assert(array_mode);
+  
+  
+  ir_node *proj_array = new_Proj(args, mode_P, 0);
   
   
   
@@ -60,13 +79,6 @@ int main(int argc, const char * argv[]) {
   
   
   
-  // new simple method
-  // -----------------
-  
-  ir_type *t = new_type_method(1, 0, false, cc_cdecl_set, mtp_no_property);
-  set_method_param_type(t, 0, new_type_primitive(int_mode));
-//  set_method_res_type(t, 0, NULL);
-  ir_entity *ent = new_entity(get_glob_type(), new_id_from_str("james"), t);
   
   
   ir_graph *fun_graph = new_ir_graph(ent, 1); // create a new graph
@@ -77,7 +89,7 @@ int main(int argc, const char * argv[]) {
   // set the start block to be the current block
   set_r_cur_block(fun_graph, get_irg_start_block(fun_graph));
   // get a reference to the arguments node
-  ir_node *args = get_irg_args(fun_graph);
+  args = get_irg_args(fun_graph);
   
   ir_node *proj = new_Proj(args, int_mode, 0);
   
