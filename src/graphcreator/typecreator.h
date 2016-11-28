@@ -1,24 +1,16 @@
-/*
- * Return Checker
- * - checks whether every execution path contains a return statement
- * - main-method doesn't need to have a return statement
- * - checks only the presence of the return statement, not the type!
- */
-
 #pragma once
 
-#include "../parser/ast.h"
-#include "checker.h"
+#include "ast.h"
+#include "creator.h"
+
+#include <libfirm/firm.h>
 
 namespace cmpl {
 
-  class ReturnChecker : public Dispatcher, public std::enable_shared_from_this<ReturnChecker> {
+  class TypeCreator : public Dispatcher, public std::enable_shared_from_this<TypeCreator> {
   private:
-    bool currentMethodIsVoid = false;
     void error(const std::string &err);
-  public:
-    bool valid = false;
-    
+  public:   
     void dispatch(std::shared_ptr<Type> n);
     void dispatch(std::shared_ptr<FakeType> n);
     void dispatch(std::shared_ptr<NullType> n);
@@ -79,10 +71,10 @@ namespace cmpl {
     void dispatch(std::shared_ptr<Minus> n);
   };
   
-  class MissingReturnPathError : public SemanticError
+  class TypeCreatorError : public CreatorError 
   {
     public:
-      MissingReturnPathError(const char* err) : SemanticError(err) { }
+      TypeCreatorError(const char* err) : CreatorError(err) { }
   };
 
 }

@@ -18,8 +18,11 @@ namespace cmpl {
   public:
     int mainMethods=0;
     std::shared_ptr<MainMethod> currentMainMethod;
+    std::shared_ptr<ClassDeclaration> currentClassDeclaration;
     
     void dispatch(std::shared_ptr<Type> n);
+    void dispatch(std::shared_ptr<FakeType> n);
+    void dispatch(std::shared_ptr<NullType> n);
     void dispatch(std::shared_ptr<UserType> n);
     void dispatch(std::shared_ptr<TypeInt> n);
     void dispatch(std::shared_ptr<TypeBoolean> n);
@@ -61,6 +64,7 @@ namespace cmpl {
     void dispatch(std::shared_ptr<CIntegerLiteral> n);
     void dispatch(std::shared_ptr<NewObject> n);
     void dispatch(std::shared_ptr<NewArray> n);
+    void dispatch(std::shared_ptr<StaticLibraryCallExpression> n);
     void dispatch(std::shared_ptr<Equals> n);
     void dispatch(std::shared_ptr<NotEquals> n);
     void dispatch(std::shared_ptr<LessThan> n);

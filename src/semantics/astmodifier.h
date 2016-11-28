@@ -9,20 +9,34 @@
 
 namespace cmpl {
 
-  class SysOutPrintChecker : public Dispatcher, public std::enable_shared_from_this<SysOutPrintChecker> {
+  class AstModifier : public Dispatcher, public std::enable_shared_from_this<AstModifier> {
   private:
     void error(const std::string &err);
-    std::shared_ptr<Expression> tmpExpression; // used in UnaryRightExpression
+    std::shared_ptr<Expression> convertToStaticLibraryCallExpressionNode();
+    std::shared_ptr<Expression> converToCIntegerLiteralWithoutNegate();
     
+    std::shared_ptr<Expression> tmpExpression; // used in UnaryRightExpression
+    std::shared_ptr<ClassDeclaration> currentClassDeclaration;
+    std::shared_ptr<Method> currentMethod;
+    std::shared_ptr<MainMethod> mainMethod;
+    
+    // needed for System.out.println
     std::shared_ptr<Expression> cRefSystem;
     std::shared_ptr<Expression> exprSystemOut;
     std::shared_ptr<UnaryOp> fieldAccessOut;
     std::shared_ptr<UnaryOp> methodInvocationPrintln;
+    std::shared_ptr<UnaryRightExpression> unaryRightExpressionSystemOutPrintln;
     std::shared_ptr<Expression> printlnParamExpr;
     
+    // needed for -CIntegerLiteral
+    std::shared_ptr<Expression> cIntegerLiteral;
+    std::shared_ptr<UnaryOp> minusOp;
+    std::shared_ptr<Expression> unaryLeftExpressionOpMinus;
   public:
     
     void dispatch(std::shared_ptr<Type> n);
+    void dispatch(std::shared_ptr<FakeType> n);
+    void dispatch(std::shared_ptr<NullType> n);
     void dispatch(std::shared_ptr<UserType> n);
     void dispatch(std::shared_ptr<TypeInt> n);
     void dispatch(std::shared_ptr<TypeBoolean> n);
@@ -64,6 +78,7 @@ namespace cmpl {
     void dispatch(std::shared_ptr<CIntegerLiteral> n);
     void dispatch(std::shared_ptr<NewObject> n);
     void dispatch(std::shared_ptr<NewArray> n);
+    void dispatch(std::shared_ptr<StaticLibraryCallExpression> n);
     void dispatch(std::shared_ptr<Equals> n);
     void dispatch(std::shared_ptr<NotEquals> n);
     void dispatch(std::shared_ptr<LessThan> n);

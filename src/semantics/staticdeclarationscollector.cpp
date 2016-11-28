@@ -1,52 +1,69 @@
 #include "staticdeclarationscollector.h"
 
+#include "../stringtable/stringtable.h"
+
 #include <iostream>
+#include "types.h"
 
 using namespace cmpl;
 
-
-// helpers
-
-inline void StaticDeclarationsCollector::error(const std::string &err)
-{
-  throw CollectorError(("staticdeclarationscollector: " + err).c_str());
+// helper
+inline void StaticDeclarationsCollector::errorMultipleNames(const std::string &err, StringIdentifier ID) {
+  throw CollectorError(("staticdeclarationscollector: cannot have multiple " + err + " with the same name " + StringTable::lookupIdentifier(ID)).c_str());
 }
-
 
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Program> n) {
   for(auto const& c: n->classDeclarations) {
     c->accept(shared_from_this());
-	classes.emplace(c->ID,c); 
+    classes.emplace(c->ID,c);
   }
 };
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<ClassDeclaration> n) {
   currentClassDeclaration = n;
-  if(classes.count(n->ID)>0)
-  {
-	  error("cannot have multiple class declarations with the same name");
-  }
-  else
-  {
-	for (auto const& c : n->classMembers) {
-		c->accept(shared_from_this());
-	}
+  
+  if(classes.count(n->ID)>0) {
+    errorMultipleNames("class declarations", n->ID);
+  } else {
+    for (auto const& c : n->classMembers) {
+      c->accept(shared_from_this());
+    }
   }
 };
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Field> n) {
   if (currentClassDeclaration->fields.count(n->ID) > 0) {
-    error("cannot have multiple fields with the same name");
-    return;
+    errorMultipleNames("fields", n->ID);
+  } else {
+    currentClassDeclaration->fields.emplace(n->ID, n);
   }
-  
-  currentClassDeclaration->fields.emplace(n->ID, n);
+};
+
+
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<MainMethod> n) {
+  if (currentClassDeclaration->methods.count(n->ID) > 0) {
+    errorMultipleNames("methods", n->ID);
+  } else {
+    /* TODO add identifier of main into current methods, so that name conflicts can be noticed
+    std::vector<std::shared_ptr<Parameter>> parameters;
+    std::vector<std::shared_ptr<BlockStatement>> statements;
+    std::shared_ptr<Block> block = std::make_shared<Block>(statements);
+    currentClassDeclaration->methods.emplace(std::make_shared<Method>(fakeType, n->ID, parameters, block));
+    */
+    
+    mainMethod = n;
+    
+    // collect local variables
+    n->block->accept(shared_from_this());
+    
+    mainMethod = nullptr;
+  }
 };
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Method> n) {
   if (currentClassDeclaration->methods.count(n->ID) > 0) {
-    error("cannot have multiple methods with the same name");
+    errorMultipleNames("methods", n->ID);
     return;
   }
   
@@ -58,31 +75,63 @@ void StaticDeclarationsCollector::dispatch(std::shared_ptr<Method> n) {
   for (auto const& p : n->parameters) {
     p->accept(shared_from_this());
   }
+  
+  // collect local variables
+  n->block->accept(shared_from_this());
 };
 
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Parameter> n) {
   if (currentMethod->parameterMap.count(n->ID) > 0) {
-    error("cannot have multiple parameters with the same name");
-    return;
+    errorMultipleNames("parameters", n->ID);
+  } else {
+    currentMethod->parameterMap.emplace(n->ID, n);
   }
-  
-  currentMethod->parameterMap.emplace(n->ID, n);
 };
 
-void StaticDeclarationsCollector::dispatch(std::shared_ptr<MainMethod> n) { };
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<Block> n) {
+  for (auto const& s: n->statements) {
+    s->accept(shared_from_this());
+  }
+};
+
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<LocalVariableDeclaration> n) {
+  if (mainMethod) {
+    mainMethod->localVariables.push_back(n);
+  } else {
+    currentMethod->localVariables.push_back(n);
+  }
+};
+
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) {
+  if (mainMethod) {
+    mainMethod->localVariables.push_back(n);
+  } else {
+    currentMethod->localVariables.push_back(n);
+  }
+};
+
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<IfStatement> n) {
+  n->ifStatement->accept(shared_from_this());
+};
+
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<WhileStatement> n) {
+  n->statement->accept(shared_from_this());
+};
+
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<IfElseStatement> n) {
+  n->ifStatement->accept(shared_from_this());
+  n->elseStatement->accept(shared_from_this());
+};
+
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Type> n) { };
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<FakeType> n) { };
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<NullType> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<UserType> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<TypeInt> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<TypeBoolean> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<TypeVoid> n) { };
-void StaticDeclarationsCollector::dispatch(std::shared_ptr<Block> n) { };
-void StaticDeclarationsCollector::dispatch(std::shared_ptr<IfStatement> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<ExpressionStatement> n) { };
-void StaticDeclarationsCollector::dispatch(std::shared_ptr<WhileStatement> n) { };
-void StaticDeclarationsCollector::dispatch(std::shared_ptr<LocalVariableDeclaration> n) { };
-void StaticDeclarationsCollector::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<EmptyStatement> n) { };
-void StaticDeclarationsCollector::dispatch(std::shared_ptr<IfElseStatement> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<ReturnStatement> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<ReturnExpressionStatement> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<MethodInvocation> n) { };
@@ -106,6 +155,7 @@ void StaticDeclarationsCollector::dispatch(std::shared_ptr<CRef> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<CIntegerLiteral> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<NewObject> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<NewArray> n) { };
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Equals> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<NotEquals> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<LessThan> n) { };

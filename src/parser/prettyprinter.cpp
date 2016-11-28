@@ -1,5 +1,6 @@
 #include "prettyprinter.h"
 
+#include <assert.h>
 #include <iostream>
 
 using namespace cmpl;
@@ -166,6 +167,14 @@ void PrettyPrinter::dispatch(std::shared_ptr<Type> n) {
   }
 };
 
+void PrettyPrinter::dispatch(std::shared_ptr<FakeType> n) {
+  assert(false);
+};
+
+void PrettyPrinter::dispatch(std::shared_ptr<NullType> n) {
+  assert(false);
+};
+
 void PrettyPrinter::dispatch(std::shared_ptr<UserType> n) {
   print(StringTable::lookupIdentifier(n->ID));
 };
@@ -200,7 +209,7 @@ void PrettyPrinter::dispatch(std::shared_ptr<Block> n) {
   }
   else
   {
-    print("{ }");
+    println("{ }");
   }
 };
 
@@ -298,6 +307,9 @@ void PrettyPrinter::dispatch(std::shared_ptr<MethodInvocation> n) {
     if(continous) {
       print(", ");
     }
+    
+    assert(argument != nullptr);
+    
     argument->accept(shared_from_this());
     continous = true;
   }
@@ -426,6 +438,12 @@ void PrettyPrinter::dispatch(std::shared_ptr<NewArray> n) {
   for(int i = 0; i < 0 /*n->type->arrayDepth*/; i++) {
     print("[]");
   }
+};
+
+void PrettyPrinter::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) {
+  print("System.out.println(");
+  n->expression->accept(shared_from_this());
+  print(")");
 };
 
 void PrettyPrinter::dispatch(std::shared_ptr<Equals> n)             { print("=="); };

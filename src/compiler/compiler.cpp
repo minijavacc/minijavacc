@@ -5,6 +5,7 @@
 #include "token.h"
 #include "checker.h"
 #include "prettyprinter.h"
+#include "creator.h"
 
 #include <iostream>
 #include <istream>
@@ -115,6 +116,52 @@ int Compiler::semcheck(std::ifstream &file)
     
     Checker checker(parser);
     checker.run();
+    
+    return 0;
+  }
+  catch (SyntaxError &e) 
+  {
+    std::cerr << "syntax error: " << e.what() << "\n";
+    std::cerr << sourcePreview(file, e.line, e.column) << "\n";
+    return 1;
+  }
+  catch (ParserError &e) 
+  {
+    std::cerr << "parser error: " << e.what() << "\n";
+    std::cerr << sourcePreview(file, e.line, e.column) << "\n";
+    return 1;
+  }
+  catch (SemanticError &e)
+  {
+    std::cerr << "semantic error: " << e.what() << "\n";
+    //std::cerr << sourcePreview(file, e.line, e.column) << "\n"; TODO: make semantic errors useful
+    return 1;
+  }
+}
+
+int Compiler::creategraph(std::ifstream &file)
+{
+  try {
+    Lexer lexer;
+    lexer.run(file);
+  
+    Parser parser(lexer);
+    parser.run();
+    
+    Checker checker(parser);
+    checker.run();
+    
+    Creator creator(parser.getAST());
+    creator.run();
+    creator.dump();
+    std::cout << "dumped graph files *.vcg\n";
+    creator.createAssembler();
+    std::cout << "create assembler file a.s\n";
+    
+    if (!creator.linkToRuntimeLibrary())
+    {
+      std::cout << "create executable file a.out\n";
+    }
     
     return 0;
   }

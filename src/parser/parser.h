@@ -1,5 +1,6 @@
 #pragma once
 
+#include "types.h"
 #include "lexer.h"
 #include "ast.h"
 #include "stringtable.h"
@@ -15,7 +16,6 @@ namespace cmpl
     public:
       Parser(Lexer &lexer) : lexer(lexer) { };
       void run();
-      bool addPrintln();
       std::shared_ptr<Node> getAST();
     
     private:
@@ -27,7 +27,7 @@ namespace cmpl
        */
       std::shared_ptr<Program>          parseProgram();
       std::shared_ptr<ClassDeclaration> parseClassDeclaration();
-      std::shared_ptr<ClassMember>      parseClassMember();
+      std::shared_ptr<ClassMember>      parseClassMember(std::shared_ptr<ClassDeclaration> clsDecl);
       std::shared_ptr<Type>             parseType();
       std::shared_ptr<BasicType>        parseBasicType();
       std::shared_ptr<Parameter>        parseParameter();

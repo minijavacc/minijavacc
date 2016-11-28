@@ -28,7 +28,7 @@ void ReturnChecker::dispatch(std::shared_ptr<Field> n) { };
  a) method has type void and no return statement
  b) method has other type and the method returns on all paths */
 void ReturnChecker::dispatch(std::shared_ptr<Method> n) {
-  currentMethodIsVoid = n->type->equals(voidNode);
+  currentMethodIsVoid = n->type->equals(Types::getVoidNode());
   
   n->block->accept(shared_from_this());
   
@@ -44,6 +44,8 @@ void ReturnChecker::dispatch(std::shared_ptr<Method> n) {
 };
 
 void ReturnChecker::dispatch(std::shared_ptr<Type> n) { };
+void ReturnChecker::dispatch(std::shared_ptr<FakeType> n) { };
+void ReturnChecker::dispatch(std::shared_ptr<NullType> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<UserType> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<TypeInt> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<TypeBoolean> n) { };
@@ -112,6 +114,7 @@ void ReturnChecker::dispatch(std::shared_ptr<CRef> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<CIntegerLiteral> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<NewObject> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<NewArray> n) { };
+void ReturnChecker::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<Equals> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<NotEquals> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<LessThan> n) { };

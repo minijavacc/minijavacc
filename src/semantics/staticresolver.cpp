@@ -19,6 +19,11 @@ inline void StaticResolver::error(const std::string &err)
   throw ResolverError(("staticresolver: " + err).c_str());
 }
 
+inline void StaticResolver::error(const std::string &err, const std::shared_ptr<Node> &n)
+{
+  throw ResolverError(("typechecker: " + err + ": " + Checker::printNode(n)).c_str());
+}
+
 void StaticResolver::dispatch(std::shared_ptr<Program> n) {
   currentProgram = n;
   for(auto const& c: n->classDeclarations) {
@@ -38,9 +43,13 @@ void StaticResolver::dispatch(std::shared_ptr<ClassDeclaration> n) {
   }
 };
 
-void StaticResolver::dispatch(std::shared_ptr<Field> n) { };
+void StaticResolver::dispatch(std::shared_ptr<Field> n) {
+  n->type->accept(shared_from_this());
+};
 
 void StaticResolver::dispatch(std::shared_ptr<Method> n) {
+  n->type->accept(shared_from_this());
+  
   currentMethod = n;
   currentSymbolTable.reset(new SymbolTable());
   currentSymbolTable->enterScope();
@@ -58,7 +67,7 @@ void StaticResolver::dispatch(std::shared_ptr<Method> n) {
 void StaticResolver::dispatch(std::shared_ptr<MainMethod> n) {
   currentSymbolTable.reset(new SymbolTable());
   currentSymbolTable->enterScope();
-  currentSymbolTable->insert(n->parameterID, n); // add parameter ID to find conflicting redefinitions TODO make sure n is never used
+  currentSymbolTable->insert(n->parameterID, n); // mainmethodchecker assures that parameterID is never used
   n->block->accept(shared_from_this());
   currentSymbolTable->leaveScope();
 };
@@ -77,22 +86,22 @@ void StaticResolver::dispatch(std::shared_ptr<LocalVariableDeclaration> n) {
   n->type->accept(shared_from_this());
   
   if (currentSymbolTable->hasValueFor(n->ID)) {
-    error("Multiple declarations of local variable ...");
+    error("Multiple declarations of local variable ...", n);
   }
   
   currentSymbolTable->insert(n->ID, n);
 };
 
 void StaticResolver::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) {
-  n->expression->accept(shared_from_this());
   n->type->accept(shared_from_this());
-  
+  // declaration can already be used in following expression
   if (currentSymbolTable->hasValueFor(n->ID)) {
-    error("Multiple declarations of local variable ...");
+    error("Multiple declarations of local variable ...", n);
     return;
   }
-  
   currentSymbolTable->insert(n->ID, n);
+  
+  n->expression->accept(shared_from_this());
 };
 
 void StaticResolver::dispatch(std::shared_ptr<IfStatement> n) {
@@ -176,7 +185,7 @@ void StaticResolver::dispatch(std::shared_ptr<CallExpression> n) {
   
   if (currentClassDeclaration->methods.count(n->ID) != 1)
   {
-    error("CallExpression to undefined method");
+    error("CallExpression to undefined method", n);
   }
   
   n->declaration = currentClassDeclaration->methods[n->ID];
@@ -192,6 +201,7 @@ void StaticResolver::dispatch(std::shared_ptr<UnaryLeftExpression> n) {
 
 void StaticResolver::dispatch(std::shared_ptr<UnaryRightExpression> n) {
   n->expression->accept(shared_from_this());
+  n->op->accept(shared_from_this());
 };
 
 void StaticResolver::dispatch(std::shared_ptr<CRef> n) {
@@ -199,11 +209,13 @@ void StaticResolver::dispatch(std::shared_ptr<CRef> n) {
   if (!currentSymbolTable->lookup(n->ID, n->declaration)) {
     // try fields (implicit this)
     if (currentClassDeclaration->fields.count(n->ID)!=1) {
-      error("could not resolve CRef " + StringTable::lookupIdentifier(n->ID));
+      error("could not resolve CRef '" + StringTable::lookupIdentifier(n->ID) + "'");
     } else {
       n->declaration = currentClassDeclaration->fields[n->ID];
     }
   } // else: declaration has successfully been set implicitly.
+  
+  assert(n->declaration.lock().get() != nullptr);
 };
 
 void StaticResolver::dispatch(std::shared_ptr<NewObject> n) {
@@ -215,20 +227,26 @@ void StaticResolver::dispatch(std::shared_ptr<NewArray> n) {
   n->type->accept(shared_from_this());
 };
 
+void StaticResolver::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) {
+  n->expression->accept(shared_from_this());
+};
+
 void StaticResolver::dispatch(std::shared_ptr<Type> n) {
   n->basicType->accept(shared_from_this());
 };
+
 
 void StaticResolver::dispatch(std::shared_ptr<UserType> n) {
   // search all class declarations
   for (auto const& c : currentProgram->classDeclarations) {
     if (c->ID == n->ID) {
       n->declaration = c;
+      assert(c != nullptr);
       return;
     }
   }
   
-  error("No declaration for basic type " + StringTable::lookupIdentifier(n->ID));
+  error("No declaration for basic type " + StringTable::lookupIdentifier(n->ID), n);
 };
 
 void StaticResolver::dispatch(std::shared_ptr<CThis> n) {
@@ -238,13 +256,17 @@ void StaticResolver::dispatch(std::shared_ptr<CThis> n) {
 
 void StaticResolver::dispatch(std::shared_ptr<Parameter> n) {
   if (currentSymbolTable->hasValueFor(n->ID)) {
-    error("Multiple declarations of parameter in method signature ...");
+    error("Multiple declarations of parameter in method signature ...", n);
     return;
   }
+  
+  n->type->accept(shared_from_this());
   
   currentSymbolTable->insert(n->ID, n);
 };
 
+void StaticResolver::dispatch(std::shared_ptr<FakeType> n) { };
+void StaticResolver::dispatch(std::shared_ptr<NullType> n) { };
 void StaticResolver::dispatch(std::shared_ptr<TypeInt> n) { };
 void StaticResolver::dispatch(std::shared_ptr<TypeBoolean> n) { };
 void StaticResolver::dispatch(std::shared_ptr<TypeVoid> n) { };

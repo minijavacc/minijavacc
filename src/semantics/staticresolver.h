@@ -19,6 +19,7 @@ namespace cmpl {
   class StaticResolver : public Dispatcher, public std::enable_shared_from_this<StaticResolver> {
   private:
     void error(const std::string &err);
+    void error(const std::string &err, const std::shared_ptr<Node> &n);
     
     std::shared_ptr<Program> currentProgram;
     std::shared_ptr<ClassDeclaration> currentClassDeclaration;
@@ -28,6 +29,8 @@ namespace cmpl {
     
   public:
     void dispatch(std::shared_ptr<Type> n);
+    void dispatch(std::shared_ptr<FakeType> n);
+    void dispatch(std::shared_ptr<NullType> n);
     void dispatch(std::shared_ptr<UserType> n);
     void dispatch(std::shared_ptr<TypeInt> n);
     void dispatch(std::shared_ptr<TypeBoolean> n);
@@ -69,6 +72,7 @@ namespace cmpl {
     void dispatch(std::shared_ptr<CIntegerLiteral> n);
     void dispatch(std::shared_ptr<NewObject> n);
     void dispatch(std::shared_ptr<NewArray> n);
+    void dispatch(std::shared_ptr<StaticLibraryCallExpression> n);
     void dispatch(std::shared_ptr<Equals> n);
     void dispatch(std::shared_ptr<NotEquals> n);
     void dispatch(std::shared_ptr<LessThan> n);

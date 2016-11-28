@@ -120,48 +120,6 @@ void Parser::run()
   ast = parseProgram();
 }
 
-bool Parser::addPrintln(){
-  // first token is always Program
-  Program* program = static_cast<Program*>(ast.get());
-  
-  for(auto const& classDecl : program->classDeclarations) {
-    if(StringTable::lookupIdentifier(classDecl->ID) == "System") {
-      return false; // System has been user-definied, so no println needed
-    }
-  }
-  
-  // println method
-  std::shared_ptr<BasicType> printBasicType = std::make_shared<TypeVoid>();
-  std::shared_ptr<Type> printType = std::make_shared<Type>(printBasicType, 0);
-  std::shared_ptr<Token> tokenPrint = StringTable::insertString("println",0,0);
-  StringIdentifier IDPrint = dynamic_cast<IdentifierToken*>(tokenPrint.get())->id;
-  std::vector<std::shared_ptr<Parameter>> parameters;
-  parameters.push_back(std::make_shared<Parameter>(std::make_shared<Type>(std::make_shared<TypeInt>(), 0), 0)); // TODO: use StringTable::invalidIdentifier
-  std::vector<std::shared_ptr<BlockStatement>> statements;
-  std::shared_ptr<Block> block = std::make_shared<Block>(statements);
-  std::shared_ptr<Method> println = std::make_shared<Method>(printType, IDPrint, parameters, block);
-  
-  // system class
-  std::shared_ptr<Token> tokenSystem = StringTable::insertString("System",0,0);
-  StringIdentifier IDSystem = dynamic_cast<IdentifierToken*>(tokenSystem.get())->id;
-  std::vector<std::shared_ptr<ClassMember>> classMembersSystem;
-  
-  // magic object
-  std::shared_ptr<Token> tokenOut = StringTable::insertString("out",0,0);
-  StringIdentifier IDOut = dynamic_cast<IdentifierToken*>(tokenOut.get())->id;
-  std::shared_ptr<BasicType> magicBasicType = std::make_shared<UserType>(IDSystem);
-  std::shared_ptr<Type> magicType = std::make_shared<Type>(magicBasicType, 0);
-  std::shared_ptr<Field> out = std::make_shared<Field>(magicType, IDOut);
-  
-  // add to class
-  classMembersSystem.push_back(std::move(out));
-  classMembersSystem.push_back(std::move(println));
-  std::shared_ptr<ClassDeclaration> classSystem = std::make_shared<ClassDeclaration>(IDSystem, classMembersSystem);
-  program->classDeclarations.push_back(std::move(classSystem));
-  
-  return true;
-}
-
 /* dyast: current = "class" */
 std::shared_ptr<Program> Parser::parseProgram()
 {
@@ -180,21 +138,22 @@ std::shared_ptr<Program> Parser::parseProgram()
 std::shared_ptr<ClassDeclaration> Parser::parseClassDeclaration()
 {
   std::vector<std::shared_ptr<ClassMember>> classMembers;
-  StringIdentifier ID;
+  StringIdentifier ID = getIdentifierFromNext();
+  std::shared_ptr<ClassDeclaration> clsDecl = std::make_shared<ClassDeclaration>(ID);
   
-  ID = getIdentifierFromNext();
   assureNextIsOSKTokenWithType(T_O_LBRACE);
   nextToken();
   // multiple class members
   while(!isCurrentTokenOSKTokenOfType(T_O_RBRACE)) {
-    classMembers.push_back(std::move(parseClassMember()));
+    classMembers.push_back(std::move(parseClassMember(clsDecl)));
   }
 
-  return std::make_shared<ClassDeclaration>(ID, classMembers);
+  clsDecl->classMembers = classMembers;
+  return clsDecl;
 }
 
 /* start: current = "public" */
-std::shared_ptr<ClassMember> Parser::parseClassMember()
+std::shared_ptr<ClassMember> Parser::parseClassMember(std::shared_ptr<ClassDeclaration> clsDecl)
 {
   assureCurrentIsOSKTokenWithType(T_K_PUBLIC);
   
@@ -221,14 +180,14 @@ std::shared_ptr<ClassMember> Parser::parseClassMember()
     assureNextIsOSKTokenWithType(T_O_RPAREN);
     nextToken();
     block = parseBlock();
-    return std::make_shared<MainMethod>(ID, parameterID, block);
+    return std::make_shared<MainMethod>(ID, parameterID, block, clsDecl);
   } else {
     std::shared_ptr<Type> type = parseType();
     StringIdentifier ID = getIdentifierFromCurrent();
     if(isNextTokenOSKTokenOfType(T_O_SEMICOLON)) {
       // Field
       nextToken();
-      return std::make_shared<Field>(type, ID);
+      return std::make_shared<Field>(type, ID, clsDecl);
     } else if(isCurrentTokenOSKTokenOfType(T_O_LPAREN)) {
       // Method
       std::vector<std::shared_ptr<Parameter>> parameters;
@@ -245,7 +204,7 @@ std::shared_ptr<ClassMember> Parser::parseClassMember()
       }
       nextToken();
       block = parseBlock();
-      return std::make_shared<Method>(type, ID, parameters, block);
+      return std::make_shared<Method>(type, ID, parameters, block, clsDecl);
     } else {
       error("Neither Field nor Method definition");
     }
@@ -271,17 +230,17 @@ std::shared_ptr<BasicType> Parser::parseBasicType()
 {
   if(isCurrentTokenOSKTokenOfType(T_K_BOOLEAN)) {
     nextToken();
-    return std::make_shared<TypeBoolean>();
+    return TypeBoolean::instance;
   } else if(isCurrentTokenOSKTokenOfType(T_K_INT)) {
     nextToken();
-    return std::make_shared<TypeInt>();
+    return TypeInt::instance;
   } else if(isCurrentTokenOSKTokenOfType(T_K_VOID)) {
     nextToken();
-    return std::make_shared<TypeVoid>();
+    return TypeVoid::instance;
   } else {
     StringIdentifier ID = getIdentifierFromCurrent();
     nextToken();
-    return std::make_shared<UserType>(ID);
+    return Types::getUserTypeBasicNode(ID);
   }
 }
 

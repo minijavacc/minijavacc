@@ -1,6 +1,7 @@
 /*
  * Static Declarations Collector
  * - collects all static declarations and stores them in 'methods', 'fields' and 'parameterMap' in the ClassDeclaration-Node
+ * - collects all local variables inside methods and stores them in 'localVariables' in the Method node
  * - checks for multiple methods/fields with the same name (no overloading allowed)
  */
 
@@ -16,12 +17,14 @@ namespace cmpl {
     private:
       shared_ptr<ClassDeclaration> currentClassDeclaration;
       shared_ptr<Method> currentMethod;
-	  std::map<StringIdentifier, std::weak_ptr<ClassDeclaration>> classes;
-	  
-      void error(const std::string &err);
+      std::map<StringIdentifier, std::weak_ptr<ClassDeclaration>> classes;
+      shared_ptr<MainMethod> mainMethod;
+      void errorMultipleNames(const std::string &err, StringIdentifier ID);
 
     public:
       void dispatch(std::shared_ptr<Type> n);
+      void dispatch(std::shared_ptr<FakeType> n);
+      void dispatch(std::shared_ptr<NullType> n);
       void dispatch(std::shared_ptr<UserType> n);
       void dispatch(std::shared_ptr<TypeInt> n);
       void dispatch(std::shared_ptr<TypeBoolean> n);
@@ -63,6 +66,7 @@ namespace cmpl {
       void dispatch(std::shared_ptr<CIntegerLiteral> n);
       void dispatch(std::shared_ptr<NewObject> n);
       void dispatch(std::shared_ptr<NewArray> n);
+      void dispatch(std::shared_ptr<StaticLibraryCallExpression> n);
       void dispatch(std::shared_ptr<Equals> n);
       void dispatch(std::shared_ptr<NotEquals> n);
       void dispatch(std::shared_ptr<LessThan> n);

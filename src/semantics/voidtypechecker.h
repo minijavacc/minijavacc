@@ -15,11 +15,13 @@ namespace cmpl {
   class VoidTypeChecker : public Dispatcher, public std::enable_shared_from_this<VoidTypeChecker> {
   private:
     void error(const std::string &err);
+    void error(const std::string &err, const std::shared_ptr<Node> &n);
     void assureNotVoid(const std::shared_ptr<Type> &type);
-    const std::shared_ptr<BasicType> voidNode = std::make_shared<TypeVoid>(); 
-      
+    
   public:
     void dispatch(std::shared_ptr<Type> n);
+    void dispatch(std::shared_ptr<FakeType> n);
+    void dispatch(std::shared_ptr<NullType> n);
     void dispatch(std::shared_ptr<UserType> n);
     void dispatch(std::shared_ptr<TypeInt> n);
     void dispatch(std::shared_ptr<TypeBoolean> n);
@@ -61,6 +63,7 @@ namespace cmpl {
     void dispatch(std::shared_ptr<CIntegerLiteral> n);
     void dispatch(std::shared_ptr<NewObject> n);
     void dispatch(std::shared_ptr<NewArray> n);
+    void dispatch(std::shared_ptr<StaticLibraryCallExpression> n);
     void dispatch(std::shared_ptr<Equals> n);
     void dispatch(std::shared_ptr<NotEquals> n);
     void dispatch(std::shared_ptr<LessThan> n);

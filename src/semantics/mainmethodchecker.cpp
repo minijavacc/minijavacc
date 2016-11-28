@@ -12,11 +12,13 @@ void MainMethodChecker::dispatch(std::shared_ptr<Program> n) {
     c->accept(shared_from_this());
   }
   if (mainMethods==0) {
-    error("Found no MainMethod definition!");
+    error("No main method definition found!");
   }
 };
 
 void MainMethodChecker::dispatch(std::shared_ptr<ClassDeclaration> n) {
+  currentClassDeclaration = n;
+  
   for (auto const& m: n->classMembers) {
     m->accept(shared_from_this());
   }
@@ -24,10 +26,21 @@ void MainMethodChecker::dispatch(std::shared_ptr<ClassDeclaration> n) {
 
 void MainMethodChecker::dispatch(std::shared_ptr<MainMethod> n) {
   currentMainMethod = n;
-  mainMethods++;
-  if(mainMethods > 1)  {
-    error("Found multiple MainMethod definitions!");
+  if(StringTable::lookupIdentifier(n->ID).compare("main")) {
+    error("static method needs to be named \"main\"!");
   }
+  
+  mainMethods++;
+  
+  if(mainMethods > 1)  {
+    error("multiple main method definitions found!");
+  }
+  
+  if (currentClassDeclaration->methods.count(n->ID) > 0)
+  {
+    error("a method named 'main' is not allowed if the class also contains the static main method");
+  }
+  
   n->block->accept(shared_from_this());
 };
 
@@ -40,17 +53,20 @@ void MainMethodChecker::dispatch(std::shared_ptr<Block> n) {
 void MainMethodChecker::dispatch(std::shared_ptr<CRef> n) {
   if(n->ID == currentMainMethod->parameterID) {
     error("Parameter of main method must not be used!");
+  } else {
+    auto shared = n->declaration.lock();
+    if(dynamic_cast<Field*>(shared.get())) {
+      error("Can not reference field from static context!");
+    }
   }
 };
 
 void MainMethodChecker::dispatch(std::shared_ptr<CThis> n) {
-  error("Found \"this\" in MainMethod!");
+  error("Can not reference \"this\" in static context!");
 };
 
 
-void MainMethodChecker::dispatch(std::shared_ptr<Method> n) {
-  //dont look in other methods, only main method
-};
+void MainMethodChecker::dispatch(std::shared_ptr<Method> n) { };
 
 
 void MainMethodChecker::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) {
@@ -132,14 +148,20 @@ void MainMethodChecker::dispatch(std::shared_ptr<CallExpression> n) {
 
 void MainMethodChecker::dispatch(std::shared_ptr<UnaryLeftExpression> n) {
   n->expression->accept(shared_from_this());
+  n->op->accept(shared_from_this());
 };
 
 void MainMethodChecker::dispatch(std::shared_ptr<UnaryRightExpression> n) {
   n->expression->accept(shared_from_this());
+  n->op->accept(shared_from_this());
 };
 
 
 void MainMethodChecker::dispatch(std::shared_ptr<NewArray> n) {
+  n->expression->accept(shared_from_this());
+};
+
+void MainMethodChecker::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) {
   n->expression->accept(shared_from_this());
 };
 
@@ -149,6 +171,8 @@ void MainMethodChecker::dispatch(std::shared_ptr<ReturnStatement> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<FieldAccess> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<NewObject> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<Type> n) { };
+void MainMethodChecker::dispatch(std::shared_ptr<FakeType> n) { };
+void MainMethodChecker::dispatch(std::shared_ptr<NullType> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<UserType> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<Field> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<Parameter> n) { };

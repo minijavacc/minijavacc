@@ -7,24 +7,24 @@
 //
 
 #include "checker.h"
+#include "mainmethodchecker.h"
 #include "returnchecker.h"
 #include "staticdeclarationscollector.h"
 #include "staticresolver.h"
-#include "voidtypechecker.h"
 #include "typechecker.h"
-#include "mainmethodchecker.h"
-#include "ast.h"
+#include "voidtypechecker.h"
+#include "astmodifier.h"
+
+#include "../parser/ast.h"
+#include "../parser/prettyprinter.h"
 
 #include <iostream>
+#include <sstream>
 
 using namespace cmpl;
 
 
 void Checker::run() {
-  
-  if(parser.addPrintln()) {
-    // successfully added things needed for println, TODO preprocess
-  }
   
   std::shared_ptr<Node> n = parser.getAST();
   
@@ -35,6 +35,12 @@ void Checker::run() {
   // collect static declarations and check for duplicated methods and classes
   std::shared_ptr<StaticDeclarationsCollector> coll(new StaticDeclarationsCollector());
   n->accept(coll);
+  
+  // recongnise tree patterns and replace with other AST nodes
+  // e.g. System.out.println, -CIntegerLiteral
+  // CAREFUL: this call modifies the AST!
+  std::shared_ptr<AstModifier> mod(new AstModifier());
+  n->accept(mod);
   
   // resolve all static references (CRefs)
   std::shared_ptr<StaticResolver> res(new StaticResolver());
@@ -54,3 +60,10 @@ void Checker::run() {
 
   std::cout << "all semantic checks passed\n";
 }
+
+std::string Checker::printNode(const std::shared_ptr<Node> &n) {
+  std::stringstream stream;
+  std::shared_ptr<Dispatcher> pp = std::make_shared<PrettyPrinter>(stream);
+  n->accept(pp);
+  return stream.str();
+};
