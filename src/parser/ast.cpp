@@ -361,14 +361,16 @@ ir_mode * Type::getFirmMode() {
 ir_type * Type::getFirmType() {
   ir_type *elem_type = basicType->getFirmType();
   
+  if (arrayDepth <= 0) {
+    // scalar type
+    return elem_type;
+  }
+  
   ir_type *my_type = elem_type;
   int i = arrayDepth;
   while (i > 0) {
-    assert(my_type);
-    // i-fache Verschachtelung
-    // Beispiel: int[][][] ist
-    // new_type_array(new_type_array(new_type_array(int_type, 0), 0), 0)
-    my_type = new_type_pointer(my_type);
+    // pointer to array of (scalars) or (pointers to arrays of ...)
+    my_type = new_type_pointer(new_type_array(my_type, 0));
     i--;
   }
   

@@ -202,18 +202,17 @@ void IRBuilder::dispatch(std::shared_ptr<AssignmentExpression> n) {
     }
     
     if (auto aa = dynamic_cast<ArrayAccess*>(ure->op.get())) {
-      // currentExpression->firm_node is a Proj P to a primitive type or pointer type
+      // currentExpression->firm_node is a Proj P to an array_type
       aa->expression->accept(shared_from_this());
       
-      ir_type *elem_type = get_pointer_points_to_type(ure->expression->type->getFirmType());
-      ir_mode *elem_mode = get_type_mode(elem_type);
+      ir_type *array_type = get_pointer_points_to_type(ure->expression->type->getFirmType());
+      ir_mode *array_mode = get_type_mode(array_type);
+      ir_type *elem_type  = get_array_element_type(array_type);
+      ir_mode *elem_mode  = get_type_mode(elem_type);
       
-      ir_node *size = new_Const(new_tarval_from_long(get_type_size(elem_type), mode_Is));
-      ir_node *mul = new_Mul(size, aa->expression->firm_node);
-      
-      ir_node *add       = new_Add(ure->expression->firm_node, mul);
-      ir_node *st        = new_Store(get_store(), add, n->expression2->firm_node, elem_type, cons_none);
-      ir_node *m         = new_Proj(st, mode_M, pn_Store_M);
+      ir_node *sel       = new_Sel(ure->expression->firm_node, aa->expression->firm_node, array_type);
+      ir_node *st        = new_Store(get_store(), sel, n->expression2->firm_node, elem_type, cons_none);
+      ir_node *m         = new_Proj(st, mode_M, pn_Load_M);
       
       set_store(m);
     }
@@ -318,17 +317,16 @@ void IRBuilder::dispatch(std::shared_ptr<FieldAccess> n) {
 void IRBuilder::dispatch(std::shared_ptr<MethodInvocation> n) { };
 
 void IRBuilder::dispatch(std::shared_ptr<ArrayAccess> n) {
-  // currentExpression->firm_node is a Proj P to a primitive type or pointer type
+  // currentExpression->firm_node is a Proj P to an array_type
   n->expression->accept(shared_from_this());
   
-  ir_type *elem_type = get_pointer_points_to_type(currentExpression->type->getFirmType());
-  ir_mode *elem_mode = get_type_mode(elem_type);
+  ir_type *array_type = get_pointer_points_to_type(currentExpression->type->getFirmType());
+  ir_mode *array_mode = get_type_mode(array_type);
+  ir_type *elem_type  = get_array_element_type(array_type);
+  ir_mode *elem_mode  = get_type_mode(elem_type);
   
-  ir_node *size = new_Const(new_tarval_from_long(get_type_size(elem_type), mode_Is));
-  ir_node *mul = new_Mul(size, n->expression->firm_node);
-  
-  ir_node *add       = new_Add(currentExpression->firm_node, mul);
-  ir_node *ld        = new_Load(get_store(), add, elem_mode, elem_type, cons_none);
+  ir_node *sel       = new_Sel(currentExpression->firm_node, n->expression->firm_node, array_type);
+  ir_node *ld        = new_Load(get_store(), sel, elem_mode, elem_type, cons_none);
   ir_node *m         = new_Proj(ld, mode_M, pn_Load_M);
   ir_node *res       = new_Proj(ld, elem_mode, pn_Load_res);
   
