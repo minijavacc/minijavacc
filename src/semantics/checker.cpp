@@ -67,3 +67,8 @@ std::string Checker::printNode(const std::shared_ptr<Node> &n) {
   n->accept(pp);
   return stream.str();
 };
+
+std::shared_ptr<Node> Checker::getAttributedAST()
+{
+  return parser.getAST();
+}

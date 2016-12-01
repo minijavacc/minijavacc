@@ -15,8 +15,8 @@ namespace cmpl
   class Lexer
   {
     public:
-      Lexer();
-      void run(std::ifstream &inputFile);
+      Lexer(std::ifstream &inputFile);
+      void run();
       bool getNextToken(std::unique_ptr<Token> &t);
       bool putBackToken(std::unique_ptr<Token> &t);
       bool hasNextToken() const;
@@ -27,6 +27,7 @@ namespace cmpl
       inline void error(char currentChar, unsigned int line, unsigned int column);
       
       std::deque<std::unique_ptr<Token>> tokenArray;
+      std::ifstream &inputFile;
   };
   
   class SyntaxError : public std::runtime_error

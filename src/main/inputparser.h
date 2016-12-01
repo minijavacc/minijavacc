@@ -12,11 +12,11 @@ namespace cmpl
   class Option
   {
     public:
-      Option(std::string string, std::function<int(std::ifstream &)> fn) :
+      Option(std::string string, std::function<int(std::ifstream &, std::string filename)> fn) :
         string(string), fn(fn) { }
       
       std::string string;
-      std::function<int(std::ifstream &)> fn;
+      std::function<int(std::ifstream &, std::string filename)> fn;
       std::string filename;
   };
 
@@ -35,7 +35,8 @@ namespace cmpl
         Option("--parsetest", Compiler::parsetest),
         Option("--print-ast", Compiler::printast),
         Option("--check", Compiler::semcheck),
-        Option("--graph", Compiler::creategraph)
+        Option("--graph", Compiler::creategraph), 
+        Option("--compile-firm", Compiler::compilefirm)
       };
 
       std::vector<Option> givenOptions;

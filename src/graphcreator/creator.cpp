@@ -3,9 +3,12 @@
 #include "irbuilder.h"
 #include "typecreator.h"
 
+#include <sys/wait.h>
+#include <unistd.h>
+
 using namespace cmpl;
 
-Creator::Creator(std::shared_ptr<Node> ast) : ast(ast)
+Creator::Creator(Checker &checker) : checker(checker), ast(checker.getAttributedAST())
 {
   ir_init(); // initialize libfirm
   
@@ -13,10 +16,10 @@ Creator::Creator(std::shared_ptr<Node> ast) : ast(ast)
   //be_parse_arg("help");
   
   // set instruction set architecture
+  // has to be set before the graph is created
   if(!be_parse_arg("isa=amd64"))
   {
-    std::cerr << "could not set isa=amd64\n";
-    return;
+    throw CreatorBackendError("could not set isa=amd64");
   }
 
   /* currently creates runtime error: 
@@ -49,27 +52,61 @@ void Creator::run()
   ast->accept(c);
 }
 
-void Creator::dump()
+void Creator::dumpGraph()
 {
   dump_all_ir_graphs("");
 }
 
-void Creator::createAssembler()
+void Creator::createBinary(std::string filepath)
 {
-  // create and open output file
-  FILE * output;
-  output = fopen("a.s" , "w");
+  // get filename without extension
+  std::string filename;
+  size_t lastindex = filepath.find_last_of(".");
+  if (lastindex == std::string::npos)
+  {
+    filename = filepath + "_";
+  }
+  else
+  {
+    filename = filepath.substr(0, lastindex); 
+  }
   
   // lowering phase
-  //be_lower_for_target();
+  be_lower_for_target();
   
-  // run backend
-  be_main(output, "input.c");
-}
-
-int Creator::linkToRuntimeLibrary()
-{
-  // link to runtime library
-  return system("gcc -o a.out a.s runtime/println.c");
+  // create and open output file
+  FILE * output;
+  output = fopen((filename + ".s").c_str() , "w");
+  
+  // run backend to generate assembler file
+  be_main(output, (filename + ".c").c_str());
+  std::cout << "Created assembler file: " << filename << ".s\n";
+  
+  // link to runtime library and create binary
+  pid_t pid;
+  if (pid = fork())
+  {
+    // parent
+    int status;
+    waitpid(pid, &status, 0);
+    
+    if (status != 0)
+    {
+      throw CreatorBackendError(("could not link assembler file to runtime library. Try running the link command manually:\n$ gcc -o " + filename + " " + filename + ".s runtime/println.c").c_str());
+    }
+  }
+  else
+  {
+    // child
+    int ret = execlp("gcc", "gcc", "-o", filename.c_str(), (filename + ".s").c_str(), "runtime/println.c", NULL);
+    
+    if (ret != 0)
+    {
+      throw CreatorBackendError("error running linker");
+    }
+  }
+  
+  std::cout << "Created binary: " << filename << "\n";
+  return;
 }
 

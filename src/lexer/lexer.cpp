@@ -12,7 +12,7 @@ using namespace cmpl;
  * - the current character is checked whether it still belongs to the current token 
  *   if not, the last token is finished and inserted into the token array
  */ 
-void Lexer::run(std::ifstream &inputFile)
+void Lexer::run()
 {
   char currentChar;
   std::string currentTokenString = "";
@@ -844,7 +844,7 @@ void Lexer::run(std::ifstream &inputFile)
   }
 }
 
-Lexer::Lexer()
+Lexer::Lexer(std::ifstream &inputFile) : inputFile(inputFile)
 {
   for (int i = T_K_ABSTRACT; i <= T_K_WHILE; i++)
   {

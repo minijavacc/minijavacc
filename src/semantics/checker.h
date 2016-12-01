@@ -20,6 +20,8 @@ namespace cmpl
     public:
       Checker(Parser &parser) : parser(parser) { };
       void run();
+      std::shared_ptr<Node> getAttributedAST();
+      
       static std::string printNode(const std::shared_ptr<Node> &n);
     private:
       Parser &parser;
