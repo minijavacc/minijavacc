@@ -77,6 +77,8 @@ void TypeChecker::dispatch(std::shared_ptr<IfStatement> n) {
   {
     error("expression in IfElseStatement must be of type boolean", n);
   }
+  
+  n->ifStatement->accept(shared_from_this());
 };
 
 void TypeChecker::dispatch(std::shared_ptr<ExpressionStatement> n) {
