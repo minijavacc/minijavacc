@@ -19,7 +19,6 @@ namespace cmpl
     
     void dumpGraph();
     void createBinary(std::string filename);
-    
   private:
     std::shared_ptr<Node> ast;
     Checker &checker;

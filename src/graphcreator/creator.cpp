@@ -57,6 +57,19 @@ void Creator::dumpGraph()
   dump_all_ir_graphs("");
 }
 
+/* inline functions from libfirm/ir/tr/type_t.h that get not 
+ * included via #include <libfirm/firm.h> */
+static inline int is_class_type_(const ir_type *type)
+{
+	return get_type_opcode(type) == tpo_class;
+}
+
+static inline int is_method_type_(ir_type const *const type)
+{
+	return get_type_opcode(type) == tpo_method;
+}
+
+
 void Creator::createBinary(std::string filepath)
 {
   // get filename without extension
@@ -71,8 +84,44 @@ void Creator::createBinary(std::string filepath)
     filename = filepath.substr(0, lastindex); 
   }
   
-  // lowering phase
+  // --- lowering phase ---
+  
+  // 1. layout types
+  size_t typesNum = get_irp_n_types();
+  
+  // iterate types
+  for (int i = 0; i < typesNum; i++)
+  {
+    const ir_type* type = get_irp_type(i);
+    
+    // check if type is a class
+    if (is_class_type_(type))
+    {
+      // iterate members of this class
+      size_t membersNum = get_compound_n_members(type);
+      
+      for (int j = 0; j < membersNum; j++)
+      {
+        ir_entity* member = get_compound_member(type, j);
+        const ir_type* memberType = get_entity_type(member);
+        
+        if (is_method_type_(memberType))
+        {
+          set_entity_owner(member, get_glob_type());
+          
+          // the for-loop has to be adapted because we removed an element
+          membersNum--;
+          j--;
+        }
+      }
+    }
+  }
+  
+  // 2. lower SELs
   be_lower_for_target();
+  
+  
+  // --- run backend to create assembler ---
   
   // create and open output file
   FILE * output;
@@ -82,7 +131,9 @@ void Creator::createBinary(std::string filepath)
   be_main(output, (filename + ".c").c_str());
   std::cout << "Created assembler file: " << filename << ".s\n";
   
-  // link to runtime library and create binary
+  
+  // --- link to runtime library and create binary ---
+  
   pid_t pid;
   if (pid = fork())
   {
