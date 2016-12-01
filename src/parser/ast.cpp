@@ -485,7 +485,13 @@ ir_entity *Method::getFirmEntity() {
     auto clsDecl = classDeclaration.lock();
     assert(clsDecl);
     
-    firm_entity = new_entity(clsDecl->getDeclaredType(), new_id_from_str(StringTable::lookupIdentifier(ID).c_str()), getFirmType());
+    // simple name mangling similar to C++
+    std::string methodName = StringTable::lookupIdentifier(ID);
+    std::string className = StringTable::lookupIdentifier(clsDecl->ID);
+    std::string mangledName = "_ZM" + std::to_string(className.length()) + className + std::to_string(methodName.length()) + methodName + "E";
+    //                           ^---- M = Method
+    
+    firm_entity = new_entity(clsDecl->getDeclaredType(), new_id_from_str(mangledName.c_str()), getFirmType());
   }
   
   return firm_entity;
@@ -539,7 +545,13 @@ ir_entity *Field::getFirmEntity() {
     auto clsDecl = classDeclaration.lock();
     assert(clsDecl);
     
-    firm_entity = new_entity(clsDecl->getDeclaredType(), new_id_from_str(StringTable::lookupIdentifier(ID).c_str()), getFirmType());
+    // simple name mangling similar to C++
+    std::string fieldName = StringTable::lookupIdentifier(ID);
+    std::string className = StringTable::lookupIdentifier(clsDecl->ID);
+    std::string mangledName = "_ZF" + std::to_string(className.length()) + className + std::to_string(fieldName.length()) + fieldName + "E";
+    //                           ^---- F = Field
+    
+    firm_entity = new_entity(clsDecl->getDeclaredType(), new_id_from_str(mangledName.c_str()), getFirmType());
     unsigned clsSize = get_type_size(clsDecl->getDeclaredType());
     unsigned fieldSize = get_type_size(getFirmType());
     set_type_size(clsDecl->getDeclaredType(), clsSize + fieldSize);
