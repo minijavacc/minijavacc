@@ -121,8 +121,27 @@ void IRBuilder::dispatch(std::shared_ptr<Block> n) {
 };
 
 void IRBuilder::dispatch(std::shared_ptr<IfStatement> n) {
+  ir_graph *g = get_current_ir_graph();
+  
+  trueBlock = new_r_immBlock(g);
+  falseBlock = new_r_immBlock(g);
+  nextBlock = new_r_immBlock(g);
+  
   n->expression->accept(shared_from_this());
+  
+  set_cur_block(trueBlock);
   n->ifStatement->accept(shared_from_this());
+  ir_node *jmpIf = new_Jmp();
+  
+  set_cur_block(falseBlock);
+  ir_node *jmpElse = new_Jmp();
+  
+  add_immBlock_pred(nextBlock, jmpIf);
+  mature_immBlock(trueBlock);
+  add_immBlock_pred(nextBlock, jmpElse);
+  mature_immBlock(falseBlock);
+  
+  set_cur_block(nextBlock);
 };
 
 void IRBuilder::dispatch(std::shared_ptr<ExpressionStatement> n) {
@@ -159,7 +178,6 @@ void IRBuilder::dispatch(std::shared_ptr<IfElseStatement> n) {
   mature_immBlock(falseBlock);
   
   set_cur_block(nextBlock);
-
 };
 
 void IRBuilder::dispatch(std::shared_ptr<ReturnStatement> n) {
