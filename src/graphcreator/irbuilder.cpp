@@ -196,7 +196,22 @@ void IRBuilder::dispatch(std::shared_ptr<AssignmentExpression> n) {
   n->expression2->accept(shared_from_this());
   
   if (auto lhs = dynamic_cast<CRef*>(n->expression1.get())) {
-    lhs->firm_node = n->expression2->firm_node;
+    auto d = lhs->declaration.lock();
+    
+    if (auto f = dynamic_cast<Field*>(d.get())) {
+      // is field access
+      ir_graph *g = get_current_ir_graph();
+      ir_node *args = get_irg_args(g);
+      ir_node *this_node = new_Proj(args, mode_P, 0);
+      
+      ir_node *irn = new_Member(this_node, f->getFirmEntity());
+      ir_node *st  = new_Store(get_store(), irn, n->expression2->firm_node, f->getFirmType(), cons_none);
+      ir_node *m   = new_Proj(st, mode_M, pn_Store_M);
+      set_store(m);
+    } else {
+      // is local var access
+      d->firm_node = n->expression2->firm_node;
+    }
   }
   
   if (auto ure = dynamic_cast<UnaryRightExpression*>(n->expression1.get())) {
