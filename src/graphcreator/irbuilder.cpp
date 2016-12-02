@@ -66,7 +66,10 @@ void IRBuilder::dispatch(std::shared_ptr<MainMethod> n) {
   
   n->block->accept(shared_from_this());
   
-  ir_node *ret = new_Return(get_store(), 0, NULL);
+  // create return node with static value 0
+  ir_tarval *tv = new_tarval_from_long(0 /* static exit code 0 */, mode_Is);
+  ir_node *results[1] = { new_Const(tv) };
+  ir_node *ret = new_Return(get_store(), 1, results);
   
   ir_node *end = get_irg_end_block(g);
   add_immBlock_pred(end, ret);
@@ -160,12 +163,9 @@ void IRBuilder::dispatch(std::shared_ptr<IfElseStatement> n) {
 };
 
 void IRBuilder::dispatch(std::shared_ptr<ReturnStatement> n) {
-  n->firm_node = new_Return(get_store(), 0, NULL);
-  
-  ir_graph *g = get_current_ir_graph();
-  ir_node *end = get_irg_end_block(g);
-  add_immBlock_pred(end, n->firm_node);
-  mature_immBlock(get_r_cur_block(g));
+  // ReturnStatements can only occur in void-methods
+  // for void-methods the return statement is created in the 
+  // IRBuilder<Method> dispatch-function
 };
 
 void IRBuilder::dispatch(std::shared_ptr<ReturnExpressionStatement> n) {

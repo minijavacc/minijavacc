@@ -415,8 +415,6 @@ ir_type * NullType::getFirmType() {
 
 
 
-
-
 ir_type *StaticLibraryCallExpression::getFirmType() {
   if (!firm_type) {
     firm_type = new_type_method(1, 0, false, cc_cdecl_set, mtp_no_property);

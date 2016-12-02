@@ -2,5 +2,5 @@
 
 void println(int a)
 {
-  printf("%x\n", a);
+  printf("%d\n", a);
 }
