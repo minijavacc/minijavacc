@@ -26,9 +26,13 @@ include_directories(
   lib/libfirm/build/gen/include/libfirm
 )
 
-link_directories(
-  lib/libfirm/build/debug
-)
+#link_directories(
+#  lib/libfirm/build/debug
+#)
+
+ADD_LIBRARY(firm STATIC IMPORTED)
+SET_TARGET_PROPERTIES(firm PROPERTIES
+  IMPORTED_LOCATION lib/libfirm/build/debug/libfirm.a)
 
 # source files
 file(GLOB_RECURSE compiler_SRCS
