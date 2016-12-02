@@ -60,7 +60,7 @@ void IRBuilder::dispatch(std::shared_ptr<ClassDeclaration> n) {
 };
 
 void IRBuilder::dispatch(std::shared_ptr<MainMethod> n) {
-  ir_graph *g = n->getFirmGraph();
+  ir_graph *g = n->firm_graph;
   set_current_ir_graph(g);
   set_r_cur_block(g, get_irg_start_block(g));
   
@@ -79,16 +79,16 @@ void IRBuilder::dispatch(std::shared_ptr<Field> n) {
 };
 
 void IRBuilder::dispatch(std::shared_ptr<Method> n) {
-  ir_graph *g = n->getFirmGraph();
+  ir_graph *g = n->firm_graph;
   set_current_ir_graph(g);
   set_r_cur_block(g, get_irg_start_block(g));
   ir_node *args = get_irg_args(g);
   
-  n->this_node = new_Proj(args, mode_P, 0);
-  
   int i = 1;
   for (auto const& p : n->parameters) {
-    p->firm_node = new_Proj(args, p->type->getFirmMode(), i++);
+    ir_mode *mode = get_type_mode(p->type->getFirmType());
+    ir_node *proj = new_Proj(args, mode, i++);
+    set_value(p->parameterIndex, proj);
   }
   
   n->block->accept(shared_from_this());
@@ -134,9 +134,29 @@ void IRBuilder::dispatch(std::shared_ptr<WhileStatement> n) {
 void IRBuilder::dispatch(std::shared_ptr<EmptyStatement> n) { };
 
 void IRBuilder::dispatch(std::shared_ptr<IfElseStatement> n) {
+  ir_graph *g = get_current_ir_graph();
+  
+  trueBlock = new_r_immBlock(g);
+  falseBlock = new_r_immBlock(g);
+  nextBlock = new_r_immBlock(g);
+  
   n->expression->accept(shared_from_this());
+  
+  set_cur_block(trueBlock);
   n->ifStatement->accept(shared_from_this());
+  ir_node *jmpIf = new_Jmp();
+  
+  set_cur_block(falseBlock);
   n->elseStatement->accept(shared_from_this());
+  ir_node *jmpElse = new_Jmp();
+  
+  add_immBlock_pred(nextBlock, jmpIf);
+  mature_immBlock(trueBlock);
+  add_immBlock_pred(nextBlock, jmpElse);
+  mature_immBlock(falseBlock);
+  
+  set_cur_block(nextBlock);
+
 };
 
 void IRBuilder::dispatch(std::shared_ptr<ReturnStatement> n) {
@@ -204,13 +224,13 @@ void IRBuilder::dispatch(std::shared_ptr<AssignmentExpression> n) {
       ir_node *args = get_irg_args(g);
       ir_node *this_node = new_Proj(args, mode_P, 0);
       
-      ir_node *irn = new_Member(this_node, f->getFirmEntity());
-      ir_node *st  = new_Store(get_store(), irn, n->expression2->firm_node, f->getFirmType(), cons_none);
+      ir_node *irn = new_Member(this_node, f->firm_entity);
+      ir_node *st  = new_Store(get_store(), irn, n->expression2->firm_node, f->type->getFirmType(), cons_none);
       ir_node *m   = new_Proj(st, mode_M, pn_Store_M);
       set_store(m);
     } else {
       // is local var access
-      d->firm_node = n->expression2->firm_node;
+      set_value(d->parameterIndex, n->expression2->firm_node);
     }
   }
   
@@ -219,8 +239,8 @@ void IRBuilder::dispatch(std::shared_ptr<AssignmentExpression> n) {
     
     if (auto fa = dynamic_cast<FieldAccess*>(ure->op.get())) {
       auto decl = fa->declaration.lock();
-      ir_node *irn = new_Member(ure->expression->firm_node, decl->getFirmEntity());
-      ir_node *st  = new_Store(get_store(), irn, n->expression2->firm_node, decl->getFirmType(), cons_none);
+      ir_node *irn = new_Member(ure->expression->firm_node, decl->firm_entity);
+      ir_node *st  = new_Store(get_store(), irn, n->expression2->firm_node, decl->type->getFirmType(), cons_none);
       ir_node *m   = new_Proj(st, mode_M, pn_Store_M);
       set_store(m);
     }
@@ -252,7 +272,14 @@ void IRBuilder::dispatch(std::shared_ptr<EqualityExpression> n) {
   n->expression1->accept(shared_from_this());
   n->expression2->accept(shared_from_this());
   n->op->accept(shared_from_this());
-  n->firm_node = new_Cmp(n->expression1->firm_node, n->expression2->firm_node, n->op->firm_relation);
+
+  ir_node *cmp = new_Cmp(n->expression1->firm_node, n->expression2->firm_node, n->op->firm_relation);
+  ir_node *cond = new_Cond(cmp);
+  ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
+  ir_node *fnode = new_Proj(cond, mode_X, pn_Cond_false);
+  
+  add_immBlock_pred(trueBlock, tnode);
+  add_immBlock_pred(falseBlock, fnode);
 };
 
 void IRBuilder::dispatch(std::shared_ptr<RelationalExpression> n) {
@@ -329,10 +356,11 @@ void IRBuilder::dispatch(std::shared_ptr<FieldAccess> n) {
   auto decl = n->declaration.lock();
   
   // currentExpression->firm_node is a Proj P64 to a class entity
-  ir_node *irn = new_Member(currentExpression->firm_node, decl->getFirmEntity());
-  ir_node *ld  = new_Load(get_store(), irn, decl->type->getFirmMode(), decl->type->getFirmType(), cons_none);
+  ir_node *irn = new_Member(currentExpression->firm_node, decl->firm_entity);
+  ir_mode *mode = get_type_mode(decl->type->getFirmType());
+  ir_node *ld  = new_Load(get_store(), irn, mode, decl->type->getFirmType(), cons_none);
   ir_node *m   = new_Proj(ld, mode_M, pn_Load_M);
-  ir_node *res = new_Proj(ld, decl->type->getFirmMode(), pn_Load_res);
+  ir_node *res = new_Proj(ld, mode, pn_Load_res);
   
   set_store(m);
   n->firm_node = res;
@@ -370,7 +398,7 @@ void IRBuilder::dispatch(std::shared_ptr<CallExpression> n) {
   auto decl = n->declaration.lock();
   assert(decl);
   
-  ir_entity *meth = decl->getFirmEntity();
+  ir_entity *meth = decl->firm_entity;
   ir_node *addr = new_Address(meth);
   unsigned long nargs = n->arguments.size();
   ir_node *args[nargs + 1];
@@ -381,10 +409,11 @@ void IRBuilder::dispatch(std::shared_ptr<CallExpression> n) {
     args[i++] = a->firm_node;
   }
   
-  ir_node *call = new_Call(get_store(), addr, (int)nargs + 1, args, decl->getFirmType());
+  ir_node *call = new_Call(get_store(), addr, (int)nargs + 1, args, decl->type->getFirmType());
   ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
   ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
-  ir_node *res = new_Proj(tres, decl->type->getFirmMode(), 0);
+  ir_mode *mode = get_type_mode(decl->type->getFirmType());
+  ir_node *res = new_Proj(tres, mode, 0);
   
   set_store(mem);
   n->firm_node = res;
@@ -435,16 +464,21 @@ void IRBuilder::dispatch(std::shared_ptr<CRef> n) {
     ir_node *args = get_irg_args(g);
     ir_node *this_node = new_Proj(args, mode_P, 0);
     
-    ir_node *irn = new_Member(this_node, decl->getFirmEntity());
-    ir_node *ld  = new_Load(get_store(), irn, decl->type->getFirmMode(), decl->type->getFirmType(), cons_none);
+    ir_node *irn = new_Member(this_node, decl->firm_entity);
+    ir_mode *mode = get_type_mode(decl->type->getFirmType());
+    ir_node *ld  = new_Load(get_store(), irn, mode, decl->type->getFirmType(), cons_none);
     ir_node *m   = new_Proj(ld, mode_M, pn_Load_M);
-    ir_node *res = new_Proj(ld, decl->type->getFirmMode(), pn_Load_res);
+    ir_node *res = new_Proj(ld, mode, pn_Load_res);
     
     set_store(m);
     n->firm_node = res;
   } else {
     // is local var access
-    n->firm_node = d->firm_node;
+    if (auto decl = dynamic_cast<TypedNode*>(d.get())) {
+      n->firm_node = get_value(d->parameterIndex, get_type_mode(decl->type->getFirmType()));
+    } else {
+      assert(false);
+    }
   }
 };
 

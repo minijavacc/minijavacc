@@ -1,7 +1,6 @@
 #include "creator.h"
-#include "typecreator.h"
+#include "irinitializer.h"
 #include "irbuilder.h"
-#include "typecreator.h"
 
 #include <sys/wait.h>
 #include <unistd.h>
@@ -47,7 +46,7 @@ Creator::~Creator()
 void Creator::run()
 {
   // check for missing return paths
-  std::shared_ptr<TypeCreator> t = std::make_shared<TypeCreator>();
+  std::shared_ptr<IRInitializer> t = std::make_shared<IRInitializer>();
   ast->accept(t);
   
   std::shared_ptr<IRBuilder> c = std::make_shared<IRBuilder>();

@@ -12,6 +12,9 @@ namespace cmpl {
     void error(const std::string &err);
     ir_node *callCallocNode(ir_node *num, ir_type *result_type);
     std::shared_ptr<Expression> currentExpression;
+    ir_node *trueBlock;
+    ir_node *falseBlock;
+    ir_node *nextBlock;
   public:
     void dispatch(std::shared_ptr<Type> n);
     void dispatch(std::shared_ptr<FakeType> n);

@@ -346,17 +346,7 @@ Type::Type(std::shared_ptr<BasicType> const& basicType, int const& arrayDepth) :
 
 
 
-#pragma mark - firm types and modes
-
-ir_mode * Type::getFirmMode() {
-  ir_mode *elem_mode = basicType->getFirmMode();
-  
-  if (arrayDepth > 0) {
-    return mode_P;
-  }
-  
-  return elem_mode;
-}
+#pragma mark - Firm types
 
 ir_type * Type::getFirmType() {
   ir_type *elem_type = basicType->getFirmType();
@@ -381,18 +371,10 @@ ir_type * UserType::getFirmType() {
   auto d = declaration.lock();
   assert(d);
   
-  return new_type_pointer(d->getDeclaredType());
-}
-
-ir_mode * UserType::getFirmMode() {
-  return mode_P;
+  return new_type_pointer(d->declared_type);
 }
 
 ir_type * FakeType::getFirmType() {
-  return NULL; // ?
-}
-
-ir_mode * FakeType::getFirmMode() {
   return NULL; // ?
 }
 
@@ -405,10 +387,6 @@ ir_type * TypeBoolean::getFirmType() {
   return boo_type;
 }
 
-ir_mode * TypeBoolean::getFirmMode() {
-  return mode_Bu;
-}
-
 ir_type * TypeInt::getFirmType() {
   static ir_type *int_type;
   if(!int_type)
@@ -418,147 +396,26 @@ ir_type * TypeInt::getFirmType() {
   return int_type;
 }
 
-ir_mode * TypeInt::getFirmMode() {
-  return mode_Is;
-}
-
 ir_type * TypeVoid::getFirmType() {
   return NULL;
-}
-
-ir_mode * TypeVoid::getFirmMode() {
-  return NULL; // ?
 }
 
 ir_type * NullType::getFirmType() {
   return NULL;
 }
 
-ir_mode * NullType::getFirmMode() {
-  return NULL; // ?
-}
 
 
 
 
-ir_type *ClassDeclaration::getDeclaredType() {
-  if (!firm_type) {
-    std::string str = StringTable::lookupIdentifier(ID);
-    firm_type = new_type_class(new_id_from_str(str.c_str()));
-  }
-  
-  return firm_type;
-}
-
-ir_type *Method::getFirmType() {
-  if (!firm_type) {
-    int nret = 1;
-    if (dynamic_cast<TypeVoid*>(this->type->basicType.get())) {
-      nret = 0;
-    }
-    
-    // + 1 for this pointer
-    firm_type = new_type_method(parameters.size() + 1, nret, false, cc_cdecl_set, mtp_no_property);
-    
-    if (nret > 0) {
-      set_method_res_type(firm_type, 0, type->getFirmType());
-    }
-    
-    // Set this type
-    auto cls = classDeclaration.lock();
-    assert(cls);
-    ir_type *t = new_type_pointer(cls->getDeclaredType());
-    set_method_param_type(firm_type, 0, t);
-    
-    // Set parameter types
-    int i = 1;
-    for (auto const& p : parameters) {
-      set_method_param_type(firm_type, i++, p->type->getFirmType());
-    }
-  }
-  
-  return firm_type;
-}
-
-ir_entity *Method::getFirmEntity() {
-  if (!firm_entity) {
-    auto clsDecl = classDeclaration.lock();
-    assert(clsDecl);
-    
-    // simple name mangling similar to C++
-    std::string methodName = StringTable::lookupIdentifier(ID);
-    std::string className = StringTable::lookupIdentifier(clsDecl->ID);
-    std::string mangledName = "_ZM" + std::to_string(className.length()) + className + std::to_string(methodName.length()) + methodName + "E";
-    //                           ^---- M = Method
-    
-    firm_entity = new_entity(clsDecl->getDeclaredType(), new_id_from_str(mangledName.c_str()), getFirmType());
-  }
-  
-  return firm_entity;
-}
-
-ir_graph *Method::getFirmGraph() {
-  if (!firm_graph) {
-    firm_graph = new_ir_graph(getFirmEntity(), 0);
-  }
-  
-  return firm_graph;
-}
 
 
 
-ir_type *MainMethod::getFirmType() {
-  if (!firm_type) {
-    firm_type = new_type_method(0, 0, false, cc_cdecl_set, mtp_no_property);
-  }
-  
-  return firm_type;
-}
-
-ir_entity *MainMethod::getFirmEntity() {
-  if (!firm_entity) {
-    auto clsDecl = classDeclaration.lock();
-    assert(clsDecl);
-    
-    firm_entity = new_entity(clsDecl->getDeclaredType(), new_id_from_str(StringTable::lookupIdentifier(ID).c_str()), getFirmType());
-  }
-  
-  return firm_entity;
-}
-
-ir_graph *MainMethod::getFirmGraph() {
-  if (!firm_graph) {
-    firm_graph = new_ir_graph(getFirmEntity(), 0);
-  }
-  
-  return firm_graph;
-}
 
 
 
-ir_type *Field::getFirmType() {
-  return type->getFirmType();
-}
 
-ir_entity *Field::getFirmEntity() {
-  if (!firm_entity) {
-    auto clsDecl = classDeclaration.lock();
-    assert(clsDecl);
-    
-    // simple name mangling similar to C++
-    std::string fieldName = StringTable::lookupIdentifier(ID);
-    std::string className = StringTable::lookupIdentifier(clsDecl->ID);
-    std::string mangledName = "_ZF" + std::to_string(className.length()) + className + std::to_string(fieldName.length()) + fieldName + "E";
-    //                           ^---- F = Field
-    
-    firm_entity = new_entity(clsDecl->getDeclaredType(), new_id_from_str(mangledName.c_str()), getFirmType());
-    unsigned clsSize = get_type_size(clsDecl->getDeclaredType());
-    unsigned fieldSize = get_type_size(getFirmType());
-    set_type_size(clsDecl->getDeclaredType(), clsSize + fieldSize);
-  }
-  
-  return firm_entity;
-}
+
 
 ir_type *StaticLibraryCallExpression::getFirmType() {
   if (!firm_type) {
