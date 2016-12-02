@@ -509,7 +509,10 @@ ir_graph *Method::getFirmGraph() {
 
 ir_type *MainMethod::getFirmType() {
   if (!firm_type) {
-    firm_type = new_type_method(0, 0, false, cc_cdecl_set, mtp_no_property);
+    // even though the main method in MiniJava is void, 
+    // for the linker it has to return an integer
+    firm_type = new_type_method(0, 1, false, cc_cdecl_set, mtp_no_property);
+    set_method_res_type(firm_type, 0, Types::getIntNode()->getFirmType());
   }
   
   return firm_type;
