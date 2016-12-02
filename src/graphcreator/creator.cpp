@@ -24,7 +24,6 @@ Creator::Creator(Checker &checker) : checker(checker), ast(checker.getAttributed
     throw CreatorBackendError("could not set isa=amd64");
   }
 
-  /* currently creates runtime error: 
   #ifdef _WIN32
     be_parse_arg("ia32-gasmode-mingw");
   #elif __APPLE__
@@ -36,7 +35,6 @@ Creator::Creator(Checker &checker) : checker(checker), ast(checker.getAttributed
   #else
     #error "No backend found for this target platform"
   #endif
-  */
 }
 
 Creator::~Creator()
