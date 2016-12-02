@@ -187,14 +187,37 @@ void IRBuilder::dispatch(std::shared_ptr<ReturnStatement> n) {
 };
 
 void IRBuilder::dispatch(std::shared_ptr<ReturnExpressionStatement> n) {
-  n->expression->accept(shared_from_this());
-  ir_node *results[1] = { n->expression->firm_node };
-  n->firm_node = new_Return(get_store(), 1, results);
-  
   ir_graph *g = get_current_ir_graph();
   ir_node *end = get_irg_end_block(g);
-  add_immBlock_pred(end, n->firm_node);
-  mature_immBlock(get_r_cur_block(g));
+  
+  trueBlock = new_r_immBlock(g);
+  falseBlock = new_r_immBlock(g);
+  nextBlock = new_r_immBlock(g);
+  
+  n->expression->accept(shared_from_this());
+  
+  ir_node *constTrue = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *constFalse = new_Const(new_tarval_from_long(0, mode_Bu));
+  
+  if (!n->expression->firm_node) {
+    set_cur_block(trueBlock);
+    ir_node *resultst[1] = { constTrue };
+    n->firm_node = new_Return(get_store(), 1, resultst);
+    add_immBlock_pred(end, n->firm_node);
+    mature_immBlock(trueBlock);
+    
+    set_cur_block(falseBlock);
+    ir_node *resultsf[1] = { constFalse };
+    n->firm_node = new_Return(get_store(), 1, resultsf);
+    add_immBlock_pred(end, n->firm_node);
+    mature_immBlock(falseBlock);
+  } else {
+    ir_node *results[1] = { n->expression->firm_node };
+    n->firm_node = new_Return(get_store(), 1, results);
+    add_immBlock_pred(end, n->firm_node);
+    mature_immBlock(get_r_cur_block(g));
+
+  }
 };
 
 
@@ -220,8 +243,37 @@ void IRBuilder::dispatch(std::shared_ptr<LocalVariableDeclaration> n) {
 };
 
 void IRBuilder::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) {
+  ir_graph *g = get_current_ir_graph();
+  
+  trueBlock = new_r_immBlock(g);
+  falseBlock = new_r_immBlock(g);
+  nextBlock = new_r_immBlock(g);
+  
   n->expression->accept(shared_from_this());
-  n->firm_node = n->expression->firm_node;
+  
+  ir_node *constTrue = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *constFalse = new_Const(new_tarval_from_long(0, mode_Bu));
+  ir_node *jmpTrue = NULL;
+  ir_node *jmpFalse = NULL;
+  
+  if (!n->expression->firm_node) {
+    set_cur_block(trueBlock);
+    set_value(n->parameterIndex, constTrue);
+    jmpTrue = new_Jmp();
+    
+    set_cur_block(falseBlock);
+    set_value(n->parameterIndex, constFalse);
+    jmpFalse = new_Jmp();
+    
+    add_immBlock_pred(nextBlock, jmpTrue);
+    mature_immBlock(trueBlock);
+    add_immBlock_pred(nextBlock, jmpFalse);
+    mature_immBlock(falseBlock);
+    
+    set_cur_block(nextBlock);
+  } else {
+    set_value(n->parameterIndex, n->expression->firm_node);
+  }
 };
 
 
@@ -231,7 +283,19 @@ void IRBuilder::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) 
 #pragma mark - Expressions
 
 void IRBuilder::dispatch(std::shared_ptr<AssignmentExpression> n) {
+  ir_graph *g = get_current_ir_graph();
+  
+  trueBlock = new_r_immBlock(g);
+  falseBlock = new_r_immBlock(g);
+  nextBlock = new_r_immBlock(g);
+  
   n->expression2->accept(shared_from_this());
+  
+  ir_node *constTrue = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *constFalse = new_Const(new_tarval_from_long(0, mode_Bu));
+  ir_node *jmpTrue = NULL;
+  ir_node *jmpFalse = NULL;
+  
   
   if (auto lhs = dynamic_cast<CRef*>(n->expression1.get())) {
     auto d = lhs->declaration.lock();
@@ -243,12 +307,34 @@ void IRBuilder::dispatch(std::shared_ptr<AssignmentExpression> n) {
       ir_node *this_node = new_Proj(args, mode_P, 0);
       
       ir_node *irn = new_Member(this_node, f->firm_entity);
-      ir_node *st  = new_Store(get_store(), irn, n->expression2->firm_node, f->type->getFirmType(), cons_none);
+      
+      ir_node *st;
+      if (!n->expression2->firm_node) {
+        set_cur_block(trueBlock);
+        st = new_Store(get_store(), irn, constTrue, f->type->getFirmType(), cons_none);
+        jmpTrue = new_Jmp();
+        
+        set_cur_block(falseBlock);
+        st = new_Store(get_store(), irn, constFalse, f->type->getFirmType(), cons_none);
+        jmpFalse = new_Jmp();
+      } else {
+        st  = new_Store(get_store(), irn, n->expression2->firm_node, f->type->getFirmType(), cons_none);
+      }
       ir_node *m   = new_Proj(st, mode_M, pn_Store_M);
       set_store(m);
     } else {
       // is local var access
-      set_value(d->parameterIndex, n->expression2->firm_node);
+      if (!n->expression2->firm_node) {
+        set_cur_block(trueBlock);
+        set_value(d->parameterIndex, constTrue);
+        jmpTrue = new_Jmp();
+        
+        set_cur_block(falseBlock);
+        set_value(d->parameterIndex, constFalse);
+        jmpFalse = new_Jmp();
+      } else {
+        set_value(d->parameterIndex, n->expression2->firm_node);
+      }
     }
   }
   
@@ -258,7 +344,18 @@ void IRBuilder::dispatch(std::shared_ptr<AssignmentExpression> n) {
     if (auto fa = dynamic_cast<FieldAccess*>(ure->op.get())) {
       auto decl = fa->declaration.lock();
       ir_node *irn = new_Member(ure->expression->firm_node, decl->firm_entity);
-      ir_node *st  = new_Store(get_store(), irn, n->expression2->firm_node, decl->type->getFirmType(), cons_none);
+      ir_node *st;
+      if (!n->expression2->firm_node) {
+        set_cur_block(trueBlock);
+        st = new_Store(get_store(), irn, constTrue, decl->type->getFirmType(), cons_none);
+        jmpTrue = new_Jmp();
+        
+        set_cur_block(falseBlock);
+        st = new_Store(get_store(), irn, constFalse, decl->type->getFirmType(), cons_none);
+        jmpFalse = new_Jmp();
+      } else {
+        st  = new_Store(get_store(), irn, n->expression2->firm_node, decl->type->getFirmType(), cons_none);
+      }
       ir_node *m   = new_Proj(st, mode_M, pn_Store_M);
       set_store(m);
     }
@@ -268,23 +365,67 @@ void IRBuilder::dispatch(std::shared_ptr<AssignmentExpression> n) {
       aa->expression->accept(shared_from_this());
       
       ir_type *array_type = get_pointer_points_to_type(ure->expression->type->getFirmType());
-      ir_mode *array_mode = get_type_mode(array_type);
       ir_type *elem_type  = get_array_element_type(array_type);
-      ir_mode *elem_mode  = get_type_mode(elem_type);
       
       ir_node *sel       = new_Sel(ure->expression->firm_node, aa->expression->firm_node, array_type);
-      ir_node *st        = new_Store(get_store(), sel, n->expression2->firm_node, elem_type, cons_none);
+      ir_node *st;
+      if (!n->expression2->firm_node) {
+        set_cur_block(trueBlock);
+        st = new_Store(get_store(), sel, constTrue, elem_type, cons_none);
+        jmpTrue = new_Jmp();
+        
+        set_cur_block(falseBlock);
+        st = new_Store(get_store(), sel, constFalse, elem_type, cons_none);
+        jmpFalse = new_Jmp();
+      } else {
+        st  = new_Store(get_store(), sel, n->expression2->firm_node, elem_type, cons_none);
+      }
       ir_node *m         = new_Proj(st, mode_M, pn_Load_M);
       
       set_store(m);
     }
   }
   
-  n->firm_node = n->expression2->firm_node;
+  
+  if (!n->expression2->firm_node) {
+    add_immBlock_pred(nextBlock, jmpTrue);
+    mature_immBlock(trueBlock);
+    add_immBlock_pred(nextBlock, jmpFalse);
+    mature_immBlock(falseBlock);
+    
+    set_cur_block(nextBlock);
+  } else {
+    n->firm_node = n->expression2->firm_node;
+  }
 };
 
-void IRBuilder::dispatch(std::shared_ptr<LogicalOrExpression> n) { };
-void IRBuilder::dispatch(std::shared_ptr<LogicalAndExpression> n) { };
+void IRBuilder::dispatch(std::shared_ptr<LogicalOrExpression> n) {
+  ir_graph *g = get_current_ir_graph();
+  
+  ir_node *rightBlock = new_r_immBlock(g);
+  ir_node *fb = falseBlock;
+  falseBlock = rightBlock;
+  n->expression1->accept(shared_from_this());
+  mature_immBlock(rightBlock);
+  
+  set_cur_block(rightBlock);
+  falseBlock = fb;
+  n->expression2->accept(shared_from_this());
+};
+
+void IRBuilder::dispatch(std::shared_ptr<LogicalAndExpression> n) {
+  ir_graph *g = get_current_ir_graph();
+  
+  ir_node *rightBlock = new_r_immBlock(g);
+  ir_node *tb = trueBlock;
+  trueBlock = rightBlock;
+  n->expression1->accept(shared_from_this());
+  mature_immBlock(rightBlock);
+  
+  set_cur_block(rightBlock);
+  trueBlock = tb;
+  n->expression2->accept(shared_from_this());
+};
 
 void IRBuilder::dispatch(std::shared_ptr<EqualityExpression> n) {
   n->expression1->accept(shared_from_this());
