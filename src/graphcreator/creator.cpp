@@ -129,6 +129,8 @@ void Creator::createBinary(std::string filepath)
   
   // run backend to generate assembler file
   be_main(output, (filename + ".c").c_str());
+  fclose(output);
+  
   std::cout << "Created assembler file: " << filename << ".s\n";
   
   
