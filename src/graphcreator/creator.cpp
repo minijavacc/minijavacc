@@ -12,6 +12,8 @@ Creator::Creator(Checker &checker) : checker(checker), ast(checker.getAttributed
 {
   ir_init(); // initialize libfirm
   
+  set_optimize(0); // deactivate local optimizing
+  
   // output backend options
   //be_parse_arg("help");
   
