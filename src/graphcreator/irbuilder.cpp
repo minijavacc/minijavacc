@@ -3,6 +3,7 @@
 #include "../stringtable/stringtable.h"
 #include <libfirm/firm.h>
 #include <iostream>
+#include "types.h"
 
 
 using namespace cmpl;
@@ -91,6 +92,14 @@ void IRBuilder::dispatch(std::shared_ptr<Method> n) {
   }
   
   n->block->accept(shared_from_this());
+  
+  if (n->type->equals(Types::getVoidNode())) {
+    ir_node *ret = new_Return(get_store(), 0, NULL);
+    
+    ir_node *end = get_irg_end_block(g);
+    add_immBlock_pred(end, ret);
+    mature_immBlock(get_r_cur_block(g));
+  }
   
   irg_finalize_cons(g);
 };
