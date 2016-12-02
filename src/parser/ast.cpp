@@ -253,7 +253,7 @@ void NullType::accept(std::shared_ptr<Dispatcher> d) {
 
 
 
-// equals
+#pragma mark - equals
 
 bool Type::equals(std::shared_ptr<Type> t) {
   assert(t != nullptr);
@@ -324,7 +324,7 @@ bool NullType::equals(std::shared_ptr<BasicType> other) {
 
 
 
-// misc
+#pragma mark - Misc
 
 bool Expression::isValidSemanticType() { // Semantic types type expressions, expressions cannot be void
   if (dynamic_cast<TypeVoid*>(type->basicType.get())) {
@@ -346,7 +346,7 @@ Type::Type(std::shared_ptr<BasicType> const& basicType, int const& arrayDepth) :
 
 
 
-// firm types and modes
+#pragma mark - firm types and modes
 
 ir_mode * Type::getFirmMode() {
   ir_mode *elem_mode = basicType->getFirmMode();
