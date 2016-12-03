@@ -285,6 +285,9 @@ namespace cmpl
     // necessary to allow NewArray set attributes of TypedNode in its contructor
     Expression(std::shared_ptr<BasicType> basicType, int arrayDepth) : TypedNode(basicType, arrayDepth) { };
     bool isValidSemanticType(); // Semantic types type expressions, expressions cannot be void
+    virtual void doCond(ir_node *trueBlock, ir_node *falseBlock) {};
+    virtual void doExpr() { assert(false); /* not implemented (yet) */ };
+    virtual void assign(ir_node *value) { assert(false); /* not implemented (yet) */ };
   };
 
   class NotEquals : public EqualityOp, public std::enable_shared_from_this<NotEquals>
@@ -433,6 +436,8 @@ namespace cmpl
     AssignmentExpression(std::shared_ptr<Expression> &expression1, std::shared_ptr<Expression> &expression2) :
                              expression1(std::move(expression1)), expression2(std::move(expression2)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
+    void doExpr() override;
   };
   
   class LogicalOrExpression : public Expression, public std::enable_shared_from_this<LogicalOrExpression>
@@ -444,6 +449,7 @@ namespace cmpl
     LogicalOrExpression(std::shared_ptr<Expression> &expression1, std::shared_ptr<Expression> &expression2) :
                             expression1(std::move(expression1)), expression2(std::move(expression2)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
   };
   
   class LogicalAndExpression : public Expression, public std::enable_shared_from_this<LogicalAndExpression>
@@ -455,6 +461,7 @@ namespace cmpl
     LogicalAndExpression(std::shared_ptr<Expression> &expression1, std::shared_ptr<Expression> &expression2) :
                              expression1(std::move(expression1)), expression2(std::move(expression2)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
   };
   
   class EqualityExpression : public OpExpression, public std::enable_shared_from_this<EqualityExpression>
@@ -463,6 +470,8 @@ namespace cmpl
     EqualityExpression(std::shared_ptr<EqualityOp> &op, std::shared_ptr<Expression> &expression1,
                          std::shared_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
+    void doExpr() override;
   };
 
   class RelationalExpression : public OpExpression, public std::enable_shared_from_this<RelationalExpression>
@@ -471,6 +480,8 @@ namespace cmpl
     RelationalExpression(std::shared_ptr<RelationalOp> &op, std::shared_ptr<Expression> &expression1,
                            std::shared_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
+    void doExpr() override;
   };
   
   class AdditiveExpression : public OpExpression, public std::enable_shared_from_this<AdditiveExpression>
@@ -479,6 +490,7 @@ namespace cmpl
     AdditiveExpression(std::shared_ptr<AddOp> &op, std::shared_ptr<Expression> &expression1,
                          std::shared_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)){ };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doExpr() override;
   };
   
   class MultiplicativeExpression : public OpExpression, public std::enable_shared_from_this<MultiplicativeExpression>
@@ -488,6 +500,7 @@ namespace cmpl
                                std::shared_ptr<Expression> &expression2) : 
                                  OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doExpr() override;
   };
   
   class CallExpression : public Expression, public std::enable_shared_from_this<CallExpression>
@@ -511,6 +524,8 @@ namespace cmpl
     UnaryLeftExpression(std::shared_ptr<UnaryOp> &op, std::shared_ptr<Expression> &expression) :
                             op(std::move(op)), expression(std::move(expression)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
+    void doExpr() override;
   };
   
   class UnaryRightExpression : public Expression, public std::enable_shared_from_this<UnaryRightExpression>
@@ -522,6 +537,7 @@ namespace cmpl
     UnaryRightExpression(std::shared_ptr<Expression> &expression, std::shared_ptr<UnaryOp> &op) :
                              expression(std::move(expression)), op(std::move(op)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void assign(ir_node *value) override;
   };
   
   class CNull : public Expression, public std::enable_shared_from_this<CNull>
@@ -536,6 +552,8 @@ namespace cmpl
   public:
     CFalse() { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doExpr() override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
   };
   
   class CTrue : public Expression, public std::enable_shared_from_this<CTrue>
@@ -543,6 +561,8 @@ namespace cmpl
   public:
     CTrue() { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doExpr() override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
   };
   
   class CThis : public Expression, public std::enable_shared_from_this<CThis>
@@ -562,6 +582,8 @@ namespace cmpl
     
     CIntegerLiteral(std::string &integer) : integer(integer) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
+    void doExpr() override;
   };
   
   class CRef : public Expression, public std::enable_shared_from_this<CRef>
@@ -572,6 +594,9 @@ namespace cmpl
     
     CRef(StringIdentifier &ID) : ID(ID) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
+    void doExpr() override;
+    void assign(ir_node *value) override;
   };
   
   class NewObject : public Expression, public std::enable_shared_from_this<NewObject>
