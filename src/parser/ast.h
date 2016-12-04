@@ -623,6 +623,7 @@ namespace cmpl
     NewArray(std::shared_ptr<BasicType> type, std::shared_ptr<Expression> &expression,
                int &arrayDepth) : Expression(type, arrayDepth), expression(std::move(expression)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doExpr() override;
   };
 
   class StaticLibraryCallExpression : public Expression, public std::enable_shared_from_this<StaticLibraryCallExpression>
@@ -640,6 +641,7 @@ namespace cmpl
     StaticLibraryCallExpression(std::shared_ptr<Expression> &expression)
       : Expression(), expression(std::move(expression)) { }; 
     void accept (std::shared_ptr<Dispatcher> d) override;
+    void doExpr() override;
   };
   
   class Parameter : public Node, public TypedNode, public std::enable_shared_from_this<Parameter>

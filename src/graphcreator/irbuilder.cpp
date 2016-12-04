@@ -370,10 +370,46 @@ void CRef::doExpr() {
   shared_from_this()->firm_node = res;
 }
 
-// TODO: doExpr() and doCond() for the following expressions:
+void StaticLibraryCallExpression::doExpr()
+{
+  auto n = shared_from_this();
+  
+  ir_entity *meth = n->getFirmEntity();
+  
+  // println() only has one argument (no this-pointer!)
+  ir_node *addr = new_Address(meth);
+  ir_node *args[1];
+  
+  n->expression->doExpr();
+  assert(n->expression->firm_node);
+  
+  args[0] = n->expression->firm_node;
+  
+  ir_node *call = new_Call(get_store(), addr, 1, args, n->getFirmType());
+  ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
+  ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
+  //ir_node *res = new_Proj(tres, Types::getVoidNode()->type->getFirmMode(), 0);
+  
+  set_store(mem);
+  
+  // TODO: returntype is void... what do do?
+  n->firm_node = call;
+}
 
-// NewArray
-// StaticLibraryCall
+void NewArray::doExpr()
+{
+  auto n = shared_from_this();
+  n->expression->doExpr();
+  
+  ir_node *num = n->expression->firm_node;
+  ir_node *call = IRBuilder::callCallocNode(num, n->type->getFirmType());
+  ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
+  ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
+  ir_node *res = new_Proj(tres, mode_P, 0);
+  
+  set_store(mem);
+  n->firm_node = res;
+}
 
 void CNull::doExpr()
 {
@@ -908,49 +944,9 @@ void IRBuilder::dispatch(std::shared_ptr<CallExpression> n) { assert(false); };
 void IRBuilder::dispatch(std::shared_ptr<NewObject> n) { assert(false); };
 void IRBuilder::dispatch(std::shared_ptr<ArrayAccess> n) { assert(false); };
 void IRBuilder::dispatch(std::shared_ptr<CRef> n) { assert(false); };
-
-
-
-
-void IRBuilder::dispatch(std::shared_ptr<NewArray> n) {
-  n->expression->accept(shared_from_this());
-  
-  ir_node *num = n->expression->firm_node;
-  ir_node *call = callCallocNode(num, n->type->getFirmType());
-  ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
-  ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
-  ir_node *res = new_Proj(tres, mode_P, 0);
-  
-  set_store(mem);
-  n->firm_node = res;
-};
-
-
-void IRBuilder::dispatch(std::shared_ptr<CIntegerLiteral> n) {
-  ir_tarval *tv = new_tarval_from_long(n->value, mode_Is);
-  n->firm_node = new_Const(tv);
-};
-
-void IRBuilder::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) {
-  ir_entity *meth = n->getFirmEntity();
-  
-  // println() only has one argument (no this-pointer!)
-  ir_node *addr = new_Address(meth);
-  ir_node *args[1];
-  
-  n->expression->accept(shared_from_this());
-  args[0] = n->expression->firm_node;
-  
-  ir_node *call = new_Call(get_store(), addr, 1, args, n->getFirmType());
-  ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
-  ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
-  //ir_node *res = new_Proj(tres, Types::->getFirmMode(), 0);
-  
-  set_store(mem);
-  
-  // TODO: returntype is void... what do do?
-  n->firm_node = nullptr;
-};
+void IRBuilder::dispatch(std::shared_ptr<NewArray> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<CIntegerLiteral> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) { assert(false); };
 
 
 
