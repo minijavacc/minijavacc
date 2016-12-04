@@ -372,10 +372,22 @@ void CRef::doExpr() {
 
 // TODO: doExpr() and doCond() for the following expressions:
 
-// CNull
-// CThis
 // NewArray
 // StaticLibraryCall
+
+void CNull::doExpr()
+{
+  ir_tarval *tv = new_tarval_from_long(0, mode_P);
+  shared_from_this()->firm_node = new_Const(tv);
+}
+
+void CThis::doExpr()
+{
+  ir_graph *g = get_current_ir_graph();
+  
+  ir_node *this_node = new_Proj(get_irg_args(g), mode_P, 0);
+  shared_from_this()->firm_node = this_node;
+}
 
 void CallExpression::doCond(ir_node *trueBlock, ir_node *falseBlock)
 {

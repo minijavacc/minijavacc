@@ -549,6 +549,7 @@ namespace cmpl
   public:
     CNull() { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doExpr() override;
   };
   
   class CFalse : public Expression, public std::enable_shared_from_this<CFalse>
@@ -576,6 +577,7 @@ namespace cmpl
     
     CThis() { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doExpr() override;
   };
   
   class CIntegerLiteral : public Expression, public std::enable_shared_from_this<CIntegerLiteral>
