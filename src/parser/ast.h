@@ -513,6 +513,8 @@ namespace cmpl
     CallExpression(StringIdentifier &ID, std::vector<std::shared_ptr<Expression>> &arguments) :
                        ID(ID), arguments(std::move(arguments)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
+    void doExpr() override;
   };
   
   class UnaryLeftExpression : public Expression, public std::enable_shared_from_this<UnaryLeftExpression>
@@ -533,10 +535,12 @@ namespace cmpl
   public:
     std::shared_ptr<UnaryOp>    op;
     std::shared_ptr<Expression> expression;
-      
+    
     UnaryRightExpression(std::shared_ptr<Expression> &expression, std::shared_ptr<UnaryOp> &op) :
                              expression(std::move(expression)), op(std::move(op)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
+    void doExpr() override;
     void assign(ir_node *value) override;
   };
   

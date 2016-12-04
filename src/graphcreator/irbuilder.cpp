@@ -31,22 +31,39 @@ void CRef::assign(ir_node *value) {
 }
 
 void UnaryRightExpression::assign(ir_node *value) {
-  if (auto fa = dynamic_cast<FieldAccess*>(shared_from_this()->op.get())) {
+  auto n = shared_from_this();
+  n->expression->doExpr();
+  
+  if (auto fa = dynamic_cast<FieldAccess*>(n->op.get())) {
     auto decl = fa->declaration.lock();
-    ir_node *irn = new_Member(shared_from_this()->expression->firm_node, decl->firm_entity);
+    assert(decl);
+    
+    assert(n->expression->firm_node);
+    assert(decl->firm_entity);
+    assert(decl->type->getFirmType());
+    
+    ir_node *irn = new_Member(n->expression->firm_node, decl->firm_entity);
     ir_node *st = new_Store(get_store(), irn, value, decl->type->getFirmType(), cons_none);
     ir_node *m   = new_Proj(st, mode_M, pn_Store_M);
     set_store(m);
+    
+    return;
   }
   
-  if (auto aa = dynamic_cast<ArrayAccess*>(shared_from_this()->op.get())) {
-    ir_type *array_type = get_pointer_points_to_type(shared_from_this()->expression->type->getFirmType());
+  if (auto aa = dynamic_cast<ArrayAccess*>(n->op.get())) {
+    assert(n->expression->type->getFirmType());
+    
+    ir_type *array_type = get_pointer_points_to_type(n->expression->type->getFirmType());
     ir_type *elem_type  = get_array_element_type(array_type);
-    ir_node *sel        = new_Sel(shared_from_this()->expression->firm_node, aa->expression->firm_node, array_type);
+    ir_node *sel        = new_Sel(n->expression->firm_node, aa->expression->firm_node, array_type);
     ir_node *st         = new_Store(get_store(), sel, value, elem_type, cons_none);
     ir_node *m          = new_Proj(st, mode_M, pn_Load_M);
     set_store(m);
+    
+    return;
   }
+  
+  assert(false);
 }
 
 
@@ -312,6 +329,8 @@ void UnaryLeftExpression::doExpr() {
     ir_node *phi = new_Phi(2, results, mode_Bu);
     shared_from_this()->firm_node = phi;
   }
+  
+  assert(false);
 }
 
 void UnaryLeftExpression::doCond(ir_node *trueBlock, ir_node *falseBlock) {
@@ -337,7 +356,7 @@ void CRef::doExpr() {
     ir_node *ld  = new_Load(get_store(), irn, mode, decl->type->getFirmType(), cons_none);
     ir_node *m   = new_Proj(ld, mode_M, pn_Load_M);
     res = new_Proj(ld, mode, pn_Load_res);
-    
+   
     set_store(m);
   } else {
     // is local var access
@@ -353,13 +372,160 @@ void CRef::doExpr() {
 
 // TODO: doExpr() and doCond() for the following expressions:
 
-// UnaryRightExpression (FieldAccess, MethodInvocation)
-// CallExpression
 // CNull
 // CThis
 // NewArray
 // StaticLibraryCall
-// ArrayAccess
+
+void CallExpression::doCond(ir_node *trueBlock, ir_node *falseBlock)
+{
+  auto n = shared_from_this();
+  
+  doExpr();
+  assert(n->firm_node);
+  
+  ir_node *res = n->firm_node;
+  
+  // Check res for trueness
+  ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *cmp = new_Cmp(res, const1, ir_relation_greater_equal);
+  ir_node *cond = new_Cond(cmp);
+  ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
+  ir_node *fnode = new_Proj(cond, mode_X, pn_Cond_false);
+  
+  add_immBlock_pred(trueBlock, tnode);
+  add_immBlock_pred(falseBlock, fnode);
+}
+
+void CallExpression::doExpr()
+{
+  auto n = shared_from_this();
+  
+  ir_graph *g = get_current_ir_graph();
+  ir_node *this_node = new_Proj(get_irg_args(g), mode_P, 0);
+  
+  auto decl = n->declaration.lock();
+  assert(decl);
+  
+  ir_entity *meth = decl->firm_entity;
+  ir_node *addr = new_Address(meth);
+  unsigned long nargs = n->arguments.size();
+  ir_node *args[nargs + 1];
+  args[0] = this_node;
+  int i = 1;
+  for (auto const& a : n->arguments) {
+    a->doExpr();
+    assert(a->firm_node);
+    
+    args[i++] = a->firm_node;
+  }
+  
+  ir_node *call = new_Call(get_store(), addr, (int)nargs + 1, args, decl->type->getFirmType());
+  ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
+  ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
+  ir_mode *mode = get_type_mode(decl->type->getFirmType());
+  ir_node *res = new_Proj(tres, mode, 0);
+  
+  set_store(mem);
+  n->firm_node = res;
+}
+
+void UnaryRightExpression::doCond(ir_node *trueBlock, ir_node *falseBlock)
+{
+  auto n = shared_from_this();
+  ir_node *res = n->firm_node;
+  
+  doExpr();
+  assert(n->firm_node);
+  
+  // Check res for trueness
+  ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *cmp = new_Cmp(res, const1, ir_relation_greater_equal);
+  ir_node *cond = new_Cond(cmp);
+  ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
+  ir_node *fnode = new_Proj(cond, mode_X, pn_Cond_false);
+  
+  add_immBlock_pred(trueBlock, tnode);
+  add_immBlock_pred(falseBlock, fnode);
+}
+
+void UnaryRightExpression::doExpr()
+{
+  auto n = shared_from_this();
+  
+  n->expression->doExpr();
+  assert(n->expression->firm_node);
+  
+  if (FieldAccess* fa = dynamic_cast<FieldAccess*>(n->op.get()))
+  {
+    auto decl = fa->declaration.lock();
+    assert(decl);
+    
+    // n->expression->firm_node is a Proj P64 to a class entity
+    ir_node *irn = new_Member(n->expression->firm_node, decl->firm_entity);
+    ir_mode *mode = get_type_mode(decl->type->getFirmType());
+    ir_node *ld  = new_Load(get_store(), irn, mode, decl->type->getFirmType(), cons_none);
+    ir_node *m   = new_Proj(ld, mode_M, pn_Load_M);
+    ir_node *res = new_Proj(ld, mode, pn_Load_res);
+    
+    set_store(m);
+    n->firm_node = res;
+    return;
+  }
+  
+  if (MethodInvocation* mi = dynamic_cast<MethodInvocation*>(n->op.get()))
+  {
+    ir_graph *g = get_current_ir_graph();
+    // n->expression->firm_node is a Proj P64 to a class entity
+    ir_node *this_node = n->expression->firm_node;
+    
+    auto decl = mi->declaration.lock();
+    assert(decl);
+    
+    ir_entity *meth = decl->firm_entity;
+    ir_node *addr = new_Address(meth);
+    unsigned long nargs = mi->arguments.size();
+    ir_node *args[nargs + 1];
+    args[0] = this_node;
+    int i = 1;
+    for (auto const& a : mi->arguments) {
+      a->doExpr();
+      assert(a->firm_node);
+      
+      args[i++] = a->firm_node;
+    }
+    
+    ir_node *call = new_Call(get_store(), addr, (int)nargs + 1, args, decl->type->getFirmType());
+    ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
+    ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
+    ir_mode *mode = get_type_mode(decl->type->getFirmType());
+    ir_node *res = new_Proj(tres, mode, 0);
+    
+    set_store(mem);
+    n->firm_node = res;
+  }
+  
+  if (ArrayAccess* aa = dynamic_cast<ArrayAccess*>(n->op.get()))
+  {
+    // n->expression->firm_node is a Proj P64 to an array_type
+    n->expression->doExpr();
+    
+    ir_type *array_type = get_pointer_points_to_type(n->expression->type->getFirmType());
+    ir_mode *array_mode = get_type_mode(array_type);
+    ir_type *elem_type  = get_array_element_type(array_type);
+    ir_mode *elem_mode  = get_type_mode(elem_type);
+    
+    ir_node *sel       = new_Sel(n->expression->firm_node, aa->expression->firm_node, array_type);
+    ir_node *ld        = new_Load(get_store(), sel, elem_mode, elem_type, cons_none);
+    ir_node *m         = new_Proj(ld, mode_M, pn_Load_M);
+    ir_node *res       = new_Proj(ld, elem_mode, pn_Load_res);
+    
+    set_store(m);
+    n->firm_node = res;
+  }
+  
+  assert(false);
+}
 
 void NewObject::doExpr() {
   auto n = shared_from_this();
@@ -535,8 +701,7 @@ void IRBuilder::dispatch(std::shared_ptr<MainMethod> n) {
   irg_finalize_cons(g);
 };
 
-void IRBuilder::dispatch(std::shared_ptr<Field> n) {
-};
+void IRBuilder::dispatch(std::shared_ptr<Field> n) {};
 
 void IRBuilder::dispatch(std::shared_ptr<Method> n) {
   ir_graph *g = n->firm_graph;
@@ -702,101 +867,15 @@ void IRBuilder::dispatch(std::shared_ptr<AdditiveExpression> n) { assert(false);
 void IRBuilder::dispatch(std::shared_ptr<MultiplicativeExpression> n) { assert(false); };
 void IRBuilder::dispatch(std::shared_ptr<UnaryLeftExpression> n) { assert(false); };
 void IRBuilder::dispatch(std::shared_ptr<UnaryRightExpression> n) { assert(false); };
-
-void IRBuilder::dispatch(std::shared_ptr<FieldAccess> n) {
-  auto decl = n->declaration.lock();
-  
-  // currentExpression->firm_node is a Proj P64 to a class entity
-  ir_node *irn = new_Member(currentExpression->firm_node, decl->firm_entity);
-  ir_mode *mode = get_type_mode(decl->type->getFirmType());
-  ir_node *ld  = new_Load(get_store(), irn, mode, decl->type->getFirmType(), cons_none);
-  ir_node *m   = new_Proj(ld, mode_M, pn_Load_M);
-  ir_node *res = new_Proj(ld, mode, pn_Load_res);
-  
-  set_store(m);
-  n->firm_node = res;
-};
-
-void IRBuilder::dispatch(std::shared_ptr<MethodInvocation> n) {
-  ir_graph *g = get_current_ir_graph();
-  ir_node *this_node = new_Proj(get_irg_args(g), mode_P, 0);
-  
-  auto decl = n->declaration.lock();
-  assert(decl);
-  
-  ir_entity *meth = decl->firm_entity;
-  ir_node *addr = new_Address(meth);
-  unsigned long nargs = n->arguments.size();
-  ir_node *args[nargs + 1];
-  args[0] = this_node;
-  int i = 1;
-  for (auto const& a : n->arguments) {
-    a->accept(shared_from_this());
-    args[i++] = a->firm_node;
-  }
-  
-  ir_node *call = new_Call(get_store(), addr, (int)nargs + 1, args, decl->type->getFirmType());
-  ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
-  ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
-  ir_mode *mode = get_type_mode(decl->type->getFirmType());
-  ir_node *res = new_Proj(tres, mode, 0);
-  
-  set_store(mem);
-  n->firm_node = res;
-};
-
-void IRBuilder::dispatch(std::shared_ptr<ArrayAccess> n) {
-  // currentExpression->firm_node is a Proj P to an array_type
-  n->expression->accept(shared_from_this());
-  
-  ir_type *array_type = get_pointer_points_to_type(currentExpression->type->getFirmType());
-  ir_mode *array_mode = get_type_mode(array_type);
-  ir_type *elem_type  = get_array_element_type(array_type);
-  ir_mode *elem_mode  = get_type_mode(elem_type);
-  
-  ir_node *sel       = new_Sel(currentExpression->firm_node, n->expression->firm_node, array_type);
-  ir_node *ld        = new_Load(get_store(), sel, elem_mode, elem_type, cons_none);
-  ir_node *m         = new_Proj(ld, mode_M, pn_Load_M);
-  ir_node *res       = new_Proj(ld, elem_mode, pn_Load_res);
-  
-  set_store(m);
-  n->firm_node = res;
-};
+void IRBuilder::dispatch(std::shared_ptr<FieldAccess> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<MethodInvocation> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<CallExpression> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<NewObject> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<ArrayAccess> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<CRef> n) { assert(false); };
 
 
 
-
-
-
-void IRBuilder::dispatch(std::shared_ptr<CallExpression> n) {
-  ir_graph *g = get_current_ir_graph();
-  ir_node *this_node = new_Proj(get_irg_args(g), mode_P, 0);
-  
-  auto decl = n->declaration.lock();
-  assert(decl);
-  
-  ir_entity *meth = decl->firm_entity;
-  ir_node *addr = new_Address(meth);
-  unsigned long nargs = n->arguments.size();
-  ir_node *args[nargs + 1];
-  args[0] = this_node;
-  int i = 1;
-  for (auto const& a : n->arguments) {
-    a->accept(shared_from_this());
-    args[i++] = a->firm_node;
-  }
-  
-  ir_node *call = new_Call(get_store(), addr, (int)nargs + 1, args, decl->type->getFirmType());
-  ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
-  ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
-  ir_mode *mode = get_type_mode(decl->type->getFirmType());
-  ir_node *res = new_Proj(tres, mode, 0);
-  
-  set_store(mem);
-  n->firm_node = res;
-};
-
-void IRBuilder::dispatch(std::shared_ptr<NewObject> n) {};
 
 void IRBuilder::dispatch(std::shared_ptr<NewArray> n) {
   n->expression->accept(shared_from_this());
@@ -812,18 +891,9 @@ void IRBuilder::dispatch(std::shared_ptr<NewArray> n) {
 };
 
 
-
-
-
-
-
 void IRBuilder::dispatch(std::shared_ptr<CIntegerLiteral> n) {
   ir_tarval *tv = new_tarval_from_long(n->value, mode_Is);
   n->firm_node = new_Const(tv);
-};
-
-void IRBuilder::dispatch(std::shared_ptr<CRef> n) {
-  
 };
 
 void IRBuilder::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) {
