@@ -177,6 +177,7 @@ void TypeChecker::dispatch(std::shared_ptr<MethodInvocation> n) {
   }
   
   auto methodDecl = classDecl->methods[n->ID].lock();
+  n->declaration = methodDecl;
   
   // check arguments
   // Check number of arguments equals number of parameters

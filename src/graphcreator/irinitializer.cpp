@@ -54,7 +54,7 @@ void IRInitializer::dispatch(std::shared_ptr<MainMethod> n) {
   ir_entity *e = new_entity(currentClassDeclaration->declared_type, new_id_from_str(name.c_str()), t);
   ir_graph *g = new_ir_graph(e, (int) n->localVariables.size());
   
-  n->firm_type = t;
+  n->declared_type = t;
   n->firm_entity = e;
   n->firm_graph = g;
   
@@ -63,9 +63,6 @@ void IRInitializer::dispatch(std::shared_ptr<MainMethod> n) {
   for (auto const& d : n->localVariables) {
     d->parameterIndex = i++;
   }
-  
-  // Descend
-  n->block->accept(shared_from_this());
 };
 
 void IRInitializer::dispatch(std::shared_ptr<Method> n) {
@@ -80,7 +77,6 @@ void IRInitializer::dispatch(std::shared_ptr<Method> n) {
   
   // Set return type
   if (nret > 0) {
-    n->type->accept(shared_from_this());
     set_method_res_type(t, 0, n->type->getFirmType());
   }
   
@@ -114,12 +110,9 @@ void IRInitializer::dispatch(std::shared_ptr<Method> n) {
   int num = (int) (1 + n->parameters.size() + n->localVariables.size());
   ir_graph *g = new_ir_graph(e, num);
   
-  n->firm_type = t;
+  n->declared_type = t;
   n->firm_entity = e;
   n->firm_graph = g;
-  
-  // Descend
-  n->block->accept(shared_from_this());
 };
 
 void IRInitializer::dispatch(std::shared_ptr<Field> n) {

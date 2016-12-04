@@ -794,7 +794,7 @@ namespace cmpl
     std::shared_ptr<Block>                  block;
     std::map<StringIdentifier, std::weak_ptr<Parameter>> parameterMap;
     ir_graph *firm_graph = NULL;
-    ir_type *firm_type = NULL;
+    ir_type *declared_type = NULL;
     
     Method(std::shared_ptr<Type> &type,
            StringIdentifier &ID,
@@ -820,7 +820,7 @@ namespace cmpl
     std::shared_ptr<Block> block;
     std::vector<std::shared_ptr<Node>>      localVariables;
     ir_graph *firm_graph = NULL;
-    ir_type *firm_type = NULL;
+    ir_type *declared_type = NULL;
     
     MainMethod(StringIdentifier &ID,
                StringIdentifier &parameterID,

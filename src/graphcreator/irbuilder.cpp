@@ -543,7 +543,7 @@ void UnaryRightExpression::doExpr()
       args[i++] = a->firm_node;
     }
     
-    ir_node *call = new_Call(get_store(), addr, (int)nargs + 1, args, decl->type->getFirmType());
+    ir_node *call = new_Call(get_store(), addr, (int)nargs + 1, args, decl->declared_type);
     ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
     ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
     ir_mode *mode = get_type_mode(decl->type->getFirmType());
@@ -571,8 +571,6 @@ void UnaryRightExpression::doExpr()
     set_store(m);
     n->firm_node = res;
   }
-  
-  assert(false);
 }
 
 void NewObject::doExpr() {
