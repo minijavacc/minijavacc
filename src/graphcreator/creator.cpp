@@ -71,18 +71,6 @@ static inline int is_method_type_(ir_type const *const type)
 
 void Creator::createBinary(std::string filepath)
 {
-  // get filename without extension
-  std::string filename;
-  size_t lastindex = filepath.find_last_of(".");
-  if (lastindex == std::string::npos)
-  {
-    filename = filepath + "_";
-  }
-  else
-  {
-    filename = filepath.substr(0, lastindex); 
-  }
-  
   // --- lowering phase ---
   
   // 1. layout types
@@ -124,13 +112,13 @@ void Creator::createBinary(std::string filepath)
   
   // create and open output file
   FILE * output;
-  output = fopen((filename + ".s").c_str() , "w");
+  output = fopen("asm.s" , "w");
   
   // run backend to generate assembler file
-  be_main(output, (filename + ".c").c_str());
+  be_main(output, "input.c");
   fclose(output);
   
-  std::cout << "Created assembler file: " << filename << ".s\n";
+  std::cout << "Created assembler file: asm.s\n";
   
   
   // --- link to runtime library and create binary ---
@@ -144,13 +132,13 @@ void Creator::createBinary(std::string filepath)
     
     if (status != 0)
     {
-      throw CreatorBackendError(("could not link assembler file to runtime library. Try running the link command manually:\n$ gcc -o " + filename + " " + filename + ".s runtime/println.c").c_str());
+      throw CreatorBackendError("could not link assembler file to runtime library. Try running the link command manually:\n$ gcc -o a.out asm.s runtime/println.c");
     }
   }
   else
   {
     // child
-    int ret = execlp("gcc", "gcc", "-o", filename.c_str(), (filename + ".s").c_str(), "runtime/println.c", NULL);
+    int ret = execlp("gcc", "gcc", "-o", "a.out", "asm.s", "runtime/println.c", NULL);
     
     if (ret != 0)
     {
@@ -158,7 +146,7 @@ void Creator::createBinary(std::string filepath)
     }
   }
   
-  std::cout << "Created binary: " << filename << "\n";
+  std::cout << "Created binary: a.out\n";
   return;
 }
 
