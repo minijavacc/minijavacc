@@ -113,7 +113,6 @@ void LogicalAndExpression::doCond(ir_node *trueBlock, ir_node *falseBlock) {
 }
 
 void EqualityExpression::doExpr() {
-//  assert(false);
   ir_graph *g = get_current_ir_graph();
   ir_node *trueBlock = new_r_immBlock(g);
   ir_node *falseBlock = new_r_immBlock(g);
@@ -354,19 +353,26 @@ void CRef::doExpr() {
 
 // TODO: doExpr() and doCond() for the following expressions:
 
-// UnaryRightExpression
-
+// UnaryRightExpression (FieldAccess, MethodInvocation)
 // CallExpression
-
 // CNull
-
 // CThis
-
-// NewObject
-
 // NewArray
-
 // StaticLibraryCall
+// ArrayAccess
+
+void NewObject::doExpr() {
+  auto n = shared_from_this();
+  
+  ir_node *num = new_Const(new_tarval_from_long(1, mode_Is));
+  ir_node *call = IRBuilder::callCallocNode(num, n->type->getFirmType());
+  ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
+  ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
+  ir_node *res = new_Proj(tres, mode_P, 0);
+  
+  set_store(mem);
+  n->firm_node = res;
+}
 
 void CRef::doCond(ir_node *trueBlock, ir_node *falseBlock) {
   auto d = shared_from_this()->declaration.lock();
@@ -410,10 +416,6 @@ void CRef::doCond(ir_node *trueBlock, ir_node *falseBlock) {
 void CIntegerLiteral::doExpr() {
   ir_tarval *tv = new_tarval_from_long(shared_from_this()->value, mode_Is);
   shared_from_this()->firm_node = new_Const(tv);
-}
-
-void CIntegerLiteral::doCond(ir_node *trueBlock, ir_node *falseBlock) {
-  assert(false);
 }
 
 void CTrue::doExpr() {
@@ -687,46 +689,19 @@ void IRBuilder::dispatch(std::shared_ptr<TypeVoid> n) { };
 
 #pragma mark - Expressions
 
-void IRBuilder::dispatch(std::shared_ptr<AssignmentExpression> n) {
-  
-};
-
-void IRBuilder::dispatch(std::shared_ptr<LogicalOrExpression> n) {
-  
-};
-
-void IRBuilder::dispatch(std::shared_ptr<LogicalAndExpression> n) {
-  
-};
-
-void IRBuilder::dispatch(std::shared_ptr<EqualityExpression> n) {
-  
-};
-
-void IRBuilder::dispatch(std::shared_ptr<RelationalExpression> n) {
-  
-};
-
-void IRBuilder::dispatch(std::shared_ptr<AdditiveExpression> n) {
-  
-};
-
-void IRBuilder::dispatch(std::shared_ptr<MultiplicativeExpression> n) {
-  
-};
-
-void IRBuilder::dispatch(std::shared_ptr<UnaryLeftExpression> n) {
-  
-};
-
-void IRBuilder::dispatch(std::shared_ptr<UnaryRightExpression> n) {
-  n->expression->accept(shared_from_this());
-  currentExpression = n->expression;
-  n->op->accept(shared_from_this());
-  currentExpression = nullptr;
-  
-  n->firm_node = n->op->firm_node;
-};
+// Expressions are created with expression->doExpr()
+// so these methods get never called
+// this is necessary because the AST method has to call doCond()
+// and doesn't own a reference for this dispatcher
+void IRBuilder::dispatch(std::shared_ptr<AssignmentExpression> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<LogicalOrExpression> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<LogicalAndExpression> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<EqualityExpression> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<RelationalExpression> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<AdditiveExpression> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<MultiplicativeExpression> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<UnaryLeftExpression> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<UnaryRightExpression> n) { assert(false); };
 
 void IRBuilder::dispatch(std::shared_ptr<FieldAccess> n) {
   auto decl = n->declaration.lock();
@@ -742,7 +717,33 @@ void IRBuilder::dispatch(std::shared_ptr<FieldAccess> n) {
   n->firm_node = res;
 };
 
-void IRBuilder::dispatch(std::shared_ptr<MethodInvocation> n) { };
+void IRBuilder::dispatch(std::shared_ptr<MethodInvocation> n) {
+  ir_graph *g = get_current_ir_graph();
+  ir_node *this_node = new_Proj(get_irg_args(g), mode_P, 0);
+  
+  auto decl = n->declaration.lock();
+  assert(decl);
+  
+  ir_entity *meth = decl->firm_entity;
+  ir_node *addr = new_Address(meth);
+  unsigned long nargs = n->arguments.size();
+  ir_node *args[nargs + 1];
+  args[0] = this_node;
+  int i = 1;
+  for (auto const& a : n->arguments) {
+    a->accept(shared_from_this());
+    args[i++] = a->firm_node;
+  }
+  
+  ir_node *call = new_Call(get_store(), addr, (int)nargs + 1, args, decl->type->getFirmType());
+  ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
+  ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
+  ir_mode *mode = get_type_mode(decl->type->getFirmType());
+  ir_node *res = new_Proj(tres, mode, 0);
+  
+  set_store(mem);
+  n->firm_node = res;
+};
 
 void IRBuilder::dispatch(std::shared_ptr<ArrayAccess> n) {
   // currentExpression->firm_node is a Proj P to an array_type
@@ -795,16 +796,7 @@ void IRBuilder::dispatch(std::shared_ptr<CallExpression> n) {
   n->firm_node = res;
 };
 
-void IRBuilder::dispatch(std::shared_ptr<NewObject> n) {
-  ir_node *num = new_Const(new_tarval_from_long(1, mode_Is));
-  ir_node *call = callCallocNode(num, n->type->getFirmType());
-  ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
-  ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
-  ir_node *res = new_Proj(tres, mode_P, 0);
-  
-  set_store(mem);
-  n->firm_node = res;
-};
+void IRBuilder::dispatch(std::shared_ptr<NewObject> n) {};
 
 void IRBuilder::dispatch(std::shared_ptr<NewArray> n) {
   n->expression->accept(shared_from_this());
@@ -851,7 +843,7 @@ void IRBuilder::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) {
   
   set_store(mem);
   
-  // returntype is void... what do do?
+  // TODO: returntype is void... what do do?
   n->firm_node = nullptr;
 };
 

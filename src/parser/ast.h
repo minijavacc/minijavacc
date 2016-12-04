@@ -285,9 +285,9 @@ namespace cmpl
     // necessary to allow NewArray set attributes of TypedNode in its contructor
     Expression(std::shared_ptr<BasicType> basicType, int arrayDepth) : TypedNode(basicType, arrayDepth) { };
     bool isValidSemanticType(); // Semantic types type expressions, expressions cannot be void
-    virtual void doCond(ir_node *trueBlock, ir_node *falseBlock) {};
-    virtual void doExpr() { assert(false); /* not implemented (yet) */ };
-    virtual void assign(ir_node *value) { assert(false); /* not implemented (yet) */ };
+    virtual void doCond(ir_node *trueBlock, ir_node *falseBlock) { assert(false); }; // if not implemented by subclass, the method must not be called
+    virtual void doExpr() { assert(false); }; // if not implemented by subclass, the method must not be called
+    virtual void assign(ir_node *value) { assert(false); }; // if not implemented by subclass, the method must not be called
   };
 
   class NotEquals : public EqualityOp, public std::enable_shared_from_this<NotEquals>
@@ -582,7 +582,6 @@ namespace cmpl
     
     CIntegerLiteral(std::string &integer) : integer(integer) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
-    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
     void doExpr() override;
   };
   
@@ -606,6 +605,8 @@ namespace cmpl
     
     NewObject(std::shared_ptr<UserType> t) : userType(t) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    //void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
+    void doExpr() override;
   };
   
   class NewArray : public Expression, public std::enable_shared_from_this<NewArray>
