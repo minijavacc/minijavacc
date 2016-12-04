@@ -14,7 +14,7 @@
 
 using namespace cmpl;
 
-int Compiler::echo(std::ifstream &file)
+int Compiler::echo(std::ifstream &file, std::string filename)
 {
   std::string line;
   
@@ -26,11 +26,11 @@ int Compiler::echo(std::ifstream &file)
   return 0;
 }
 
-int Compiler::lextest(std::ifstream &file)
+int Compiler::lextest(std::ifstream &file, std::string filename)
 {
   try {
-    Lexer lexer;
-    lexer.run(file);
+    Lexer lexer(file);
+    lexer.run();
   
     std::unique_ptr<Token> token;
     while (lexer.getNextToken(token))
@@ -50,11 +50,11 @@ int Compiler::lextest(std::ifstream &file)
   }
 }
 
-int Compiler::parsetest(std::ifstream &file)
+int Compiler::parsetest(std::ifstream &file, std::string filename)
 {
   try {
-    Lexer lexer;
-    lexer.run(file);
+    Lexer lexer(file);
+    lexer.run();
   
     Parser parser(lexer);
     parser.run();
@@ -75,11 +75,11 @@ int Compiler::parsetest(std::ifstream &file)
   }
 }
 
-int Compiler::printast(std::ifstream &file)
+int Compiler::printast(std::ifstream &file, std::string filename)
 {
   try {
-    Lexer lexer;
-    lexer.run(file);
+    Lexer lexer(file);
+    lexer.run();
   
     Parser parser(lexer);
     parser.run();
@@ -105,11 +105,11 @@ int Compiler::printast(std::ifstream &file)
   }
 }
 
-int Compiler::semcheck(std::ifstream &file)
+int Compiler::semcheck(std::ifstream &file, std::string filename)
 {
   try {
-    Lexer lexer;
-    lexer.run(file);
+    Lexer lexer(file);
+    lexer.run();
   
     Parser parser(lexer);
     parser.run();
@@ -139,11 +139,11 @@ int Compiler::semcheck(std::ifstream &file)
   }
 }
 
-int Compiler::creategraph(std::ifstream &file)
+int Compiler::creategraph(std::ifstream &file, std::string filename)
 {
   try {
-    Lexer lexer;
-    lexer.run(file);
+    Lexer lexer(file);
+    lexer.run();
   
     Parser parser(lexer);
     parser.run();
@@ -151,17 +151,10 @@ int Compiler::creategraph(std::ifstream &file)
     Checker checker(parser);
     checker.run();
     
-    Creator creator(parser.getAST());
+    Creator creator(checker);
     creator.run();
-    creator.dump();
+    creator.dumpGraph();
     std::cout << "dumped graph files *.vcg\n";
-    creator.createAssembler();
-    std::cout << "create assembler file a.s\n";
-    
-    if (!creator.linkToRuntimeLibrary())
-    {
-      std::cout << "create executable file a.out\n";
-    }
     
     return 0;
   }
@@ -181,6 +174,54 @@ int Compiler::creategraph(std::ifstream &file)
   {
     std::cerr << "semantic error: " << e.what() << "\n";
     //std::cerr << sourcePreview(file, e.line, e.column) << "\n"; TODO: make semantic errors useful
+    return 1;
+  }
+  catch (CreatorError &e) 
+  {
+    std::cerr << "creator error: " << e.what() << "\n";
+    return 1;
+  }
+}
+
+int Compiler::compilefirm(std::ifstream &file, std::string filename)
+{
+  try {
+    Lexer lexer(file);
+    lexer.run();
+  
+    Parser parser(lexer);
+    parser.run();
+    
+    Checker checker(parser);
+    checker.run();
+    
+    Creator creator(checker);
+    creator.run();
+    creator.createBinary(filename);
+    
+    return 0;
+  }
+  catch (SyntaxError &e) 
+  {
+    std::cerr << "syntax error: " << e.what() << "\n";
+    std::cerr << sourcePreview(file, e.line, e.column) << "\n";
+    return 1;
+  }
+  catch (ParserError &e) 
+  {
+    std::cerr << "parser error: " << e.what() << "\n";
+    std::cerr << sourcePreview(file, e.line, e.column) << "\n";
+    return 1;
+  }
+  catch (SemanticError &e)
+  {
+    std::cerr << "semantic error: " << e.what() << "\n";
+    //std::cerr << sourcePreview(file, e.line, e.column) << "\n"; TODO: make semantic errors useful
+    return 1;
+  }
+  catch (CreatorError &e) 
+  {
+    std::cerr << "creator error: " << e.what() << "\n";
     return 1;
   }
 }

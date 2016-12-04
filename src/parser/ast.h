@@ -79,80 +79,83 @@ namespace cmpl
   // ------ Visitor pattern ------ //
   class Dispatcher {
   public:
-    virtual void dispatch(std::shared_ptr<Type> n) = 0;
-    virtual void dispatch(std::shared_ptr<TypeBoolean> n) = 0;
-    virtual void dispatch(std::shared_ptr<TypeInt> n) = 0;
-    virtual void dispatch(std::shared_ptr<TypeVoid> n) = 0;
-    virtual void dispatch(std::shared_ptr<FakeType> n) = 0;
-    virtual void dispatch(std::shared_ptr<NullType> n) = 0;
-    virtual void dispatch(std::shared_ptr<UserType> n) = 0;
-    virtual void dispatch(std::shared_ptr<Program> n) = 0;
-    virtual void dispatch(std::shared_ptr<ClassDeclaration> n) = 0;
-    virtual void dispatch(std::shared_ptr<Field> n) = 0;
-    virtual void dispatch(std::shared_ptr<Method> n) = 0;
-    virtual void dispatch(std::shared_ptr<MainMethod> n) = 0;
-    virtual void dispatch(std::shared_ptr<Parameter> n) = 0;
-    virtual void dispatch(std::shared_ptr<Block> n) = 0;
-    virtual void dispatch(std::shared_ptr<IfStatement> n) = 0;
-    virtual void dispatch(std::shared_ptr<IfElseStatement> n) = 0;
-    virtual void dispatch(std::shared_ptr<ExpressionStatement> n) = 0;
-    virtual void dispatch(std::shared_ptr<WhileStatement> n) = 0;
-    virtual void dispatch(std::shared_ptr<LocalVariableDeclaration> n) = 0;
-    virtual void dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) = 0;
-    virtual void dispatch(std::shared_ptr<ReturnStatement> n) = 0;
-    virtual void dispatch(std::shared_ptr<ReturnExpressionStatement> n) = 0;
-    virtual void dispatch(std::shared_ptr<EmptyStatement> n) = 0;
-    virtual void dispatch(std::shared_ptr<MethodInvocation> n) = 0;
-    virtual void dispatch(std::shared_ptr<ArrayAccess> n) = 0;
-    virtual void dispatch(std::shared_ptr<FieldAccess> n) = 0;
-    virtual void dispatch(std::shared_ptr<AssignmentExpression> n) = 0;
-    virtual void dispatch(std::shared_ptr<LogicalOrExpression> n) = 0;
-    virtual void dispatch(std::shared_ptr<LogicalAndExpression> n) = 0;
-    virtual void dispatch(std::shared_ptr<EqualityExpression> n) = 0;
-    virtual void dispatch(std::shared_ptr<RelationalExpression> n) = 0;
-    virtual void dispatch(std::shared_ptr<AdditiveExpression> n) = 0;
-    virtual void dispatch(std::shared_ptr<MultiplicativeExpression> n) = 0;
-    virtual void dispatch(std::shared_ptr<CallExpression> n) = 0;
-    virtual void dispatch(std::shared_ptr<UnaryLeftExpression> n) = 0;
-    virtual void dispatch(std::shared_ptr<UnaryRightExpression> n) = 0;
-    virtual void dispatch(std::shared_ptr<CNull> n) = 0;
-    virtual void dispatch(std::shared_ptr<CThis> n) = 0;
-    virtual void dispatch(std::shared_ptr<CTrue> n) = 0;
-    virtual void dispatch(std::shared_ptr<CFalse> n) = 0;
-    virtual void dispatch(std::shared_ptr<CRef> n) = 0;
-    virtual void dispatch(std::shared_ptr<CIntegerLiteral> n) = 0;
-    virtual void dispatch(std::shared_ptr<NewObject> n) = 0;
-    virtual void dispatch(std::shared_ptr<NewArray> n) = 0;
-    virtual void dispatch(std::shared_ptr<StaticLibraryCallExpression> n) = 0;
-    virtual void dispatch(std::shared_ptr<Equals> n) = 0;
-    virtual void dispatch(std::shared_ptr<NotEquals> n) = 0;
-    virtual void dispatch(std::shared_ptr<LessThan> n) = 0;
-    virtual void dispatch(std::shared_ptr<LessThanOrEqual> n) = 0;
-    virtual void dispatch(std::shared_ptr<GreaterThan> n) = 0;
-    virtual void dispatch(std::shared_ptr<GreaterThanOrEqual> n) = 0;
-    virtual void dispatch(std::shared_ptr<Add> n) = 0;
-    virtual void dispatch(std::shared_ptr<Subtract> n) = 0;
-    virtual void dispatch(std::shared_ptr<Multiply> n) = 0;
-    virtual void dispatch(std::shared_ptr<Divide> n) = 0;
-    virtual void dispatch(std::shared_ptr<Modulo> n) = 0;
-    virtual void dispatch(std::shared_ptr<Negate> n) = 0;
-    virtual void dispatch(std::shared_ptr<Minus> n) = 0;
+    virtual void dispatch(std::shared_ptr<Type> n) {};
+    virtual void dispatch(std::shared_ptr<TypeBoolean> n) {};
+    virtual void dispatch(std::shared_ptr<TypeInt> n) {};
+    virtual void dispatch(std::shared_ptr<TypeVoid> n) {};
+    virtual void dispatch(std::shared_ptr<FakeType> n) {};
+    virtual void dispatch(std::shared_ptr<NullType> n) {};
+    virtual void dispatch(std::shared_ptr<UserType> n) {};
+    virtual void dispatch(std::shared_ptr<Program> n) {};
+    virtual void dispatch(std::shared_ptr<ClassDeclaration> n) {};
+    virtual void dispatch(std::shared_ptr<Field> n) {};
+    virtual void dispatch(std::shared_ptr<Method> n) {};
+    virtual void dispatch(std::shared_ptr<MainMethod> n) {};
+    virtual void dispatch(std::shared_ptr<Parameter> n) {};
+    virtual void dispatch(std::shared_ptr<Block> n) {};
+    virtual void dispatch(std::shared_ptr<IfStatement> n) {};
+    virtual void dispatch(std::shared_ptr<IfElseStatement> n) {};
+    virtual void dispatch(std::shared_ptr<ExpressionStatement> n) {};
+    virtual void dispatch(std::shared_ptr<WhileStatement> n) {};
+    virtual void dispatch(std::shared_ptr<LocalVariableDeclaration> n) {};
+    virtual void dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) {};
+    virtual void dispatch(std::shared_ptr<ReturnStatement> n) {};
+    virtual void dispatch(std::shared_ptr<ReturnExpressionStatement> n) {};
+    virtual void dispatch(std::shared_ptr<EmptyStatement> n) {};
+    virtual void dispatch(std::shared_ptr<MethodInvocation> n) {};
+    virtual void dispatch(std::shared_ptr<ArrayAccess> n) {};
+    virtual void dispatch(std::shared_ptr<FieldAccess> n) {};
+    virtual void dispatch(std::shared_ptr<AssignmentExpression> n) {};
+    virtual void dispatch(std::shared_ptr<LogicalOrExpression> n) {};
+    virtual void dispatch(std::shared_ptr<LogicalAndExpression> n) {};
+    virtual void dispatch(std::shared_ptr<EqualityExpression> n) {};
+    virtual void dispatch(std::shared_ptr<RelationalExpression> n) {};
+    virtual void dispatch(std::shared_ptr<AdditiveExpression> n) {};
+    virtual void dispatch(std::shared_ptr<MultiplicativeExpression> n) {};
+    virtual void dispatch(std::shared_ptr<CallExpression> n) {};
+    virtual void dispatch(std::shared_ptr<UnaryLeftExpression> n) {};
+    virtual void dispatch(std::shared_ptr<UnaryRightExpression> n) {};
+    virtual void dispatch(std::shared_ptr<CNull> n) {};
+    virtual void dispatch(std::shared_ptr<CThis> n) {};
+    virtual void dispatch(std::shared_ptr<CTrue> n) {};
+    virtual void dispatch(std::shared_ptr<CFalse> n) {};
+    virtual void dispatch(std::shared_ptr<CRef> n) {};
+    virtual void dispatch(std::shared_ptr<CIntegerLiteral> n) {};
+    virtual void dispatch(std::shared_ptr<NewObject> n) {};
+    virtual void dispatch(std::shared_ptr<NewArray> n) {};
+    virtual void dispatch(std::shared_ptr<StaticLibraryCallExpression> n) {};
+    virtual void dispatch(std::shared_ptr<Equals> n) {};
+    virtual void dispatch(std::shared_ptr<NotEquals> n) {};
+    virtual void dispatch(std::shared_ptr<LessThan> n) {};
+    virtual void dispatch(std::shared_ptr<LessThanOrEqual> n) {};
+    virtual void dispatch(std::shared_ptr<GreaterThan> n) {};
+    virtual void dispatch(std::shared_ptr<GreaterThanOrEqual> n) {};
+    virtual void dispatch(std::shared_ptr<Add> n) {};
+    virtual void dispatch(std::shared_ptr<Subtract> n) {};
+    virtual void dispatch(std::shared_ptr<Multiply> n) {};
+    virtual void dispatch(std::shared_ptr<Divide> n) {};
+    virtual void dispatch(std::shared_ptr<Modulo> n) {};
+    virtual void dispatch(std::shared_ptr<Negate> n) {};
+    virtual void dispatch(std::shared_ptr<Minus> n) {};
   };
   
   class Node
   {
   public:
     ir_node* firm_node = NULL;
+    ir_entity *firm_entity = NULL;
+    int parameterIndex;
     virtual void accept(std::shared_ptr<Dispatcher> d) = 0;
   };
   
 /**************** actual nodes ****************/
   class BasicType : public Node
   {
+  private:
+    ir_type *firm_type = NULL;
   public:
     bool virtual equals(std::shared_ptr<BasicType> t) = 0;
-    virtual ir_type * getFirmType() = 0;
-    virtual ir_mode * getFirmMode() = 0;
+    virtual ir_type *getFirmType() = 0;
   };
   
   class TypedNode
@@ -182,6 +185,8 @@ namespace cmpl
   
   class Type : public Node, public std::enable_shared_from_this<Type>
   {
+  private:
+    ir_type *firm_type;
   public:
     std::shared_ptr<BasicType> basicType;
     int                        arrayDepth;
@@ -190,7 +195,6 @@ namespace cmpl
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<Type> t);
     ir_type *getFirmType();
-    ir_mode *getFirmMode();
   };
   
   // basic types (created in AST)
@@ -200,8 +204,7 @@ namespace cmpl
   public:
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<BasicType> t) override;
-    virtual ir_type * getFirmType() override;
-    virtual ir_mode * getFirmMode() override;
+    ir_type *getFirmType() override;
     
     static const std::shared_ptr<TypeInt> instance;
     
@@ -214,8 +217,7 @@ namespace cmpl
   public:
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<BasicType> t) override;
-    virtual ir_type * getFirmType() override;
-    virtual ir_mode * getFirmMode() override;
+    ir_type *getFirmType() override;
     
     static const std::shared_ptr<TypeBoolean> instance;
     
@@ -228,8 +230,7 @@ namespace cmpl
   public:
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<BasicType> t) override;
-    virtual ir_type * getFirmType() override;
-    virtual ir_mode * getFirmMode() override;
+    ir_type *getFirmType() override;
     
     static const std::shared_ptr<TypeVoid> instance;
     
@@ -242,8 +243,7 @@ namespace cmpl
   public:
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<BasicType> other) override;
-    virtual ir_type * getFirmType() override;
-    virtual ir_mode * getFirmMode() override;
+    ir_type *getFirmType() override;
     
     static const std::shared_ptr<FakeType> instance;
     
@@ -256,8 +256,7 @@ namespace cmpl
   public:
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<BasicType> other) override;
-    virtual ir_type * getFirmType() override;
-    virtual ir_mode * getFirmMode() override;
+    ir_type *getFirmType() override;
     
     static const std::shared_ptr<NullType> instance;
     
@@ -274,8 +273,7 @@ namespace cmpl
     UserType(StringIdentifier ID) : ID(ID) { }
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<BasicType> other) override;
-    virtual ir_type * getFirmType() override;
-    virtual ir_mode * getFirmMode() override;
+    ir_type *getFirmType() override;
 };
   
   // other nodes
@@ -287,6 +285,9 @@ namespace cmpl
     // necessary to allow NewArray set attributes of TypedNode in its contructor
     Expression(std::shared_ptr<BasicType> basicType, int arrayDepth) : TypedNode(basicType, arrayDepth) { };
     bool isValidSemanticType(); // Semantic types type expressions, expressions cannot be void
+    virtual void doCond(ir_node *trueBlock, ir_node *falseBlock) { assert(false); }; // if not implemented by subclass, the method must not be called
+    virtual void doExpr() { assert(false); }; // if not implemented by subclass, the method must not be called
+    virtual void assign(ir_node *value) { assert(false); }; // if not implemented by subclass, the method must not be called
   };
 
   class NotEquals : public EqualityOp, public std::enable_shared_from_this<NotEquals>
@@ -435,6 +436,8 @@ namespace cmpl
     AssignmentExpression(std::shared_ptr<Expression> &expression1, std::shared_ptr<Expression> &expression2) :
                              expression1(std::move(expression1)), expression2(std::move(expression2)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
+    void doExpr() override;
   };
   
   class LogicalOrExpression : public Expression, public std::enable_shared_from_this<LogicalOrExpression>
@@ -446,6 +449,7 @@ namespace cmpl
     LogicalOrExpression(std::shared_ptr<Expression> &expression1, std::shared_ptr<Expression> &expression2) :
                             expression1(std::move(expression1)), expression2(std::move(expression2)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
   };
   
   class LogicalAndExpression : public Expression, public std::enable_shared_from_this<LogicalAndExpression>
@@ -457,6 +461,7 @@ namespace cmpl
     LogicalAndExpression(std::shared_ptr<Expression> &expression1, std::shared_ptr<Expression> &expression2) :
                              expression1(std::move(expression1)), expression2(std::move(expression2)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
   };
   
   class EqualityExpression : public OpExpression, public std::enable_shared_from_this<EqualityExpression>
@@ -465,6 +470,8 @@ namespace cmpl
     EqualityExpression(std::shared_ptr<EqualityOp> &op, std::shared_ptr<Expression> &expression1,
                          std::shared_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
+    void doExpr() override;
   };
 
   class RelationalExpression : public OpExpression, public std::enable_shared_from_this<RelationalExpression>
@@ -473,6 +480,8 @@ namespace cmpl
     RelationalExpression(std::shared_ptr<RelationalOp> &op, std::shared_ptr<Expression> &expression1,
                            std::shared_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
+    void doExpr() override;
   };
   
   class AdditiveExpression : public OpExpression, public std::enable_shared_from_this<AdditiveExpression>
@@ -481,6 +490,7 @@ namespace cmpl
     AdditiveExpression(std::shared_ptr<AddOp> &op, std::shared_ptr<Expression> &expression1,
                          std::shared_ptr<Expression> &expression2) : OpExpression(std::move(op), std::move(expression1), std::move(expression2)){ };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doExpr() override;
   };
   
   class MultiplicativeExpression : public OpExpression, public std::enable_shared_from_this<MultiplicativeExpression>
@@ -490,6 +500,7 @@ namespace cmpl
                                std::shared_ptr<Expression> &expression2) : 
                                  OpExpression(std::move(op), std::move(expression1), std::move(expression2)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doExpr() override;
   };
   
   class CallExpression : public Expression, public std::enable_shared_from_this<CallExpression>
@@ -502,6 +513,8 @@ namespace cmpl
     CallExpression(StringIdentifier &ID, std::vector<std::shared_ptr<Expression>> &arguments) :
                        ID(ID), arguments(std::move(arguments)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
+    void doExpr() override;
   };
   
   class UnaryLeftExpression : public Expression, public std::enable_shared_from_this<UnaryLeftExpression>
@@ -513,6 +526,8 @@ namespace cmpl
     UnaryLeftExpression(std::shared_ptr<UnaryOp> &op, std::shared_ptr<Expression> &expression) :
                             op(std::move(op)), expression(std::move(expression)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
+    void doExpr() override;
   };
   
   class UnaryRightExpression : public Expression, public std::enable_shared_from_this<UnaryRightExpression>
@@ -520,10 +535,13 @@ namespace cmpl
   public:
     std::shared_ptr<UnaryOp>    op;
     std::shared_ptr<Expression> expression;
-      
+    
     UnaryRightExpression(std::shared_ptr<Expression> &expression, std::shared_ptr<UnaryOp> &op) :
                              expression(std::move(expression)), op(std::move(op)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
+    void doExpr() override;
+    void assign(ir_node *value) override;
   };
   
   class CNull : public Expression, public std::enable_shared_from_this<CNull>
@@ -531,6 +549,7 @@ namespace cmpl
   public:
     CNull() { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doExpr() override;
   };
   
   class CFalse : public Expression, public std::enable_shared_from_this<CFalse>
@@ -538,6 +557,8 @@ namespace cmpl
   public:
     CFalse() { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doExpr() override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
   };
   
   class CTrue : public Expression, public std::enable_shared_from_this<CTrue>
@@ -545,6 +566,8 @@ namespace cmpl
   public:
     CTrue() { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doExpr() override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
   };
   
   class CThis : public Expression, public std::enable_shared_from_this<CThis>
@@ -554,6 +577,7 @@ namespace cmpl
     
     CThis() { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doExpr() override;
   };
   
   class CIntegerLiteral : public Expression, public std::enable_shared_from_this<CIntegerLiteral>
@@ -564,6 +588,7 @@ namespace cmpl
     
     CIntegerLiteral(std::string &integer) : integer(integer) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doExpr() override;
   };
   
   class CRef : public Expression, public std::enable_shared_from_this<CRef>
@@ -574,6 +599,9 @@ namespace cmpl
     
     CRef(StringIdentifier &ID) : ID(ID) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
+    void doExpr() override;
+    void assign(ir_node *value) override;
   };
   
   class NewObject : public Expression, public std::enable_shared_from_this<NewObject>
@@ -583,6 +611,8 @@ namespace cmpl
     
     NewObject(std::shared_ptr<UserType> t) : userType(t) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    //void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
+    void doExpr() override;
   };
   
   class NewArray : public Expression, public std::enable_shared_from_this<NewArray>
@@ -593,6 +623,7 @@ namespace cmpl
     NewArray(std::shared_ptr<BasicType> type, std::shared_ptr<Expression> &expression,
                int &arrayDepth) : Expression(type, arrayDepth), expression(std::move(expression)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
+    void doExpr() override;
   };
 
   class StaticLibraryCallExpression : public Expression, public std::enable_shared_from_this<StaticLibraryCallExpression>
@@ -610,6 +641,7 @@ namespace cmpl
     StaticLibraryCallExpression(std::shared_ptr<Expression> &expression)
       : Expression(), expression(std::move(expression)) { }; 
     void accept (std::shared_ptr<Dispatcher> d) override;
+    void doExpr() override;
   };
   
   class Parameter : public Node, public TypedNode, public std::enable_shared_from_this<Parameter>
@@ -736,13 +768,11 @@ namespace cmpl
   class Field : public ClassMember, public TypedNode, public std::enable_shared_from_this<Field>
   {
   private:
-    ir_type *firm_type = NULL;
-    ir_entity *firm_entity = NULL;
     std::weak_ptr<ClassDeclaration> classDeclaration;
   public:
     StringIdentifier ID;
     bool isLValue = true;
-    ir_entity* ent;
+    ir_type *firm_type;
     
     Field(std::shared_ptr<Type> &type,
           StringIdentifier &ID,
@@ -751,16 +781,11 @@ namespace cmpl
                                                      classDeclaration(clsDecl) { };
     
     void accept(std::shared_ptr<Dispatcher> d) override;
-    ir_type *getFirmType();
-    ir_entity *getFirmEntity();
   };
   
   class Method : public ClassMember, public TypedNode, public std::enable_shared_from_this<Method>
   {
   private:
-    ir_type *firm_type = NULL;
-    ir_entity *firm_entity = NULL;
-    ir_graph *firm_graph = NULL;
     std::weak_ptr<ClassDeclaration> classDeclaration;
   public:
     StringIdentifier                        ID;
@@ -768,8 +793,9 @@ namespace cmpl
     std::vector<std::shared_ptr<Node>>      localVariables;
     std::shared_ptr<Block>                  block;
     std::map<StringIdentifier, std::weak_ptr<Parameter>> parameterMap;
-    ir_node *this_node;
-      
+    ir_graph *firm_graph = NULL;
+    ir_type *declared_type = NULL;
+    
     Method(std::shared_ptr<Type> &type,
            StringIdentifier &ID,
            std::vector<std::shared_ptr<Parameter>> &parameters,
@@ -781,24 +807,20 @@ namespace cmpl
                                                       classDeclaration(clsDecl) { };
     
     void accept(std::shared_ptr<Dispatcher> d) override;
-    ir_type *getFirmType();
-    ir_entity *getFirmEntity();
-    ir_graph *getFirmGraph();
   };
   
   /** The MainMethod is a ClassMember and therefore part of a ClassDeclaration. The MainMethod element contains two IDs (Method-identifier and parameter-identifier) and a Block (Representation of the method body) */
   class MainMethod : public ClassMember, public std::enable_shared_from_this<MainMethod>
   {
   private:
-    ir_type *firm_type = NULL;
-    ir_entity *firm_entity = NULL;
-    ir_graph *firm_graph = NULL;
     std::weak_ptr<ClassDeclaration> classDeclaration;
   public:
     StringIdentifier       ID;
     StringIdentifier       parameterID;
     std::shared_ptr<Block> block;
     std::vector<std::shared_ptr<Node>>      localVariables;
+    ir_graph *firm_graph = NULL;
+    ir_type *declared_type = NULL;
     
     MainMethod(StringIdentifier &ID,
                StringIdentifier &parameterID,
@@ -809,29 +831,23 @@ namespace cmpl
                                                           classDeclaration(clsDecl) { };
     
     void accept(std::shared_ptr<Dispatcher> d) override;
-    ir_type *getFirmType();
-    ir_entity *getFirmEntity();
-    ir_graph *getFirmGraph();
   };
   
 
   /** A ClassDeclaration consists of an ID, which is the identifier for this class and various ClassMembers, like Methods and Fields.  */
   class ClassDeclaration : public Node, public TypedNode, public std::enable_shared_from_this<ClassDeclaration>
   {
-  private:
-    ir_type *firm_type = NULL;
-    
   public:
     StringIdentifier                          ID;
     std::vector<std::shared_ptr<ClassMember>> classMembers;
     std::map<StringIdentifier, std::weak_ptr<Method>> methods;
     std::map<StringIdentifier, std::weak_ptr<Field>> fields;
     bool returns = false;
-      
+    ir_type *declared_type = NULL;
+    
     ClassDeclaration(StringIdentifier &ID) :
                          ID(ID), TypedNode(std::make_shared<UserType>(ID), 0) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
-    ir_type *getDeclaredType();
   };
   
   /** Always the first element in the AST. Can contain multiple ClassDeclarations. */	
