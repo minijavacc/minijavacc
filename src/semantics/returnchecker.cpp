@@ -66,9 +66,13 @@ void ReturnChecker::dispatch(std::shared_ptr<Block> n) {
 };
 
 // Do not return
-void ReturnChecker::dispatch(std::shared_ptr<IfStatement> n) { };
+void ReturnChecker::dispatch(std::shared_ptr<IfStatement> n) {
+  n->ifStatement->accept(shared_from_this());
+};
 void ReturnChecker::dispatch(std::shared_ptr<ExpressionStatement> n) { };
-void ReturnChecker::dispatch(std::shared_ptr<WhileStatement> n) { };
+void ReturnChecker::dispatch(std::shared_ptr<WhileStatement> n) {
+  n->statement->accept(shared_from_this());
+};
 void ReturnChecker::dispatch(std::shared_ptr<LocalVariableDeclaration> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<EmptyStatement> n) { };
@@ -86,6 +90,7 @@ void ReturnChecker::dispatch(std::shared_ptr<ReturnStatement> n) {
   if (!currentMethodIsVoid) { // blank return statement is only allowed in void methods
     error("blank return statement in non-void method");
   }
+  n->returns = true;
 };
 
 void ReturnChecker::dispatch(std::shared_ptr<ReturnExpressionStatement> n) {
