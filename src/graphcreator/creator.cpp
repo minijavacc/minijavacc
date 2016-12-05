@@ -121,31 +121,28 @@ void Creator::createBinary(std::string filepath)
   std::cout << "Created assembler file: asm.s\n";
   
   
+  // --- create runtime library file in working directory ---
+  
+  // load source from file at compile time
+  std::string runtimeSource = R"(
+    #include "runtime/runtime.c"
+  )";
+  
+  std::ofstream runtimeFile("_runtime.c");
+  runtimeFile << runtimeSource;
+  runtimeFile.close();
+  
+  
   // --- link to runtime library and create binary ---
   
-  pid_t pid;
-  if (pid = fork())
+  if (system("gcc -o a.out asm.s _runtime.c") != 0)
   {
-    // parent
-    int status;
-    waitpid(pid, &status, 0);
-    
-    if (status != 0)
-    {
-      throw CreatorBackendError("could not link assembler file to runtime library. Try running the link command manually:\n$ gcc -o a.out asm.s runtime/println.c");
-    }
-  }
-  else
-  {
-    // child
-    int ret = execlp("gcc", "gcc", "-o", "a.out", "asm.s", "runtime/println.c", NULL);
-    
-    if (ret != 0)
-    {
-      throw CreatorBackendError("error running linker");
-    }
+    throw CreatorBackendError("error running linker");
   }
   
+  // delete temporary runtime file
+  system("rm _runtime.c");
+
   std::cout << "Created binary: a.out\n";
   return;
 }
