@@ -52,6 +52,7 @@ void UnaryRightExpression::assign(ir_node *value) {
   
   if (auto aa = dynamic_cast<ArrayAccess*>(n->op.get())) {
     assert(n->expression->type->getFirmType());
+    aa->expression->doExpr();
     
     ir_type *array_type = get_pointer_points_to_type(n->expression->type->getFirmType());
     ir_type *elem_type  = get_array_element_type(array_type);
