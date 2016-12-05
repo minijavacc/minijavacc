@@ -122,10 +122,13 @@ void Creator::createBinary(std::string filepath)
   
   
   // --- create runtime library file in working directory ---
-  
-  // load source from file at compile time
-  std::string runtimeSource = R"(
-    #include "runtime/runtime.c"
+  const char * runtimeSource = R"(
+#include <stdio.h>
+
+void println(int a)
+{
+  printf("%d\n", a);
+}
   )";
   
   std::ofstream runtimeFile("_runtime.c");
