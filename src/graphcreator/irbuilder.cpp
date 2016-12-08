@@ -820,8 +820,9 @@ void IRBuilder::dispatch(std::shared_ptr<IfStatement> n) {
   
   if (!n->ifStatement->returns) {
     add_immBlock_pred(nextBlock, jmpIf);
+    mature_immBlock(trueBlock);
   }
-  mature_immBlock(trueBlock);
+  
   add_immBlock_pred(nextBlock, jmpElse);
   mature_immBlock(falseBlock);
   
@@ -847,10 +848,15 @@ void IRBuilder::dispatch(std::shared_ptr<IfElseStatement> n) {
   n->elseStatement->accept(shared_from_this());
   ir_node *jmpElse = new_Jmp();
   
-  add_immBlock_pred(nextBlock, jmpIf);
-  mature_immBlock(trueBlock);
-  add_immBlock_pred(nextBlock, jmpElse);
-  mature_immBlock(falseBlock);
+  if (!n->ifStatement->returns) {
+    add_immBlock_pred(nextBlock, jmpIf);
+    mature_immBlock(trueBlock);
+  }
+  
+  if (!n->elseStatement->returns) {
+    add_immBlock_pred(nextBlock, jmpElse);
+    mature_immBlock(falseBlock);
+  }
   
   set_cur_block(nextBlock);
 };
