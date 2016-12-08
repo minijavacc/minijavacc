@@ -22,7 +22,11 @@ Creator::Creator(Checker &checker) : checker(checker), ast(checker.getAttributed
   {
     throw CreatorBackendError("could not set isa=amd64");
   }
-
+  
+  // set mode_P to P64
+  mode_P64 = new_reference_mode("P64", irma_twos_complement, 64, 64);
+  set_modeP(mode_P64);
+  
   #ifdef _WIN32
     be_parse_arg("ia32-gasmode-mingw");
   #elif __APPLE__

@@ -22,6 +22,8 @@ namespace cmpl
   private:
     std::shared_ptr<Node> ast;
     Checker &checker;
+    
+    ir_mode *mode_P64;
   };
   
   class CreatorError : public std::runtime_error

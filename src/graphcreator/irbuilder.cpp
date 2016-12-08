@@ -561,17 +561,22 @@ void UnaryRightExpression::doExpr()
   if (ArrayAccess* aa = dynamic_cast<ArrayAccess*>(n->op.get()))
   {
     // n->expression->firm_node is a Proj P64 to an array_type
-    n->expression->doExpr();
+    aa->expression->doExpr();
+    assert(aa->expression->firm_node);
     
     ir_type *array_type = get_pointer_points_to_type(n->expression->type->getFirmType());
     ir_mode *array_mode = get_type_mode(array_type);
     ir_type *elem_type  = get_array_element_type(array_type);
     ir_mode *elem_mode  = get_type_mode(elem_type);
     
-    ir_node *sel       = new_Sel(n->expression->firm_node, aa->expression->firm_node, array_type);
-    ir_node *ld        = new_Load(get_store(), sel, elem_mode, elem_type, cons_none);
-    ir_node *m         = new_Proj(ld, mode_M, pn_Load_M);
-    ir_node *res       = new_Proj(ld, elem_mode, pn_Load_res);
+    ir_node *no_mem     = new_r_NoMem(get_current_ir_graph());
+    
+    ir_node *sel        = new_Sel(n->expression->firm_node, aa->expression->firm_node, array_type);
+    ir_node *ld         = new_Load(no_mem, sel, elem_mode, elem_type, cons_none);
+    ir_node *m          = new_Proj(ld, mode_M, pn_Load_M);
+    ir_node *res        = new_Proj(ld, elem_mode, pn_Load_res);
+    
+    //ir_node  *result      = new_d_Add(dbgi, base_addr, real_offset);
     
     set_store(m);
     n->firm_node = res;
