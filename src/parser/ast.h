@@ -627,11 +627,7 @@ namespace cmpl
   };
 
   class StaticLibraryCallExpression : public Expression, public std::enable_shared_from_this<StaticLibraryCallExpression>
-  {
-  private:
-    ir_type *firm_type = NULL;
-    ir_entity *firm_entity = NULL;
-    
+  {    
   public:
     ir_type *getFirmType();
     ir_entity *getFirmEntity();
