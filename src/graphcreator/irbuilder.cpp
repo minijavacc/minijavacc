@@ -277,6 +277,7 @@ void MultiplicativeExpression::doExpr() {
     ir_node *mem = get_store();
     ir_node* div = new_Div(mem, n->expression1->firm_node, n->expression2->firm_node, op_pin_state_pinned);
     n->firm_node = new_Proj(div, mode_Is, pn_Div_res);
+    set_store(mem);
     return;
   }
   
@@ -570,14 +571,10 @@ void UnaryRightExpression::doExpr()
     ir_type *elem_type  = get_array_element_type(array_type);
     ir_mode *elem_mode  = get_type_mode(elem_type);
     
-    ir_node *no_mem     = new_r_NoMem(get_current_ir_graph());
-    
     ir_node *sel        = new_Sel(n->expression->firm_node, aa->expression->firm_node, array_type);
-    ir_node *ld         = new_Load(no_mem, sel, elem_mode, elem_type, cons_none);
+    ir_node *ld         = new_Load(get_store(), sel, elem_mode, elem_type, cons_none);
     ir_node *m          = new_Proj(ld, mode_M, pn_Load_M);
     ir_node *res        = new_Proj(ld, elem_mode, pn_Load_res);
-    
-    //ir_node  *result      = new_d_Add(dbgi, base_addr, real_offset);
     
     set_store(m);
     n->firm_node = res;

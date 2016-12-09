@@ -349,29 +349,36 @@ Type::Type(std::shared_ptr<BasicType> const& basicType, int const& arrayDepth) :
 #pragma mark - Firm types
 
 ir_type * Type::getFirmType() {
-  ir_type *elem_type = basicType->getFirmType();
-  
-  if (arrayDepth <= 0) {
-    // scalar type
-    return elem_type;
+  if (!firm_type)
+  {
+    firm_type = basicType->getFirmType();
+    
+    if (arrayDepth <= 0) {
+      // scalar type
+      return firm_type;
+    }
+    
+    int i = arrayDepth;
+    while (i > 0) {
+      // pointer to array of (scalars) or (pointers to arrays of ...)
+      firm_type = new_type_pointer(new_type_array(firm_type, 0));
+      i--;
+    }
   }
   
-  ir_type *my_type = elem_type;
-  int i = arrayDepth;
-  while (i > 0) {
-    // pointer to array of (scalars) or (pointers to arrays of ...)
-    my_type = new_type_pointer(new_type_array(my_type, 0));
-    i--;
-  }
-  
-  return my_type;
+  return firm_type;
 }
 
 ir_type * UserType::getFirmType() {
-  auto d = declaration.lock();
-  assert(d);
+  if (!firm_type)
+  {
+    auto d = declaration.lock();
+    assert(d);
   
-  return new_type_pointer(d->declared_type);
+    firm_type =  new_type_pointer(d->declared_type);
+  }
+  
+  return firm_type;
 }
 
 ir_type * FakeType::getFirmType() {
@@ -379,21 +386,21 @@ ir_type * FakeType::getFirmType() {
 }
 
 ir_type * TypeBoolean::getFirmType() {
-  static ir_type *boo_type;
-  if(!boo_type)
+  if(!firm_type)
   {
-    boo_type = new_type_primitive(mode_Bu);
+    firm_type = new_type_primitive(mode_Bu);
   }
-  return boo_type;
+  
+  return firm_type;
 }
 
 ir_type * TypeInt::getFirmType() {
-  static ir_type *int_type;
-  if(!int_type)
+  if(!firm_type)
   {
-	  int_type = new_type_primitive(mode_Is);
+	  firm_type = new_type_primitive(mode_Is);
   }
-  return int_type;
+  
+  return firm_type;
 }
 
 ir_type * TypeVoid::getFirmType() {

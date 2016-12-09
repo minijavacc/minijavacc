@@ -56,9 +56,12 @@ void IRInitializer::dispatch(std::shared_ptr<ClassDeclaration> n) {
 void IRInitializer::dispatch(std::shared_ptr<MainMethod> n) {
   std::string name = StringTable::lookupIdentifier(n->ID);
   ir_type *t = new_type_method(0, 1, false, cc_cdecl_set, mtp_no_property);
+  assert(t);
   set_method_res_type(t, 0, Types::getIntNode()->getFirmType());
   ir_entity *e = new_entity(currentClassDeclaration->declared_type, new_id_from_str(MAIN_NAME), t);
+  assert(e);
   ir_graph *g = new_ir_graph(e, (int) n->localVariables.size());
+  assert(g);
   
   n->declared_type = t;
   n->firm_entity = e;
@@ -80,6 +83,7 @@ void IRInitializer::dispatch(std::shared_ptr<Method> n) {
   
   // Build type
   ir_type *t = new_type_method(1 + n->parameters.size(), nret, false, cc_cdecl_set, mtp_no_property);
+  assert(t);
   
   // Set return type
   if (nret > 0) {
@@ -88,6 +92,7 @@ void IRInitializer::dispatch(std::shared_ptr<Method> n) {
   
   // Set this pointer type
   ir_type *th = new_type_pointer(currentClassDeclaration->declared_type);
+  assert(th);
   set_method_param_type(t, 0, th);
   
   // Set other parameter types
@@ -115,6 +120,7 @@ void IRInitializer::dispatch(std::shared_ptr<Method> n) {
   // Build graph
   int num = (int) (1 + n->parameters.size() + n->localVariables.size());
   ir_graph *g = new_ir_graph(e, num);
+  assert(g);
   
   n->declared_type = t;
   n->firm_entity = e;
@@ -124,6 +130,7 @@ void IRInitializer::dispatch(std::shared_ptr<Method> n) {
 void IRInitializer::dispatch(std::shared_ptr<Field> n) {
   // Propagate type
   ir_type *t = n->type->getFirmType();
+  assert(t);
   
   // Build entity
   // simple name mangling similar to C++
@@ -133,6 +140,7 @@ void IRInitializer::dispatch(std::shared_ptr<Field> n) {
   //                           ^---- F = Field
   
   ir_entity *e = new_entity(currentClassDeclaration->declared_type, new_id_from_str(mangledName.c_str()), t);
+  assert(e);
   
   // Set class size
   unsigned clsSize = get_type_size(currentClassDeclaration->declared_type);

@@ -53,7 +53,7 @@ void Creator::run()
   ast->accept(c);
 }
 
-void Creator::dumpGraph(std::string suffix)
+void Creator::dumpGraphs(std::string suffix)
 {
   dump_all_ir_graphs(suffix.c_str());
 }
@@ -112,7 +112,7 @@ void Creator::createBinary(std::string filepath)
   
   // 2. lower SELs
   lower_highlevel();
-  be_lower_for_target();
+  be_lower_for_target(); 
   
   // --- run backend to create assembler ---
   

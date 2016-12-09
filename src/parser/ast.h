@@ -142,8 +142,8 @@ namespace cmpl
   class Node
   {
   public:
-    ir_node* firm_node = NULL;
-    ir_entity *firm_entity = NULL;
+    ir_node* firm_node = nullptr;
+    ir_entity *firm_entity = nullptr;
     int parameterIndex;
     virtual void accept(std::shared_ptr<Dispatcher> d) = 0;
   };
@@ -151,10 +151,9 @@ namespace cmpl
 /**************** actual nodes ****************/
   class BasicType : public Node
   {
-  private:
-    ir_type *firm_type = NULL;
   public:
     bool virtual equals(std::shared_ptr<BasicType> t) = 0;
+    ir_type *firm_type = nullptr;
     virtual ir_type *getFirmType() = 0;
   };
   
@@ -185,8 +184,6 @@ namespace cmpl
   
   class Type : public Node, public std::enable_shared_from_this<Type>
   {
-  private:
-    ir_type *firm_type;
   public:
     std::shared_ptr<BasicType> basicType;
     int                        arrayDepth;
@@ -194,6 +191,7 @@ namespace cmpl
     Type(std::shared_ptr<BasicType> const& basicType, int const& arrayDepth);
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<Type> t);
+    ir_type *firm_type;
     ir_type *getFirmType();
   };
   
@@ -789,8 +787,8 @@ namespace cmpl
     std::vector<std::shared_ptr<Node>>      localVariables;
     std::shared_ptr<Block>                  block;
     std::map<StringIdentifier, std::weak_ptr<Parameter>> parameterMap;
-    ir_graph *firm_graph = NULL;
-    ir_type *declared_type = NULL;
+    ir_graph *firm_graph = nullptr;
+    ir_type *declared_type = nullptr;
     
     Method(std::shared_ptr<Type> &type,
            StringIdentifier &ID,
@@ -815,8 +813,8 @@ namespace cmpl
     StringIdentifier       parameterID;
     std::shared_ptr<Block> block;
     std::vector<std::shared_ptr<Node>>      localVariables;
-    ir_graph *firm_graph = NULL;
-    ir_type *declared_type = NULL;
+    ir_graph *firm_graph = nullptr;
+    ir_type *declared_type = nullptr;
     
     MainMethod(StringIdentifier &ID,
                StringIdentifier &parameterID,
@@ -839,7 +837,7 @@ namespace cmpl
     std::map<StringIdentifier, std::weak_ptr<Method>> methods;
     std::map<StringIdentifier, std::weak_ptr<Field>> fields;
     bool returns = false;
-    ir_type *declared_type = NULL;
+    ir_type *declared_type = nullptr;
     
     ClassDeclaration(StringIdentifier &ID) :
                          ID(ID), TypedNode(std::make_shared<UserType>(ID), 0) { };

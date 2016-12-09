@@ -153,7 +153,7 @@ int Compiler::creategraph(std::ifstream &file, std::string filename)
     
     Creator creator(checker);
     creator.run();
-    creator.dumpGraph();
+    creator.dumpGraphs();
     std::cout << "dumped graph files *.vcg\n";
     
     return 0;
