@@ -866,7 +866,35 @@ void IRBuilder::dispatch(std::shared_ptr<ExpressionStatement> n) {
 };
 
 void IRBuilder::dispatch(std::shared_ptr<WhileStatement> n) {
-
+  ir_graph *g = get_current_ir_graph();
+  
+  ir_node *headerBlock = new_r_immBlock(g);
+  ir_node *bodyBlock = new_r_immBlock(g);
+  ir_node *nextBlock = new_r_immBlock(g);
+  
+  ir_node *jmp1 = new_Jmp();
+  
+  set_cur_block(headerBlock);
+  // Ensure the creation of a PhiM nodes in case of endless loops
+  ir_node *mem = get_store();
+  n->expression->doCond(bodyBlock, nextBlock);
+  
+  set_cur_block(bodyBlock);
+  n->statement->accept(shared_from_this());
+  ir_node *jmp2 = new_Jmp();
+  
+  if (!n->statement->returns) {
+    add_immBlock_pred(headerBlock, jmp2);
+    mature_immBlock(bodyBlock);
+  }
+  
+  add_immBlock_pred(headerBlock, jmp1);
+  mature_immBlock(headerBlock);
+  
+  set_cur_block(nextBlock);
+  
+  // Keep block in case of endless loops
+  keep_alive(headerBlock);
 };
 
 void IRBuilder::dispatch(std::shared_ptr<EmptyStatement> n) { };
