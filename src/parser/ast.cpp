@@ -424,9 +424,15 @@ ir_type *StaticLibraryCallExpression::getFirmType() {
   return firm_type;
 }
 
+#ifdef __APPLE__
+#define PRINTLN_NAME "_println"
+#else
+#define PRINTLN_NAME "println"
+#endif
+
 ir_entity *StaticLibraryCallExpression::getFirmEntity() {
   if (!firm_entity) {
-    firm_entity = new_global_entity(get_glob_type(), new_id_from_str("println"),
+    firm_entity = new_global_entity(get_glob_type(), new_id_from_str(PRINTLN_NAME),
                                     getFirmType(), ir_visibility_external,
                                     IR_LINKAGE_DEFAULT);
   }

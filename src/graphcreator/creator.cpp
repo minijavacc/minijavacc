@@ -30,9 +30,7 @@ Creator::Creator(Checker &checker) : checker(checker), ast(checker.getAttributed
   #ifdef _WIN32
     be_parse_arg("ia32-gasmode-mingw");
   #elif __APPLE__
-    be_parse_arg("ia32-gasmode=acho");
-    be_parse_arg("ia32-stackalign=4");
-    be_parse_arg("pic");
+    be_parse_arg("objectformat=mach-o");
   #elif __linux__
     be_parse_arg("ia32-gasmode=elf");
   #else
