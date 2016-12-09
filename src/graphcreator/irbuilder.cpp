@@ -563,6 +563,7 @@ void UnaryRightExpression::doExpr()
     // n->expression->firm_node is a Proj P64 to an array_type
     aa->expression->doExpr();
     assert(aa->expression->firm_node);
+    assert(is_Pointer_type(n->expression->type->getFirmType()));
     
     ir_type *array_type = get_pointer_points_to_type(n->expression->type->getFirmType());
     ir_mode *array_mode = get_type_mode(array_type);

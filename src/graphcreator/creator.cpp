@@ -53,9 +53,9 @@ void Creator::run()
   ast->accept(c);
 }
 
-void Creator::dumpGraph()
+void Creator::dumpGraph(std::string suffix)
 {
-  dump_all_ir_graphs("");
+  dump_all_ir_graphs(suffix.c_str());
 }
 
 /* inline functions from libfirm/ir/tr/type_t.h that get not 
@@ -73,6 +73,10 @@ static inline int is_method_type_(ir_type const *const type)
 
 void Creator::createBinary(std::string filepath)
 {
+  // --- validate graphs ---
+  //irg_verify(irg);
+  
+  
   // --- lowering phase ---
   
   // 1. layout types
@@ -107,8 +111,8 @@ void Creator::createBinary(std::string filepath)
   }
   
   // 2. lower SELs
+  lower_highlevel();
   be_lower_for_target();
-  
   
   // --- run backend to create assembler ---
   
