@@ -809,11 +809,13 @@ void IRBuilder::dispatch(std::shared_ptr<Block> n) {
 void IRBuilder::dispatch(std::shared_ptr<IfStatement> n) {
   ir_graph *g = get_current_ir_graph();
   
+  ir_node *currentBlock = get_cur_block();
   ir_node *trueBlock = new_r_immBlock(g);
   ir_node *falseBlock = new_r_immBlock(g);
   ir_node *nextBlock = new_r_immBlock(g);
   
   n->expression->doCond(trueBlock, falseBlock);
+  mature_immBlock(currentBlock);
   
   set_cur_block(trueBlock);
   n->ifStatement->accept(shared_from_this());
@@ -836,13 +838,13 @@ void IRBuilder::dispatch(std::shared_ptr<IfStatement> n) {
 void IRBuilder::dispatch(std::shared_ptr<IfElseStatement> n) {
   ir_graph *g = get_current_ir_graph();
   
+  ir_node *currentBlock = get_cur_block();
   ir_node *trueBlock = new_r_immBlock(g);
   ir_node *falseBlock = new_r_immBlock(g);
   ir_node *nextBlock = new_r_immBlock(g);
   
   n->expression->doCond(trueBlock, falseBlock);
-  
-  mature_immBlock(get_cur_block());
+  mature_immBlock(currentBlock);
   
   set_cur_block(trueBlock);
   n->ifStatement->accept(shared_from_this());
@@ -872,11 +874,13 @@ void IRBuilder::dispatch(std::shared_ptr<ExpressionStatement> n) {
 void IRBuilder::dispatch(std::shared_ptr<WhileStatement> n) {
   ir_graph *g = get_current_ir_graph();
   
+  ir_node *currentBlock = get_cur_block();
   ir_node *headerBlock = new_r_immBlock(g);
   ir_node *bodyBlock = new_r_immBlock(g);
   ir_node *nextBlock = new_r_immBlock(g);
   
   ir_node *jmp1 = new_Jmp();
+  mature_immBlock(currentBlock);
   
   set_cur_block(headerBlock);
   // Ensure the creation of a PhiM nodes in case of endless loops
