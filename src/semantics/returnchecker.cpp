@@ -32,14 +32,8 @@ void ReturnChecker::dispatch(std::shared_ptr<Method> n) {
   
   n->block->accept(shared_from_this());
   
-  if (n->block->returns) { // did return
-    if(currentMethodIsVoid) {
-      error("Method " + StringTable::lookupIdentifier(n->ID) + " of type void would return a value");
-    }
-  } else {
-    if(!currentMethodIsVoid) {
-      error("Method " + StringTable::lookupIdentifier(n->ID) + " has missing return paths");
-    }
+  if (!n->block->returns && !currentMethodIsVoid) {
+    error("Method " + StringTable::lookupIdentifier(n->ID) + " has missing return paths");
   }
 };
 
