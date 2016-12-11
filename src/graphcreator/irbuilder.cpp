@@ -108,6 +108,36 @@ void AssignmentExpression::doCond(ir_node *trueBlock, ir_node *falseBlock) {
   add_immBlock_pred(falseBlock, fnode);
 }
 
+void LogicalOrExpression::doExpr() {
+  ir_graph *g = get_current_ir_graph();
+  ir_node *trueBlock = new_r_immBlock(g);
+  ir_node *falseBlock = new_r_immBlock(g);
+  ir_node *nextBlock = new_r_immBlock(g);
+  
+  doCond(trueBlock, falseBlock);
+  
+  mature_immBlock(get_cur_block());
+  
+  set_cur_block(trueBlock);
+  ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *jmpTrue = new_Jmp();
+  
+  set_cur_block(falseBlock);
+  ir_node *const0 = new_Const(new_tarval_from_long(0, mode_Bu));
+  ir_node *jmpFalse = new_Jmp();
+  
+  add_immBlock_pred(nextBlock, jmpTrue);
+  mature_immBlock(trueBlock);
+  add_immBlock_pred(nextBlock, jmpFalse);
+  mature_immBlock(falseBlock);
+  
+  set_cur_block(nextBlock);
+  
+  ir_node *results[2] = { const1, const0 };
+  ir_node *phi = new_Phi(2, results, mode_Bu);
+  shared_from_this()->firm_node = phi;
+}
+
 void LogicalOrExpression::doCond(ir_node *trueBlock, ir_node *falseBlock) {
   ir_graph *g = get_current_ir_graph();
   
@@ -117,6 +147,36 @@ void LogicalOrExpression::doCond(ir_node *trueBlock, ir_node *falseBlock) {
   
   set_cur_block(rightBlock);
   shared_from_this()->expression2->doCond(trueBlock, falseBlock);
+}
+
+void LogicalAndExpression::doExpr() {
+  ir_graph *g = get_current_ir_graph();
+  ir_node *trueBlock = new_r_immBlock(g);
+  ir_node *falseBlock = new_r_immBlock(g);
+  ir_node *nextBlock = new_r_immBlock(g);
+  
+  doCond(trueBlock, falseBlock);
+  
+  mature_immBlock(get_cur_block());
+  
+  set_cur_block(trueBlock);
+  ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *jmpTrue = new_Jmp();
+  
+  set_cur_block(falseBlock);
+  ir_node *const0 = new_Const(new_tarval_from_long(0, mode_Bu));
+  ir_node *jmpFalse = new_Jmp();
+  
+  add_immBlock_pred(nextBlock, jmpTrue);
+  mature_immBlock(trueBlock);
+  add_immBlock_pred(nextBlock, jmpFalse);
+  mature_immBlock(falseBlock);
+  
+  set_cur_block(nextBlock);
+  
+  ir_node *results[2] = { const1, const0 };
+  ir_node *phi = new_Phi(2, results, mode_Bu);
+  shared_from_this()->firm_node = phi;
 }
 
 void LogicalAndExpression::doCond(ir_node *trueBlock, ir_node *falseBlock) {

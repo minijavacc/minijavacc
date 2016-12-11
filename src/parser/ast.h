@@ -448,6 +448,7 @@ namespace cmpl
                             expression1(std::move(expression1)), expression2(std::move(expression2)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
     void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
+    void doExpr() override;
   };
   
   class LogicalAndExpression : public Expression, public std::enable_shared_from_this<LogicalAndExpression>
@@ -460,6 +461,7 @@ namespace cmpl
                              expression1(std::move(expression1)), expression2(std::move(expression2)) { };
     void accept(std::shared_ptr<Dispatcher> d) override;
     void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
+    void doExpr() override;
   };
   
   class EqualityExpression : public OpExpression, public std::enable_shared_from_this<EqualityExpression>
