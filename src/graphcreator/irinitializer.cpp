@@ -25,12 +25,42 @@ void IRInitializer::dispatch(std::shared_ptr<Program> n) {
 void IRInitializer::dispatch(std::shared_ptr<ClassDeclaration> n) {
   currentClassDeclaration = n;
   
+  unsigned int fieldOffset = 0;
+  
   // Fields first (important)
   for (auto const &p : n->fields) {
     auto f = p.second.lock();
     assert(f);
-    f->accept(shared_from_this());
+    
+    // Propagate type
+    ir_type *t = f->type->getFirmType();
+    assert(t);
+    
+    // Build entity
+    // simple name mangling similar to C++
+    std::string fieldName = StringTable::lookupIdentifier(f->ID);
+    std::string className = StringTable::lookupIdentifier(currentClassDeclaration->ID);
+    std::string mangledName = "_ZF" + std::to_string(className.length()) + className + std::to_string(fieldName.length()) + fieldName + "E";
+    //                           ^---- F = Field
+    
+    ir_entity *e = new_entity(currentClassDeclaration->declared_type, new_id_from_str(mangledName.c_str()), t);
+    assert(e);
+    
+    // set field offset
+    set_entity_offset(e, fieldOffset);
+    fieldOffset += get_type_size(t);
+    
+    f->firm_type = t;
+    f->firm_entity = e;
   }
+  
+  // set class size
+  unsigned int classSize = get_type_size(n->declared_type) + fieldOffset;
+  set_type_size(n->declared_type, classSize);
+  
+  // set class state
+  set_type_state(n->declared_type, layout_fixed);
+  
   
   // Methods last (important)
   for (auto const &p : n->methods) {
@@ -127,27 +157,5 @@ void IRInitializer::dispatch(std::shared_ptr<Method> n) {
   n->firm_graph = g;
 };
 
-void IRInitializer::dispatch(std::shared_ptr<Field> n) {
-  // Propagate type
-  ir_type *t = n->type->getFirmType();
-  assert(t);
-  
-  // Build entity
-  // simple name mangling similar to C++
-  std::string fieldName = StringTable::lookupIdentifier(n->ID);
-  std::string className = StringTable::lookupIdentifier(currentClassDeclaration->ID);
-  std::string mangledName = "_ZF" + std::to_string(className.length()) + className + std::to_string(fieldName.length()) + fieldName + "E";
-  //                           ^---- F = Field
-  
-  ir_entity *e = new_entity(currentClassDeclaration->declared_type, new_id_from_str(mangledName.c_str()), t);
-  assert(e);
-  
-  // Set class size
-  unsigned clsSize = get_type_size(currentClassDeclaration->declared_type);
-  unsigned fieldSize = get_type_size(t);
-  set_type_size(currentClassDeclaration->declared_type, clsSize + fieldSize);
-  
-  n->firm_type = t;
-  n->firm_entity = e;
-};
+void IRInitializer::dispatch(std::shared_ptr<Field> n) {};
 

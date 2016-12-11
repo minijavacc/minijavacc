@@ -16,16 +16,16 @@ Creator::Creator(Checker &checker) : checker(checker), ast(checker.getAttributed
   // output backend options
   //be_parse_arg("help");
   
+  // set mode_P to P64
+  mode_P64 = new_reference_mode("P64", irma_twos_complement, 64, 64);
+  set_modeP(mode_P64);
+  
   // set instruction set architecture
   // has to be set before the graph is created
   if(!be_parse_arg("isa=amd64"))
   {
     throw CreatorBackendError("could not set isa=amd64");
   }
-  
-  // set mode_P to P64
-  mode_P64 = new_reference_mode("P64", irma_twos_complement, 64, 64);
-  set_modeP(mode_P64);
   
   #ifdef _WIN32
     be_parse_arg("ia32-gasmode-mingw");
