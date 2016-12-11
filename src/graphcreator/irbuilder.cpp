@@ -710,7 +710,7 @@ void CTrue::doCond(ir_node *trueBlock, ir_node *falseBlock) {
   
   // Check this->value for trueness
   ir_node *c = new_Const(new_tarval_from_long(0, mode_Bu));
-  ir_node *cmp = new_Cmp(c, c, ir_relation_true);
+  ir_node *cmp = new_Cmp(c, c, ir_relation_equal);
   ir_node *cond = new_Cond(cmp);
   ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
   ir_node *fnode = new_Proj(cond, mode_X, pn_Cond_false);
@@ -732,7 +732,7 @@ void CFalse::doCond(ir_node *trueBlock, ir_node *falseBlock) {
   
   // Check this->value for trueness
   ir_node *c = new_Const(new_tarval_from_long(0, mode_Bu));
-  ir_node *cmp = new_Cmp(c, c, ir_relation_false);
+  ir_node *cmp = new_Cmp(c, c, ir_relation_greater_equal);
   ir_node *cond = new_Cond(cmp);
   ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
   ir_node *fnode = new_Proj(cond, mode_X, pn_Cond_false);
@@ -876,20 +876,24 @@ void IRBuilder::dispatch(std::shared_ptr<IfStatement> n) {
   n->expression->doCond(trueBlock, falseBlock);
   mature_immBlock(currentBlock);
   
-  set_cur_block(trueBlock);
-  n->ifStatement->accept(shared_from_this());
-  ir_node *jmpIf = new_Jmp();
   
-  set_cur_block(falseBlock);
-  ir_node *jmpElse = new_Jmp();
+  // Handle IF branch
+  set_cur_block(trueBlock);
+  n->ifStatement->accept(shared_from_this()); // might set_cur_block()
+  
+  ir_node *jmpIf = new_Jmp();
   
   if (!n->ifStatement->returns) {
     add_immBlock_pred(nextBlock, jmpIf);
-    mature_immBlock(trueBlock);
+    mature_immBlock(get_cur_block());
   }
   
+  // Handle ELSE branch
+  set_cur_block(falseBlock);
+  ir_node *jmpElse = new_Jmp();
+  
   add_immBlock_pred(nextBlock, jmpElse);
-  mature_immBlock(falseBlock);
+  mature_immBlock(get_cur_block());
   
   set_cur_block(nextBlock);
 };
@@ -909,18 +913,18 @@ void IRBuilder::dispatch(std::shared_ptr<IfElseStatement> n) {
   n->ifStatement->accept(shared_from_this());
   ir_node *jmpIf = new_Jmp();
   
+  if (!n->ifStatement->returns) {
+    add_immBlock_pred(nextBlock, jmpIf);
+    mature_immBlock(get_cur_block());
+  }
+  
   set_cur_block(falseBlock);
   n->elseStatement->accept(shared_from_this());
   ir_node *jmpElse = new_Jmp();
   
-  if (!n->ifStatement->returns) {
-    add_immBlock_pred(nextBlock, jmpIf);
-    mature_immBlock(trueBlock);
-  }
-  
   if (!n->elseStatement->returns) {
     add_immBlock_pred(nextBlock, jmpElse);
-    mature_immBlock(falseBlock);
+    mature_immBlock(get_cur_block());
   }
   
   set_cur_block(nextBlock);
@@ -952,7 +956,7 @@ void IRBuilder::dispatch(std::shared_ptr<WhileStatement> n) {
   
   if (!n->statement->returns) {
     add_immBlock_pred(headerBlock, jmp2);
-    mature_immBlock(bodyBlock);
+    mature_immBlock(get_cur_block());
   }
   
   add_immBlock_pred(headerBlock, jmp1);
