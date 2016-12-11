@@ -18,7 +18,7 @@ namespace cmpl
     void run();
     
     void dumpGraphs(std::string suffix = "");
-    void createBinary(std::string filename);
+    void createBinary(std::string filename, bool generateDebugInformation = false);
   private:
     std::shared_ptr<Node> ast;
     Checker &checker;

@@ -71,10 +71,15 @@ static inline int is_method_type_(ir_type const *const type)
 }
 
 
-void Creator::createBinary(std::string filepath)
+void Creator::createBinary(std::string filepath, bool generateDebugInformation)
 {
   // --- validate graphs ---
   //irg_verify(irg);
+  
+  if (generateDebugInformation)
+  {
+    be_parse_arg("debug=basic");
+  }
   
   
   // --- lowering phase ---
@@ -121,7 +126,7 @@ void Creator::createBinary(std::string filepath)
   output = fopen("asm.s" , "w");
   
   // run backend to generate assembler file
-  be_main(output, "input.c");
+  be_main(output, filepath.c_str());
   fclose(output);
   
   std::cout << "Created assembler file: asm.s\n";
