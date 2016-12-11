@@ -485,14 +485,13 @@ void CallExpression::doExpr()
 void UnaryRightExpression::doCond(ir_node *trueBlock, ir_node *falseBlock)
 {
   auto n = shared_from_this();
-  ir_node *res = n->firm_node;
   
   doExpr();
   assert(n->firm_node);
   
   // Check res for trueness
   ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
-  ir_node *cmp = new_Cmp(res, const1, ir_relation_greater_equal);
+  ir_node *cmp = new_Cmp(n->firm_node, const1, ir_relation_greater_equal);
   ir_node *cond = new_Cond(cmp);
   ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
   ir_node *fnode = new_Proj(cond, mode_X, pn_Cond_false);
