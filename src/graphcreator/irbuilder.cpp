@@ -732,7 +732,7 @@ void CFalse::doCond(ir_node *trueBlock, ir_node *falseBlock) {
   
   // Check this->value for trueness
   ir_node *c = new_Const(new_tarval_from_long(0, mode_Bu));
-  ir_node *cmp = new_Cmp(c, c, ir_relation_greater_equal);
+  ir_node *cmp = new_Cmp(c, c, ir_relation_less_greater);
   ir_node *cond = new_Cond(cmp);
   ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
   ir_node *fnode = new_Proj(cond, mode_X, pn_Cond_false);
