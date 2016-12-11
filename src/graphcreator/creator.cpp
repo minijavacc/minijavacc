@@ -110,15 +110,9 @@ void Creator::createBinary(std::string filepath)
     }
   }
   
-  // DEBUG
-  dumpGraphs("beforelowering");
-  
   // 2. lower SELs
   lower_highlevel();
   be_lower_for_target(); 
-  
-  // DEBUG
-  dumpGraphs("afterlowering");
   
   // --- run backend to create assembler ---
   

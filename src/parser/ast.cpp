@@ -413,13 +413,23 @@ ir_type * NullType::getFirmType() {
 
 
 
+
+
+
+
+
+
+
+
+static ir_type *print_type = NULL;
+
 ir_type *StaticLibraryCallExpression::getFirmType() {
-  if (!firm_type) {
-    firm_type = new_type_method(1, 0, false, cc_cdecl_set, mtp_no_property);
-    set_method_param_type(firm_type, 0, Types::getIntNode()->getFirmType());
+  if (!print_type) {
+    print_type = new_type_method(1, 0, false, cc_cdecl_set, mtp_no_property);
+    set_method_param_type(print_type, 0, Types::getIntNode()->getFirmType());
   }
   
-  return firm_type;
+  return print_type;
 }
 
 #ifdef __APPLE__
@@ -428,12 +438,14 @@ ir_type *StaticLibraryCallExpression::getFirmType() {
 #define PRINTLN_NAME "println"
 #endif
 
+static ir_entity *print_entity = NULL;
+
 ir_entity *StaticLibraryCallExpression::getFirmEntity() {
-  if (!firm_entity) {
-    firm_entity = new_global_entity(get_glob_type(), new_id_from_str(PRINTLN_NAME),
+  if (!print_entity) {
+    print_entity = new_global_entity(get_glob_type(), new_id_from_str(PRINTLN_NAME),
                                     getFirmType(), ir_visibility_external,
                                     IR_LINKAGE_DEFAULT);
   }
   
-  return firm_entity;
+  return print_entity;
 }

@@ -631,7 +631,6 @@ namespace cmpl
     ir_entity *getFirmEntity();
     
     std::shared_ptr<Expression> expression;
-    ir_type *firm_type = nullptr;
     
     StaticLibraryCallExpression(std::shared_ptr<Expression> &expression)
       : Expression(), expression(std::move(expression)) { }; 
