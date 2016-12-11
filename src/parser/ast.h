@@ -191,7 +191,7 @@ namespace cmpl
     Type(std::shared_ptr<BasicType> const& basicType, int const& arrayDepth);
     void accept(std::shared_ptr<Dispatcher> d) override;
     bool equals(std::shared_ptr<Type> t);
-    ir_type *firm_type;
+    ir_type *firm_type = nullptr;
     ir_type *getFirmType();
   };
   
@@ -766,7 +766,7 @@ namespace cmpl
   public:
     StringIdentifier ID;
     bool isLValue = true;
-    ir_type *firm_type;
+    ir_type *firm_type = nullptr;
     
     Field(std::shared_ptr<Type> &type,
           StringIdentifier &ID,
