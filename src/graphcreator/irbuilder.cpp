@@ -390,9 +390,10 @@ void UnaryLeftExpression::doExpr() {
     ir_node *results[2] = { const1, const0 };
     ir_node *phi = new_Phi(2, results, mode_Bu);
     shared_from_this()->firm_node = phi;
+    return;
   }
   
-  // assert(false); REVIEW: was there even a reason for this?
+  assert(false);
 }
 
 void UnaryLeftExpression::doCond(ir_node *trueBlock, ir_node *falseBlock) {
