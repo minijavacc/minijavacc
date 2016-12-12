@@ -21,7 +21,11 @@ void ReturnChecker::dispatch(std::shared_ptr<ClassDeclaration> n) {
   }
 };
 
-void ReturnChecker::dispatch(std::shared_ptr<MainMethod> n) { };
+void ReturnChecker::dispatch(std::shared_ptr<MainMethod> n) {
+  currentMethodIsVoid = true;
+  n->block->accept(shared_from_this());
+};
+
 void ReturnChecker::dispatch(std::shared_ptr<Field> n) { };
 
 /* Checks whether
