@@ -862,6 +862,10 @@ void IRBuilder::dispatch(std::shared_ptr<Parameter> n) { };
 void IRBuilder::dispatch(std::shared_ptr<Block> n) {
   for (auto const& s : n->statements) {
     s->accept(shared_from_this());
+    
+    if (s->returns) {
+      break;
+    }
   }
 };
 
