@@ -110,32 +110,36 @@ void AssignmentExpression::doCond(ir_node *trueBlock, ir_node *falseBlock) {
 
 void LogicalOrExpression::doExpr() {
   ir_graph *g = get_current_ir_graph();
+  
+  ir_node *currentBlock = get_cur_block();
   ir_node *trueBlock = new_r_immBlock(g);
   ir_node *falseBlock = new_r_immBlock(g);
   ir_node *nextBlock = new_r_immBlock(g);
   
   doCond(trueBlock, falseBlock);
-  
-  mature_immBlock(get_cur_block());
+  mature_immBlock(currentBlock);
   
   set_cur_block(trueBlock);
   ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
   ir_node *jmpTrue = new_Jmp();
   
+  add_immBlock_pred(nextBlock, jmpTrue);
+  mature_immBlock(get_cur_block());
+  
   set_cur_block(falseBlock);
   ir_node *const0 = new_Const(new_tarval_from_long(0, mode_Bu));
   ir_node *jmpFalse = new_Jmp();
   
-  add_immBlock_pred(nextBlock, jmpTrue);
-  mature_immBlock(trueBlock);
   add_immBlock_pred(nextBlock, jmpFalse);
-  mature_immBlock(falseBlock);
+  mature_immBlock(get_cur_block());
   
   set_cur_block(nextBlock);
   
   ir_node *results[2] = { const1, const0 };
   ir_node *phi = new_Phi(2, results, mode_Bu);
   shared_from_this()->firm_node = phi;
+  
+  mature_immBlock(nextBlock);
 }
 
 void LogicalOrExpression::doCond(ir_node *trueBlock, ir_node *falseBlock) {
@@ -151,32 +155,36 @@ void LogicalOrExpression::doCond(ir_node *trueBlock, ir_node *falseBlock) {
 
 void LogicalAndExpression::doExpr() {
   ir_graph *g = get_current_ir_graph();
+  
+  ir_node *currentBlock = get_cur_block();
   ir_node *trueBlock = new_r_immBlock(g);
   ir_node *falseBlock = new_r_immBlock(g);
   ir_node *nextBlock = new_r_immBlock(g);
   
   doCond(trueBlock, falseBlock);
-  
-  mature_immBlock(get_cur_block());
+  mature_immBlock(currentBlock);
   
   set_cur_block(trueBlock);
   ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
   ir_node *jmpTrue = new_Jmp();
   
+  add_immBlock_pred(nextBlock, jmpTrue);
+  mature_immBlock(get_cur_block());
+  
   set_cur_block(falseBlock);
   ir_node *const0 = new_Const(new_tarval_from_long(0, mode_Bu));
   ir_node *jmpFalse = new_Jmp();
   
-  add_immBlock_pred(nextBlock, jmpTrue);
-  mature_immBlock(trueBlock);
   add_immBlock_pred(nextBlock, jmpFalse);
-  mature_immBlock(falseBlock);
+  mature_immBlock(get_cur_block());
   
   set_cur_block(nextBlock);
   
   ir_node *results[2] = { const1, const0 };
   ir_node *phi = new_Phi(2, results, mode_Bu);
   shared_from_this()->firm_node = phi;
+  
+  mature_immBlock(nextBlock);
 }
 
 void LogicalAndExpression::doCond(ir_node *trueBlock, ir_node *falseBlock) {
@@ -192,32 +200,36 @@ void LogicalAndExpression::doCond(ir_node *trueBlock, ir_node *falseBlock) {
 
 void EqualityExpression::doExpr() {
   ir_graph *g = get_current_ir_graph();
+  
+  ir_node *currentBlock = get_cur_block();
   ir_node *trueBlock = new_r_immBlock(g);
   ir_node *falseBlock = new_r_immBlock(g);
   ir_node *nextBlock = new_r_immBlock(g);
   
   doCond(trueBlock, falseBlock);
-  
-  mature_immBlock(get_cur_block());
+  mature_immBlock(currentBlock);
   
   set_cur_block(trueBlock);
   ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
   ir_node *jmpTrue = new_Jmp();
   
+  add_immBlock_pred(nextBlock, jmpTrue);
+  mature_immBlock(get_cur_block());
+  
   set_cur_block(falseBlock);
   ir_node *const0 = new_Const(new_tarval_from_long(0, mode_Bu));
   ir_node *jmpFalse = new_Jmp();
   
-  add_immBlock_pred(nextBlock, jmpTrue);
-  mature_immBlock(trueBlock);
   add_immBlock_pred(nextBlock, jmpFalse);
-  mature_immBlock(falseBlock);
+  mature_immBlock(get_cur_block());
 
   set_cur_block(nextBlock);
   
   ir_node *results[2] = { const1, const0 };
   ir_node *phi = new_Phi(2, results, mode_Bu);
   shared_from_this()->firm_node = phi;
+  
+  mature_immBlock(nextBlock);
 }
 
 void EqualityExpression::doCond(ir_node *trueBlock, ir_node *falseBlock) {
@@ -244,28 +256,29 @@ void EqualityExpression::doCond(ir_node *trueBlock, ir_node *falseBlock) {
 }
 
 void RelationalExpression::doExpr() {
-  //  assert(false);
   ir_graph *g = get_current_ir_graph();
+  
+  ir_node *currentBlock = get_cur_block();
   ir_node *trueBlock = new_r_immBlock(g);
   ir_node *falseBlock = new_r_immBlock(g);
   ir_node *nextBlock = new_r_immBlock(g);
   
   doCond(trueBlock, falseBlock);
-  
-  mature_immBlock(get_cur_block());
+  mature_immBlock(currentBlock);
   
   set_cur_block(trueBlock);
   ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
   ir_node *jmpTrue = new_Jmp();
   
+  add_immBlock_pred(nextBlock, jmpTrue);
+  mature_immBlock(get_cur_block());
+  
   set_cur_block(falseBlock);
   ir_node *const0 = new_Const(new_tarval_from_long(0, mode_Bu));
   ir_node *jmpFalse = new_Jmp();
   
-  add_immBlock_pred(nextBlock, jmpTrue);
-  mature_immBlock(trueBlock);
   add_immBlock_pred(nextBlock, jmpFalse);
-  mature_immBlock(falseBlock);
+  mature_immBlock(get_cur_block());
   
   set_cur_block(nextBlock);
   
@@ -364,28 +377,31 @@ void UnaryLeftExpression::doExpr() {
   
   if (dynamic_cast<Negate*>(n->op.get())) {
     ir_graph *g = get_current_ir_graph();
+    
+    ir_node *currentBlock = get_cur_block();
     ir_node *trueBlock = new_r_immBlock(g);
     ir_node *falseBlock = new_r_immBlock(g);
     ir_node *nextBlock = new_r_immBlock(g);
     
     doCond(trueBlock, falseBlock);
-    
-    mature_immBlock(get_cur_block());
+    mature_immBlock(currentBlock);
     
     set_cur_block(trueBlock);
     ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
     ir_node *jmpTrue = new_Jmp();
     
+    add_immBlock_pred(nextBlock, jmpTrue);
+    mature_immBlock(get_cur_block());
+    
     set_cur_block(falseBlock);
     ir_node *const0 = new_Const(new_tarval_from_long(0, mode_Bu));
     ir_node *jmpFalse = new_Jmp();
     
-    add_immBlock_pred(nextBlock, jmpTrue);
-    mature_immBlock(trueBlock);
     add_immBlock_pred(nextBlock, jmpFalse);
-    mature_immBlock(falseBlock);
+    mature_immBlock(get_cur_block());
     
     set_cur_block(nextBlock);
+    mature_immBlock(nextBlock);
     
     ir_node *results[2] = { const1, const0 };
     ir_node *phi = new_Phi(2, results, mode_Bu);
@@ -901,6 +917,7 @@ void IRBuilder::dispatch(std::shared_ptr<IfStatement> n) {
   mature_immBlock(get_cur_block());
   
   set_cur_block(nextBlock);
+  mature_immBlock(nextBlock);
 };
 
 void IRBuilder::dispatch(std::shared_ptr<IfElseStatement> n) {
@@ -933,6 +950,7 @@ void IRBuilder::dispatch(std::shared_ptr<IfElseStatement> n) {
   }
   
   set_cur_block(nextBlock);
+  mature_immBlock(nextBlock);
 };
 
 void IRBuilder::dispatch(std::shared_ptr<ExpressionStatement> n) {
@@ -968,6 +986,7 @@ void IRBuilder::dispatch(std::shared_ptr<WhileStatement> n) {
   mature_immBlock(headerBlock);
   
   set_cur_block(nextBlock);
+  mature_immBlock(nextBlock);
   
   // Keep block in case of endless loops
   keep_alive(headerBlock);
