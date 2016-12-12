@@ -392,7 +392,7 @@ void UnaryLeftExpression::doExpr() {
     shared_from_this()->firm_node = phi;
   }
   
-  assert(false);
+  // assert(false); REVIEW: was there even a reason for this?
 }
 
 void UnaryLeftExpression::doCond(ir_node *trueBlock, ir_node *falseBlock) {
