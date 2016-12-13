@@ -47,15 +47,31 @@ namespace cmpl
   public:
     AddInstr(regNum src1, regNum src2, regNum dest)
       : src1(src1), src2(src2), dest(dest) {}
-      
+    
     std::string generate()
     {
+      // TODO: just example with bla bla code!!!
       return "add " + getRegisterName(dest) + ", " + getRegisterName(src1) + ", " + getRegisterName(src2);
     }
     
     regNum dest;
     regNum src1;
     regNum src2;
+  };
+  
+  class JmpInstr : Instruction
+  {
+  public:
+    JmpInstr(Label label)
+      : label(label) {}
+    
+    std::string generate()
+    {
+      // TODO: just example with bla bla code!!!
+      return "jmp " + label;
+    }
+    
+    Label label;
   };
 
 }

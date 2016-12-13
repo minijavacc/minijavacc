@@ -1,6 +1,7 @@
 #pragma once
 
 #include "amd64instructions.h"
+#include "graphassembler.h"
 #include "creator.h"
 
 #include <libfirm/firm.h>
@@ -16,14 +17,9 @@ namespace cmpl
   class Backend
   {
   public:
-    Backend(Creator &creator);
-    ~Backend();
+    Backend(Creator &creator) : creator(creator) {}
     
     void run(std::string filepath);
-    
-    std::vector<std::shared_ptr<Instruction>> irgSetInstructionOrder(ir_graph* irg);
-    void irgAllocateRegisters(std::vector<std::shared_ptr<Instruction>> &instructions);
-    std::string irgCreateInstructions(std::vector<std::shared_ptr<Instruction>> &instructions);
     
     void createAssemblerFile(std::string filepath);
     void runExternalLinker();
