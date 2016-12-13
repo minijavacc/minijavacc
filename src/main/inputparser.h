@@ -36,7 +36,8 @@ namespace cmpl
         Option("--print-ast", Compiler::printast),
         Option("--check", Compiler::semcheck),
         Option("--graph", Compiler::creategraph), 
-        Option("--compile-firm", Compiler::compilefirm)
+        Option("--compile-firm", Compiler::compilefirm), 
+        Option("--compile", Compiler::compile)
       };
 
       std::vector<Option> givenOptions;
