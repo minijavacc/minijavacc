@@ -2,6 +2,16 @@
 
 using namespace cmpl;
 
+
+// for use with irg_walk_topological()
+void irgNodeWalker(ir_node *node, void *env)
+{
+  // get this-Pointer
+  Backend* _this = static_cast<Backend*>(env);
+  
+  
+}
+
 Backend::Backend(Creator &creator) : creator(creator)
 {
   // activate back edges
@@ -47,13 +57,13 @@ void Backend::run(std::string filepath)
   runExternalLinker();
 }
 
-void createAssemblerFile(std::string filepath)
+void Backend::createAssemblerFile(std::string filepath)
 {
   // take std::vector<std::string> irgAssembler and write a complete assembler file to disk
   // try to avoid unneeded string copying
 }
 
-void runExternalLinker()
+void Backend::runExternalLinker()
 {
   // use code from Creator() to run linker
   // leave code seperated to be able to generate output files with better names in future
@@ -79,14 +89,4 @@ void Backend::irgAllocateRegisters(std::vector<std::shared_ptr<Instruction>> &in
 std::string Backend::irgCreateInstructions(std::vector<std::shared_ptr<Instruction>> &instructions)
 {
   return "";
-}
-
-
-// for use with irg_walk_topological()
-void irgNodeWalker(ir_node *node, void *env)
-{
-  // get this-Pointer
-  Backend* _this = static_cast<Backend*>(env);
-  
-  
 }

@@ -40,7 +40,4 @@ namespace cmpl
     public:
       BackendError(const char* err) : std::runtime_error(err) { }
   };
-
-  // for use with irg_walk_topological()
-  void irgNodeWalker(ir_node *node, void* env);
 }
