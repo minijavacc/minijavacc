@@ -24,7 +24,7 @@ Backend::~Backend()
   for (int i = 0; i < irgsNum; i++)
   {
     ir_graph* irg = get_irp_irg(i);
-		edges_activate(irg);
+		edges_deactivate(irg);
   }
 }
 
