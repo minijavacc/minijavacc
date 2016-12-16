@@ -1,14 +1,15 @@
 #include "graphassembler.h"
-
+#include <stdio.h>
 
 using namespace cmpl;
 
-
+int c=0;
 // for use with irg_walk_topological()
 void irgNodeWalker(ir_node *node, void *env)
 {
-  // get this-Pointer
-  GraphAssembler* _this = static_cast<GraphAssembler*>(env);
+  // get instructions-Pointer
+    std::vector<std::shared_ptr<Instruction>>* instructions = static_cast<std::vector<std::shared_ptr<Instruction>>*>(env);
+	//check typ of node
 }
 
 
@@ -41,7 +42,7 @@ std::vector<std::shared_ptr<Instruction>> GraphAssembler::irgSerialize()
   // create sequence of instructions (create them on the fly)
   
   // walk irg
-  irg_walk_topological(irg, irgNodeWalker, (void*) this);
+  irg_walk_topological(irg, irgNodeWalker, (void*) &instructions);
   
   // Example
   // AddInstr(0, 1, newReg());
