@@ -18,7 +18,6 @@ namespace cmpl
   {
   public:
     Backend(Creator &creator) : creator(creator) {}
-    
     void run(std::string filepath);
     
     void createAssemblerFile(std::string filepath);

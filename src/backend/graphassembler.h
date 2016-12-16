@@ -16,7 +16,6 @@ namespace cmpl
   {
   public:
     GraphAssembler(ir_graph* irg) : irg(irg) {}
-    
     std::string run();
     
     std::vector<std::shared_ptr<Instruction>> irgSerialize();
