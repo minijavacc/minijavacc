@@ -1,5 +1,6 @@
 #include "graphassembler.h"
 #include <stdio.h>
+#include <libfirm/firm.h>
 
 using namespace cmpl;
 
@@ -10,6 +11,11 @@ void irgNodeWalker(ir_node *node, void *env)
   // get instructions-Pointer
     std::vector<std::shared_ptr<Instruction>>* instructions = static_cast<std::vector<std::shared_ptr<Instruction>>*>(env);
 	//check typ of node
+	if(is_Const(node))
+	{
+		long l=get_tarval_long(get_Const_tarval(node));
+		printf("node is const %ld \n",l);
+	}
 }
 
 
