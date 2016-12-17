@@ -4,20 +4,16 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 CLEAR='\033[0m'
 
-# Assume script resides inside src/lexer/tests directory and is always called from there
+# Assume script resides inside tests/lexer directory and is always called from root project directory
 
-BASEDIR='./src/lexer/tests'
-cd ../../..
-
+BASEDIR='tests/lexer'
 lexer='./run'
 
 test_files=( 'edge_cases' 'prog1' 'test1' 'test2' 'test3' 'test4' 'test5' 'while' )
 error_files=( 'errors' )
 
 
-
 success=true
-
 
 
 for i in "${test_files[@]}"
@@ -58,8 +54,7 @@ done
 
 
 
-cd $BASEDIR
-./single_test_cases.sh
+./${BASEDIR}/single_test_cases.sh
 
 
 
