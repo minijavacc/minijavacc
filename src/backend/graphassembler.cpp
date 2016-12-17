@@ -50,7 +50,7 @@ void insertProlog(ctx *x) {
   x->instructions->insert(it, p);
   it = x->instructions->begin();
   x->instructions->insert(it + 1, m);
-  it = x->instructions->begin();s
+  it = x->instructions->begin();
   x->instructions->insert(it + 2, s);
 }
 
