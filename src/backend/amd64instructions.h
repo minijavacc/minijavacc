@@ -20,7 +20,7 @@ namespace cmpl
     
     virtual std::string generate();
     
-    std::string getRegisterName(regNum reg)
+    static std::string getRegisterName(regNum reg)
     {
       switch (reg)
       {

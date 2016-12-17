@@ -51,9 +51,9 @@ std::string GraphAssembler::run()
   // activate all edges in graph
   edges_activate(irg);
 
-  instructions = irgSerialize();
-  irgRegisterAllocation(instructions);
-  assemblerOutput = irgCodeGeneration(instructions);
+  irgSerialize();
+  irgRegisterAllocation();
+  assemblerOutput = irgCodeGeneration();
   
   // deactivate edges
   edges_deactivate(irg);
@@ -63,30 +63,33 @@ std::string GraphAssembler::run()
 
 
 
-std::vector<std::shared_ptr<Instruction>> GraphAssembler::irgSerialize()
+void GraphAssembler::irgSerialize()
 {
-  std::vector<std::shared_ptr<Instruction>> instructions;
   
   // create sequence of instructions (create them on the fly)
   
   // walk irg
-  irg_walk_topological(irg, irgNodeWalker, (void*) &instructions);
+  irg_walk_topological(irg, irgNodeWalker, static_cast<void*>(&instructions));
   
   // Example
   // AddInstr(0, 1, newReg());
-  
-  return std::move(instructions);
 }
 
-void GraphAssembler::irgRegisterAllocation(std::vector<std::shared_ptr<Instruction>> &instructions)
+void GraphAssembler::irgRegisterAllocation()
 {
   // work with instructions-vector
-  // 
-  // after the allocation only 6(?) registers must be used
+  // primitive: just use 2 registers
+  for(auto& instruction: instructions) {
+    
+  }
+  
+  // enhanced: from https://en.wikipedia.org/wiki/X86_calling_conventions#x86-64_calling_conventions
+  // System V AMD64: 6 times int/pointer {RDI, RSI, RDX, RCX, R8, R9} ["certain" floating point {XMM0–7} probably irrelevant for us] Caller Stack aligned on 16 bytes
+  // after the allocation only 6 registers must be used
   // save size of needed stack frame somewhere
 }
 
-std::string GraphAssembler::irgCodeGeneration(std::vector<std::shared_ptr<Instruction>> &instructions)
+std::string GraphAssembler::irgCodeGeneration()
 {
   // call generate() for every instruction, set labels, create one long string
   // add function prolog/epilog

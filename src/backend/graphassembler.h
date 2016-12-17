@@ -18,15 +18,16 @@ namespace cmpl
     GraphAssembler(ir_graph* irg) : irg(irg) {}
     std::string run();
     
-    std::vector<std::shared_ptr<Instruction>> irgSerialize();
-    void irgRegisterAllocation(std::vector<std::shared_ptr<Instruction>> &instructions);
-    std::string irgCodeGeneration(std::vector<std::shared_ptr<Instruction>> &instructions);
+    void irgSerialize();
+    void irgRegisterAllocation();
+    std::string irgCodeGeneration();
     
     regNum newReg();
     
   private:
     ir_graph* irg;
-    
+    std::vector<std::shared_ptr<Instruction>> instructions;
+
     regNum nextRegNum = 0;
   };
   
