@@ -8,9 +8,11 @@
 #include <iostream>
 #include <assert.h>
 #include <memory>
+#include <map>
 
 namespace cmpl
 {
+  using namespace std;
 
   class GraphAssembler
   {
@@ -26,9 +28,9 @@ namespace cmpl
     
   private:
     ir_graph* irg;
-    std::shared_ptr<std::vector<std::shared_ptr<Instruction>>> instructions;
+    shared_ptr<map<Label, shared_ptr<vector<shared_ptr<Instruction>>>>> blocks;
+    std::shared_ptr<std::vector<Label>> labels; // topological order
     size_t nargs;
-    std::shared_ptr<subq_rsp> prolog_subq;
 
     regNum nextRegNum = 0;
   };

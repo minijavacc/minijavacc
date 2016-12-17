@@ -57,7 +57,7 @@ namespace cmpl
     regNum src2;
     
     std::string generate() override {
-      return "\t" + mnemonic() + " " + std::to_string(src1) + ", " + std::to_string(src2);
+      return mnemonic() + " " + std::to_string(src1) + ", " + std::to_string(src2);
     }
   };
   
@@ -67,7 +67,7 @@ namespace cmpl
     regNum src2;
     
     std::string generate() override {
-      return "\t" + mnemonic() + " " + std::to_string(src1) + ", " + std::to_string(src2);
+      return mnemonic() + " " + std::to_string(src1) + ", " + std::to_string(src2);
     }
   };
   
@@ -120,7 +120,7 @@ namespace cmpl
     }
     
     std::string generate() override {
-      return "\t" + mnemonic() + " " + label;
+      return mnemonic() + " " + label;
     }
   };
   
@@ -128,16 +128,7 @@ namespace cmpl
   public:
     Label label;
     std::string generate() override {
-      return "\tjmp " + label;
-    }
-  };
-  
-  class Lbl : public Instruction {
-  public:
-    using Instruction::Instruction;
-    Label label;
-    std::string generate() override {
-      return label + ":";
+      return "jmp " + label;
     }
   };
   
@@ -148,7 +139,7 @@ namespace cmpl
     regNum dest;
     
     std::string generate() override {
-      return "\tmovl " + std::to_string((signed)offset * -4) + "(%ebp), " + getRegisterName(dest);
+      return "movl " + std::to_string((signed)offset * -4) + "(%ebp), " + getRegisterName(dest);
     }
   };
   
@@ -158,7 +149,7 @@ namespace cmpl
     regNum src;
     
     std::string generate() override {
-      return "\tmovl " + getRegisterName(src) + " "+ std::to_string((signed)offset * -4) + "(%ebp)";
+      return "movl " + getRegisterName(src) + " "+ std::to_string((signed)offset * -4) + "(%ebp)";
     }
   };
   
@@ -169,7 +160,7 @@ namespace cmpl
     regNum dest;
     
     std::string generate() override {
-      return "\tmovl $" + std::to_string(imm_value) + ", " + getRegisterName(dest);
+      return "movl $" + std::to_string(imm_value) + ", " + getRegisterName(dest);
     }
   };
   
@@ -177,7 +168,7 @@ namespace cmpl
   class movl_to_rax : public I1to0 {
   public:
     std::string generate() override {
-      return "\tmovl " + getRegisterName(src1) + ", %rax";
+      return "movl " + getRegisterName(src1) + ", %rax";
     }
   };
   
@@ -198,28 +189,28 @@ namespace cmpl
   class popq_rbp : public Instruction {
   public:
     std::string generate() override {
-      return "\tpopq %rbp";
+      return "popq %rbp";
     }
   };
   
   class retq : public Instruction {
   public:
     std::string generate() override {
-      return "\tretq";
+      return "retq";
     }
   };
   
   class pushq_rbp : public Instruction {
   public:
     std::string generate() override {
-      return "\tpushq %rbp";
+      return "pushq %rbp";
     }
   };
   
   class movq_rsp_rbp : public Instruction {
   public:
     std::string generate() override {
-      return "\tmovq %rsp %rbp";
+      return "movq %rsp %rbp";
     }
   };
   
@@ -227,7 +218,7 @@ namespace cmpl
   public:
     unsigned nslots;
     std::string generate() override {
-      return "\tsubq " + std::to_string(nslots * 4) + " %rsp";
+      return "subq " + std::to_string(nslots * 4) + " %rsp";
     }
   };
 
