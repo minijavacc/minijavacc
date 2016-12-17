@@ -17,17 +17,12 @@ namespace cmpl
   class Instruction
   {
   public:
-    regNum dest;
-    regNum src1;
-    regNum src2;
-    
     virtual std::string mnemonic() {
-      return "NOP";
+      return "X";
     }
 
     virtual std::string generate() {
-//      assert(src2 == dest);
-      return "\t" + mnemonic() + " " + getRegisterName(src1) + ", " + getRegisterName(src2);
+      assert(false);
     };
 
     
@@ -55,7 +50,33 @@ namespace cmpl
     }
   };
   
-  class cmpl_ : public Instruction {
+  class I2to1 : public Instruction {
+  public:
+    regNum dest;
+    regNum src1;
+    regNum src2;
+    
+    std::string generate() override {
+      return "\t" + mnemonic() + " " + std::to_string(src1) + ", " + std::to_string(src2);
+    }
+  };
+  
+  class I2to0 : public Instruction {
+  public:
+    regNum src1;
+    regNum src2;
+    
+    std::string generate() override {
+      return "\t" + mnemonic() + " " + std::to_string(src1) + ", " + std::to_string(src2);
+    }
+  };
+  
+  class I1to0 : public Instruction {
+  public:
+    regNum src1;
+  };
+  
+  class cmpl_ : public I2to0 {
     std::string mnemonic() override {
       return "cmpl";
     }
@@ -70,27 +91,27 @@ namespace cmpl
     std::string mnemonic() override {
       switch (relation) {
         case ir_relation_equal:
-          return "JE";
+          return "je";
           break;
           
         case ir_relation_greater:
-          return "JA";
+          return "ja";
           break;
           
         case ir_relation_greater_equal:
-          return "JAE";
+          return "jae";
           break;
           
         case ir_relation_less:
-          return "JB";
+          return "jb";
           break;
           
         case ir_relation_less_equal:
-          return "JBE";
+          return "jbe";
           break;
           
         case ir_relation_less_greater:
-          return "JNE";
+          return "jne";
           break;
           
         default:
@@ -121,22 +142,31 @@ namespace cmpl
   };
   
   
-  class movl_stack : public Instruction {
+  class movl_from_stack : public Instruction {
   public:
     unsigned offset = 0;
-    using Instruction::Instruction;
+    regNum dest;
     
     std::string generate() override {
       return "\tmovl " + std::to_string((signed)offset * -4) + "(%ebp), " + getRegisterName(dest);
     }
   };
   
-  
-  class movl_imm : public Instruction {
+  class movl_to_stack : public Instruction {
   public:
-    using Instruction::Instruction;
+    unsigned offset = 0;
+    regNum src;
     
+    std::string generate() override {
+      return "\tmovl " + getRegisterName(src) + " "+ std::to_string((signed)offset * -4) + "(%ebp)";
+    }
+  };
+  
+  
+  class movl_from_imm : public Instruction {
+  public:
     long imm_value;
+    regNum dest;
     
     std::string generate() override {
       return "\tmovl $" + std::to_string(imm_value) + ", " + getRegisterName(dest);
@@ -144,35 +174,29 @@ namespace cmpl
   };
   
   
-  class movl_rax : public Instruction {
+  class movl_to_rax : public I1to0 {
   public:
-    using Instruction::Instruction;
-    
     std::string generate() override {
       return "\tmovl " + getRegisterName(src1) + ", %rax";
     }
   };
   
   
-  class addl : public Instruction {
-    using Instruction::Instruction;
+  class addl : public I2to1 {
     std::string mnemonic() override {
       return "addl";
     }
   };
   
   
-  class imull : public Instruction {
-    using Instruction::Instruction;
+  class imull : public I2to1 {
     std::string mnemonic() override {
       return "imull";
     }
   };
   
-  class popqrbp : public Instruction {
+  class popq_rbp : public Instruction {
   public:
-    using Instruction::Instruction;
-    
     std::string generate() override {
       return "\tpopq %rbp";
     }
@@ -180,10 +204,30 @@ namespace cmpl
   
   class retq : public Instruction {
   public:
-    using Instruction::Instruction;
-    
     std::string generate() override {
       return "\tretq";
+    }
+  };
+  
+  class pushq_rbp : public Instruction {
+  public:
+    std::string generate() override {
+      return "\tpushq %rbp";
+    }
+  };
+  
+  class movq_rsp_rbp : public Instruction {
+  public:
+    std::string generate() override {
+      return "\tmovq %rsp %rbp";
+    }
+  };
+  
+  class subq_rsp : public Instruction {
+  public:
+    unsigned nslots;
+    std::string generate() override {
+      return "\tsubq " + std::to_string(nslots * 4) + " %rsp";
     }
   };
 

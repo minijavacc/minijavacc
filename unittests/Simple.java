@@ -3,7 +3,7 @@ class Simple {
   }
   
   public int foo(int a) {
-    if (a == 3) {
+    if (a+1 == 3) {
       return 42;
     } else {
       return 23;

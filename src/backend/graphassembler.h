@@ -26,7 +26,9 @@ namespace cmpl
     
   private:
     ir_graph* irg;
-    std::vector<std::shared_ptr<Instruction>> instructions;
+    std::shared_ptr<std::vector<std::shared_ptr<Instruction>>> instructions;
+    size_t nargs;
+    std::shared_ptr<subq_rsp> prolog_subq;
 
     regNum nextRegNum = 0;
   };
