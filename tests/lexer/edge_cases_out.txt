@@ -1,0 +1,15 @@
+integer literal 0
+integer literal 123456789
+integer literal 0
+integer literal 0
+identifier id0
+identifier id1
+integer literal 0
+identifier id
+integer literal 1
+identifier id
+identifier _id
+identifier __id__
+identifier tab
+identifier tab
+EOF

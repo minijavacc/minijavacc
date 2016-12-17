@@ -1,0 +1,79 @@
+class
+identifier Test4
+{
+public
+static
+void
+identifier main
+(
+identifier String
+[
+]
+identifier args
+)
+{
+while
+(
+integer literal 5
+>
+integer literal 3
+)
+{
+if
+(
+!
+false
+)
+{
+identifier Test4
+identifier t
+=
+new
+identifier Test4
+(
+)
+;
+int
+identifier f
+=
+integer literal 10
+;
+while
+(
+identifier t
+.
+identifier whilee
+(
+identifier f
+)
+)
+{
+identifier t
+.
+identifier whilee
+(
+identifier f
+*
+integer literal 5
+)
+;
+}
+}
+}
+}
+public
+boolean
+identifier whilee
+(
+int
+identifier f
+)
+{
+return
+identifier f
+<
+integer literal 7
+;
+}
+}
+EOF
