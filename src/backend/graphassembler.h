@@ -24,15 +24,11 @@ namespace cmpl
     void irgRegisterAllocation();
     std::string irgCodeGeneration();
     
-    regNum newReg();
-    
   private:
     ir_graph* irg;
     shared_ptr<map<Label, shared_ptr<vector<shared_ptr<Instruction>>>>> blocks;
     std::shared_ptr<std::vector<Label>> labels; // topological order
     size_t nargs;
-
-    regNum nextRegNum = 0;
   };
   
   class GraphAssemblerError : public std::runtime_error

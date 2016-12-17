@@ -396,10 +396,3 @@ string GraphAssembler::irgCodeGeneration()
   
   return move(string(""));
 }
-
-regNum GraphAssembler::newReg()
-{
-  regNum r = nextRegNum++; // post-increment!
-  
-  return r;
-}
