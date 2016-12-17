@@ -18,11 +18,38 @@ void irgNodeWalker(ir_node *node, void *env)
 		//check if its the first block
 		if(get_irn_arity(node)==0)
 		{
+			//get the methods parameter and return
 			ir_entity* entity=get_irg_entity(get_irn_irg(node));
 			const char* name=get_entity_name(entity); 
-			ir_type* type=get_entity_type(entity);
-			size_t paramsSize=get_method_n_params(type);
-			size_t returnSize=get_method_n_ress(type);
+			ir_type* method=get_entity_type(entity);
+			size_t paramsSize=get_method_n_params(method);
+			size_t returnSize=get_method_n_ress(method);
+			//handle return type
+			if(returnSize==1)
+			{
+				ir_type* returnType=get_method_res_type(method,0);
+				if(is_Primitive_type(returnType))
+				{
+					ir_mode* mode=get_type_mode(returnType);
+					if(mode==mode_Is)
+					{
+						//int
+					}
+					else if(mode==mode_Bu){
+						//bool
+					}
+					else {
+						//only int and bool primitives are valid
+						asstert(false);
+					}
+				}
+				else
+				{
+					//is pointer-type for usertypes or arrays
+					
+				}
+			}
+			
 			
 			printf("method: name = %s  paramCount = %d  returnCount = %d \n",name,paramsSize,returnSize);
 			
