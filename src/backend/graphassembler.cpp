@@ -70,6 +70,26 @@ void insertProlog(ctx *x) {
 
 #pragma mark - Instruction builders
 
+void handlePhi(ir_node *node, ctx *x) {
+  regNum outReg = alloc_new_reg(x, node);
+  ir_node *bl = get_nodes_block(node);
+  for (int i = 0; i < get_Phi_n_preds(node); i++) {
+    ir_node *phipred = get_Phi_pred(node, i);
+    regNum inReg = x->registers.at(get_irn_node_nr(phipred));
+    
+    ir_node *j = get_Block_cfgpred(bl, i);
+    ir_node *jbl = get_nodes_block(j);
+    
+    Label l = x->nodeNrToLabel.at(get_irn_node_nr(jbl));
+    auto is = x->blocks->at(l);
+    
+    auto m = make_shared<movl>();
+    m->src1 = inReg;
+    m->dest = outReg;
+    is->push_back(m);
+  }
+}
+
 void buildBlock(ir_node *node, ctx *x) {
   ir_graph *g = get_irn_irg(node);
   if (node == get_irg_end_block(g)) {
@@ -100,7 +120,7 @@ void buildCond(ir_node *node, ctx *x) {
   ir_node *trueBlock = nullptr;
   ir_node *falseBlock = nullptr;
   
-  // TODO: there must be a more direct way
+  // to do: there must be a more direct way
   foreach_out_edge_safe(node, edge) {
     ir_node *n = get_edge_src_irn(edge);
     if (is_Proj(n)) {
@@ -227,6 +247,10 @@ void irgNodeWalker(ir_node *node, void *env)
     buildJmp(node, x);
   }
   
+  if (is_Phi(node)) {
+    handlePhi(node, x);
+  }
+  
   if (is_Proj(node)) {
     buildProj(node, x);
   }
@@ -287,14 +311,9 @@ void GraphAssembler::irgSerialize()
   
   // Insert prolog
   insertProlog(&x);
-  
-  
-//  for (auto const& i : *x.instructions) {
-//    cout << i->generate() << "\n";
-//  }
-//  
-//  cout << "\n\n";
 }
+
+
 
 void GraphAssembler::irgRegisterAllocation()
 {

@@ -74,6 +74,20 @@ namespace cmpl
   class I1to0 : public Instruction {
   public:
     regNum src1;
+    
+    std::string generate() override {
+      return mnemonic() + " " + std::to_string(src1);
+    }
+  };
+  
+  class I1to1 : public Instruction {
+  public:
+    regNum src1;
+    regNum dest;
+    
+    std::string generate() override {
+      return mnemonic() + " " + std::to_string(src1) + ", " + std::to_string(dest);
+    }
   };
   
   class cmpl_ : public I2to0 {
@@ -129,6 +143,13 @@ namespace cmpl
     Label label;
     std::string generate() override {
       return "jmp " + label;
+    }
+  };
+  
+  
+  class movl : public I1to1 {
+    std::string mnemonic() override {
+      return "movl";
     }
   };
   
