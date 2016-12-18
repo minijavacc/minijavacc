@@ -9,7 +9,7 @@ using namespace cmpl;
 #pragma mark - Misc
 
 struct ctx {
-  shared_ptr<map<Label, shared_ptr<vector<shared_ptr<Instruction>>>>> blocks;
+  shared_ptr<map<Label, shared_ptr<LabeledBlock>>> blocks;
   shared_ptr<vector<Label>> labels;
   map<long, long> registers;
   map<long, Label> nodeNrToLabel;
@@ -37,9 +37,7 @@ Label get_label(ctx *x, ir_node *node) {
   return l;
 }
 
-shared_ptr<vector<shared_ptr<Instruction>>> get_current_block(ctx *x) {
-//  auto curlabel = x->labels->back();
-//  auto curblock = x->blocks->at(curlabel);
+shared_ptr<LabeledBlock> get_current_block(ctx *x) {
   return x->blocks->at(x->labels->back());
 }
 
@@ -55,13 +53,13 @@ void insertProlog(ctx *x) {
   s->nslots = (unsigned) x->nextFreeRegister;
   
   Label fl = x->labels->front();
-  auto is = x->blocks->at(fl);
-  auto it = is->begin();
-  x->blocks->at(fl)->insert(it, p);
-  it = is->begin();
-  is->insert(it + 1, m);
-  it = is->begin();
-  is->insert(it + 2, s);
+  auto bl = x->blocks->at(fl);
+  auto it = bl->instructions->begin();
+  bl->instructions->insert(it, p);
+  it = bl->instructions->begin();
+  bl->instructions->insert(it + 1, m);
+  it = bl->instructions->begin();
+  bl->instructions->insert(it + 2, s);
 }
 
 
@@ -81,12 +79,19 @@ void handlePhi(ir_node *node, ctx *x) {
     ir_node *jbl = get_nodes_block(j);
     
     Label l = x->nodeNrToLabel.at(get_irn_node_nr(jbl));
-    auto is = x->blocks->at(l);
+    shared_ptr<LabeledBlock> lb = x->blocks->at(l);
     
     auto m = make_shared<movl>();
     m->src1 = inReg;
     m->dest = outReg;
-    is->push_back(m);
+    
+    for (int i_ = 0; i_ < lb->instructions->size(); i_++) {
+      if ((*(lb->instructions))[i_] == lb->exitInstruction) {
+        auto it = lb->instructions->begin();
+        lb->instructions->insert(it + i_, m);
+        break;
+      }
+    }
   }
 }
 
@@ -97,8 +102,9 @@ void buildBlock(ir_node *node, ctx *x) {
   }
   
   Label l = get_label(x, node);
-  auto bl = make_shared<vector<shared_ptr<Instruction>>>();
-  x->blocks->emplace(l, bl);
+  auto lb = make_shared<LabeledBlock>();
+  lb->label = l;
+  x->blocks->emplace(l, lb);
   x->labels->push_back(l);
 }
 
@@ -110,7 +116,7 @@ void buildConst(ir_node *node, ctx *x) {
   long oreg = alloc_new_reg(x, node);
   m->dest = oreg;
   
-  get_current_block(x)->push_back(m);
+  get_current_block(x)->instructions->push_back(m);
 }
 
 void buildCond(ir_node *node, ctx *x) {
@@ -155,16 +161,18 @@ void buildCond(ir_node *node, ctx *x) {
   auto cmp = make_shared<cmpl_>();
   cmp->src1 = lreg;
   cmp->src2 = rreg;
-  get_current_block(x)->push_back(cmp);
+  get_current_block(x)->instructions->push_back(cmp);
   
   auto br = make_shared<Branch>();
   br->relation = get_Cmp_relation(s);
   br->label = trueLabel;
-  get_current_block(x)->push_back(br);
+  get_current_block(x)->instructions->push_back(br);
   
   auto j = make_shared<jmp>();
   j->label = falseLabel;
-  get_current_block(x)->push_back(j);
+  get_current_block(x)->instructions->push_back(j);
+  
+  get_current_block(x)->exitInstruction = cmp;
 }
 
 void buildJmp(ir_node *node, ctx *x) {
@@ -175,7 +183,11 @@ void buildJmp(ir_node *node, ctx *x) {
     
     auto j = make_shared<jmp>();
     j->label = l;
-    get_current_block(x)->push_back(j);
+    get_current_block(x)->instructions->push_back(j);
+    
+    auto lb = get_current_block(x);
+    lb->exitInstruction = j;
+    return;
   }
 }
 
@@ -189,7 +201,7 @@ void buildProj(ir_node *node, ctx *x) {
       m->offset = get_Proj_num(node);
       long oreg = alloc_new_reg(x, node);
       m->dest = oreg;
-      get_current_block(x)->push_back(m);
+      get_current_block(x)->instructions->push_back(m);
     }
   }
 }
@@ -206,7 +218,7 @@ void buildAdd(ir_node *node, ctx *x) {
   inst->src1 = lreg;
   inst->src2 = rreg;
   inst->dest = oreg;
-  get_current_block(x)->push_back(inst);
+  get_current_block(x)->instructions->push_back(inst);
 }
 
 void buildReturn(ir_node *node, ctx *x) {
@@ -215,13 +227,13 @@ void buildReturn(ir_node *node, ctx *x) {
     long r = x->registers[get_irn_node_nr(pred)];
     auto inst = make_shared<movl_to_rax>();
     inst->src1 = r;
-    get_current_block(x)->push_back(inst);
+    get_current_block(x)->instructions->push_back(inst);
   }
   
   auto pop = make_shared<popq_rbp>();
-  get_current_block(x)->push_back(pop);
+  get_current_block(x)->instructions->push_back(pop);
   auto ret = make_shared<retq>();
-  get_current_block(x)->push_back(ret);
+  get_current_block(x)->instructions->push_back(ret);
 }
 
 
@@ -274,7 +286,7 @@ string GraphAssembler::run()
 {
   // Store number of arguments
   string assemblerOutput;
-  blocks = make_shared<map<Label, shared_ptr<vector<shared_ptr<Instruction>>>>>();
+  blocks = make_shared<map<Label, shared_ptr<LabeledBlock>>>();
   labels = make_shared<vector<Label>>();
   ir_entity *ent = get_irg_entity(irg);
   ir_type *ty = get_entity_type(ent);
@@ -320,7 +332,8 @@ void GraphAssembler::irgRegisterAllocation()
   // work with instructions-vector
   // primitive: just use 2 registers
   for (auto const& label : *labels) {
-    auto instructions = blocks->at(label);
+    auto lb = blocks->at(label);
+    auto instructions = lb->instructions;
     auto instructions_ = make_shared<vector<shared_ptr<Instruction>>>();
     
     for (auto const& instruction : *instructions) {
@@ -334,6 +347,11 @@ void GraphAssembler::irgRegisterAllocation()
         auto m2 = make_shared<movl_from_stack>();
         m2->offset = (unsigned) (i->src2 + nargs);
         m2->dest = 1;
+        
+        // store dest
+        auto m3 = make_shared<movl_to_stack>();
+        m3->offset = (unsigned) (i->dest + nargs);
+        m3->src = m2->dest;
 
         i->src1 = m1->dest;
         i->src2 = m2->dest;
@@ -342,6 +360,27 @@ void GraphAssembler::irgRegisterAllocation()
         instructions_->push_back(m1);
         instructions_->push_back(m2);
         instructions_->push_back(instruction);
+        instructions_->push_back(m3);
+        continue;
+      }
+      
+      if (auto i = dynamic_cast<I1to1*>(instruction.get())) {
+        // load arg1
+        auto m1 = make_shared<movl_from_stack>();
+        m1->offset = (unsigned) (i->src1 + nargs);
+        m1->dest = 0;
+        
+        // store dest
+        auto m3 = make_shared<movl_to_stack>();
+        m3->offset = (unsigned) (i->dest + nargs);
+        m3->src = 1;
+        
+        i->src1 = 0;
+        i->dest = 1;
+        
+        instructions_->push_back(m1);
+        instructions_->push_back(instruction);
+        instructions_->push_back(m3);
         continue;
       }
       
@@ -385,7 +424,7 @@ void GraphAssembler::irgRegisterAllocation()
       instructions_->push_back(instruction);
     }
     
-    blocks->emplace(label, instructions_);
+    lb->instructions = instructions_;
   }
   
   
@@ -393,7 +432,7 @@ void GraphAssembler::irgRegisterAllocation()
   for (auto const& label : *labels) {
     cout << label << ":\n";
     
-    auto instructions = blocks->at(label);
+    auto instructions = blocks->at(label)->instructions;
     
     for (auto const& instruction : *instructions) {
       cout << "\t" + instruction->generate() << "\n";
