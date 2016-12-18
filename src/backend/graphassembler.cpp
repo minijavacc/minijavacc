@@ -8,37 +8,27 @@ using namespace cmpl;
 
 #pragma mark - Misc
 
-struct ctx {
-  shared_ptr<map<Label, shared_ptr<LabeledBlock>>> blocks;
-  shared_ptr<vector<Label>> labels;
-  map<long, long> registers;
-  map<long, Label> nodeNrToLabel;
-  long nextFreeRegister;
-  long nextFreeLabel;
-  string labelPrefix;
-};
-
-long alloc_new_reg(ctx *x, ir_node *node) {
-  long r = x->nextFreeRegister;
-  x->registers.emplace(get_irn_node_nr(node), r);
-  x->nextFreeRegister = x->nextFreeRegister + 1;
+long GraphAssembler::allocateReg(ir_node *node) {
+  long r = nextFreeRegister;
+  registers.emplace(get_irn_node_nr(node), r);
+  nextFreeRegister = nextFreeRegister + 1;
   return r;
 }
 
-Label get_label(ctx *x, ir_node *node) {
-  if (x->nodeNrToLabel.count(get_irn_node_nr(node)) > 0) {
-    return x->nodeNrToLabel.at(get_irn_node_nr(node));
+Label GraphAssembler::getLabel(ir_node *node) {
+  if (nodeNrToLabel.count(get_irn_node_nr(node)) > 0) {
+    return nodeNrToLabel.at(get_irn_node_nr(node));
   }
   
-  string p = x->labelPrefix;
-  Label l = p + to_string(x->nextFreeLabel);
-  x->nodeNrToLabel.emplace(get_irn_node_nr(node), l);
-  x->nextFreeLabel = x->nextFreeLabel + 1;
+  string p = labelPrefix;
+  Label l = p + to_string(nextFreeLabel);
+  nodeNrToLabel.emplace(get_irn_node_nr(node), l);
+  nextFreeLabel = nextFreeLabel + 1;
   return l;
 }
 
-shared_ptr<LabeledBlock> get_current_block(ctx *x) {
-  return x->blocks->at(x->labels->back());
+shared_ptr<LabeledBlock> GraphAssembler::getCurrentBlock() {
+  return blocks->at(labels->back());
 }
 
 
@@ -46,14 +36,14 @@ shared_ptr<LabeledBlock> get_current_block(ctx *x) {
 
 #pragma mark - Function prolog/epilog
 
-void insertProlog(ctx *x) {
+void GraphAssembler::insertProlog() {
   auto p = make_shared<pushq_rbp>();
   auto m = make_shared<movq_rsp_rbp>();
   auto s = make_shared<subq_rsp>();
-  s->nslots = (unsigned) x->nextFreeRegister;
+  s->nslots = (unsigned) nextFreeRegister;
   
-  Label fl = x->labels->front();
-  auto bl = x->blocks->at(fl);
+  Label fl = labels->front();
+  auto bl = blocks->at(fl);
   auto it = bl->instructions->begin();
   bl->instructions->insert(it, p);
   it = bl->instructions->begin();
@@ -68,18 +58,18 @@ void insertProlog(ctx *x) {
 
 #pragma mark - Instruction builders
 
-void handlePhi(ir_node *node, ctx *x) {
-  regNum outReg = alloc_new_reg(x, node);
+void GraphAssembler::handlePhi(ir_node *node) {
+  regNum outReg = allocateReg(node);
   ir_node *bl = get_nodes_block(node);
   for (int i = 0; i < get_Phi_n_preds(node); i++) {
     ir_node *phipred = get_Phi_pred(node, i);
-    regNum inReg = x->registers.at(get_irn_node_nr(phipred));
+    regNum inReg = registers.at(get_irn_node_nr(phipred));
     
     ir_node *j = get_Block_cfgpred(bl, i);
     ir_node *jbl = get_nodes_block(j);
     
-    Label l = x->nodeNrToLabel.at(get_irn_node_nr(jbl));
-    shared_ptr<LabeledBlock> lb = x->blocks->at(l);
+    Label l = nodeNrToLabel.at(get_irn_node_nr(jbl));
+    shared_ptr<LabeledBlock> lb = blocks->at(l);
     
     auto m = make_shared<movl>();
     m->src1 = inReg;
@@ -95,31 +85,31 @@ void handlePhi(ir_node *node, ctx *x) {
   }
 }
 
-void buildBlock(ir_node *node, ctx *x) {
+void GraphAssembler::buildBlock(ir_node *node) {
   ir_graph *g = get_irn_irg(node);
   if (node == get_irg_end_block(g)) {
     return;
   }
   
-  Label l = get_label(x, node);
+  Label l = getLabel(node);
   auto lb = make_shared<LabeledBlock>();
   lb->label = l;
-  x->blocks->emplace(l, lb);
-  x->labels->push_back(l);
+  blocks->emplace(l, lb);
+  labels->push_back(l);
 }
 
-void buildConst(ir_node *node, ctx *x) {
+void GraphAssembler::buildConst(ir_node *node) {
   ir_tarval *val = get_Const_tarval(node);
   long l = get_tarval_long(val);
   auto m = make_shared<movl_from_imm>();
   m->imm_value = l;
-  long oreg = alloc_new_reg(x, node);
+  long oreg = allocateReg(node);
   m->dest = oreg;
   
-  get_current_block(x)->instructions->push_back(m);
+  getCurrentBlock()->instructions->push_back(m);
 }
 
-void buildCond(ir_node *node, ctx *x) {
+void GraphAssembler::buildCond(ir_node *node) {
   ir_node *s = get_Cond_selector(node);
   assert(is_Cmp(s));
   
@@ -149,49 +139,49 @@ void buildCond(ir_node *node, ctx *x) {
   assert(trueBlock);
   assert(falseBlock);
   
-  Label trueLabel = get_label(x, trueBlock);
-  Label falseLabel = get_label(x, falseBlock);
+  Label trueLabel = getLabel(trueBlock);
+  Label falseLabel = getLabel(falseBlock);
   
   ir_node *l = get_Cmp_left(s);
   ir_node *r = get_Cmp_right(s);
   
-  long lreg = x->registers[get_irn_node_nr(l)];
-  long rreg = x->registers[get_irn_node_nr(r)];
+  long lreg = registers[get_irn_node_nr(l)];
+  long rreg = registers[get_irn_node_nr(r)];
   
   auto cmp = make_shared<cmpl_>();
   cmp->src1 = lreg;
   cmp->src2 = rreg;
-  get_current_block(x)->instructions->push_back(cmp);
+  getCurrentBlock()->instructions->push_back(cmp);
   
   auto br = make_shared<Branch>();
   br->relation = get_Cmp_relation(s);
   br->label = trueLabel;
-  get_current_block(x)->instructions->push_back(br);
+  getCurrentBlock()->instructions->push_back(br);
   
   auto j = make_shared<jmp>();
   j->label = falseLabel;
-  get_current_block(x)->instructions->push_back(j);
+  getCurrentBlock()->instructions->push_back(j);
   
-  get_current_block(x)->exitInstruction = cmp;
+  getCurrentBlock()->exitInstruction = cmp;
 }
 
-void buildJmp(ir_node *node, ctx *x) {
+void GraphAssembler::buildJmp(ir_node *node) {
   foreach_out_edge_safe(node, edge) {
     ir_node *n = get_edge_src_irn(edge);
     assert(is_Block(n));
-    Label l = get_label(x, n);
+    Label l = getLabel(n);
     
     auto j = make_shared<jmp>();
     j->label = l;
-    get_current_block(x)->instructions->push_back(j);
+    getCurrentBlock()->instructions->push_back(j);
     
-    auto lb = get_current_block(x);
+    auto lb = getCurrentBlock();
     lb->exitInstruction = j;
     return;
   }
 }
 
-void buildProj(ir_node *node, ctx *x) {
+void GraphAssembler::buildProj(ir_node *node) {
   ir_node *pred = get_Proj_pred(node);
   if (is_Proj(pred)) {
     ir_node *ppred = get_Proj_pred(pred);
@@ -199,41 +189,41 @@ void buildProj(ir_node *node, ctx *x) {
       // Is an argument
       auto m = make_shared<movl_from_stack>();
       m->offset = get_Proj_num(node);
-      long oreg = alloc_new_reg(x, node);
+      long oreg = allocateReg(node);
       m->dest = oreg;
-      get_current_block(x)->instructions->push_back(m);
+      getCurrentBlock()->instructions->push_back(m);
     }
   }
 }
 
-void buildAdd(ir_node *node, ctx *x) {
+void GraphAssembler::buildAdd(ir_node *node) {
   ir_node *l = get_Add_left(node);
   ir_node *r = get_Add_right(node);
   
-  long lreg = x->registers[get_irn_node_nr(l)];
-  long rreg = x->registers[get_irn_node_nr(r)];
-  long oreg = alloc_new_reg(x, node);
+  long lreg = registers[get_irn_node_nr(l)];
+  long rreg = registers[get_irn_node_nr(r)];
+  long oreg = allocateReg(node);
   
   auto inst = make_shared<addl>();
   inst->src1 = lreg;
   inst->src2 = rreg;
   inst->dest = oreg;
-  get_current_block(x)->instructions->push_back(inst);
+  getCurrentBlock()->instructions->push_back(inst);
 }
 
-void buildReturn(ir_node *node, ctx *x) {
+void GraphAssembler::buildReturn(ir_node *node) {
   if (get_Return_n_ress(node) > 0) {
     ir_node *pred = get_Return_res(node, 0);
-    long r = x->registers[get_irn_node_nr(pred)];
+    long r = registers[get_irn_node_nr(pred)];
     auto inst = make_shared<movl_to_rax>();
     inst->src1 = r;
-    get_current_block(x)->instructions->push_back(inst);
+    getCurrentBlock()->instructions->push_back(inst);
   }
   
   auto pop = make_shared<popq_rbp>();
-  get_current_block(x)->instructions->push_back(pop);
+  getCurrentBlock()->instructions->push_back(pop);
   auto ret = make_shared<retq>();
-  get_current_block(x)->instructions->push_back(ret);
+  getCurrentBlock()->instructions->push_back(ret);
 }
 
 
@@ -241,38 +231,38 @@ int nodeNum=0;
 // for use with irg_walk_topological()
 void irgNodeWalker(ir_node *node, void *env)
 {
-  ctx *x = (struct ctx *) env;
+  GraphAssembler *_this = static_cast<GraphAssembler*>(env);
   
   if (is_Block(node)) {
-    buildBlock(node, x);
+    _this->buildBlock(node);
   }
   
   if (is_Const(node)) {
-    buildConst(node, x);
+    _this->buildConst(node);
   }
       
   if (is_Cond(node)) {
-    buildCond(node, x);
+    _this->buildCond(node);
   }
   
   if (is_Jmp(node)) {
-    buildJmp(node, x);
+    _this->buildJmp(node);
   }
   
   if (is_Phi(node)) {
-    handlePhi(node, x);
+    _this->handlePhi(node);
   }
   
   if (is_Proj(node)) {
-    buildProj(node, x);
+    _this->buildProj(node);
   }
     
   if (is_Add(node)) {
-    buildAdd(node, x);
+    _this->buildAdd(node);
   }
     
   if (is_Return(node)) {
-    buildReturn(node, x);
+    _this->buildReturn(node);
   }
 }
 
@@ -310,19 +300,13 @@ string GraphAssembler::run()
 
 void GraphAssembler::irgSerialize()
 {
-  // Initialize context
-  ctx x;
-  x.nextFreeRegister = 0;
-  x.nextFreeLabel = 0;
-  x.labelPrefix = "L_";
-  x.labels = labels;
-  x.blocks = blocks;
+  labelPrefix = "L" + std::to_string(get_irg_graph_nr(irg)) + "_";
   
   // Walk graph
-  irg_walk_topological(irg, irgNodeWalker, &x);
+  irg_walk_topological(irg, irgNodeWalker, static_cast<void*>(this));
   
   // Insert prolog
-  insertProlog(&x);
+  insertProlog();
 }
 
 

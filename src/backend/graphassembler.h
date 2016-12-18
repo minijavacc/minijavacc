@@ -34,12 +34,33 @@ namespace cmpl
     void irgSerialize();
     void irgRegisterAllocation();
     std::string irgCodeGeneration();
+		
+		// methods should be private, but must be called from irgNodeWalker()
+		void insertProlog();
+		void handlePhi(ir_node *node);
+		void buildBlock(ir_node *node);
+		void buildConst(ir_node *node);
+		void buildCond(ir_node *node);
+		void buildJmp(ir_node *node);
+		void buildProj(ir_node *node);
+		void buildAdd(ir_node *node);
+		void buildReturn(ir_node *node);
     
   private:
     ir_graph* irg;
-    shared_ptr<map<Label, shared_ptr<LabeledBlock>>> blocks;
-    std::shared_ptr<std::vector<Label>> labels; // topological order
     size_t nargs;
+		
+		shared_ptr<map<Label, shared_ptr<LabeledBlock>>> blocks;
+		shared_ptr<vector<Label>> labels; // topological order
+		map<long, long> registers;
+		map<long, Label> nodeNrToLabel;
+		long nextFreeRegister = 0;
+		long nextFreeLabel = 0;
+		string labelPrefix;
+		
+		long allocateReg(ir_node *node);
+		Label getLabel(ir_node *node);
+		shared_ptr<LabeledBlock> getCurrentBlock();
   };
   
   class GraphAssemblerError : public std::runtime_error
