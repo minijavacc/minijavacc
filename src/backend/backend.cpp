@@ -22,13 +22,13 @@ void Backend::run(std::string filepath)
 
 void Backend::createAssemblerFile(std::string filepath)
 {
-	// create and open output file
+  // create and open output file
   ofstream outputFile("asm.s");
-	
-	for (auto assembler : irgAssembler)
-	{
-		outputFile << assembler;
-	}
+  
+  for (auto assembler : irgAssembler)
+  {
+    outputFile << assembler;
+  }
   
   outputFile.close();
   
@@ -63,10 +63,10 @@ void println(int a)
   
   // delete temporary runtime file
   if (system("rm _runtime.c") != 0)
-	{
-		throw BackendError("assembler file could not be deleted");
-	}
-	
+  {
+    throw BackendError("assembler file could not be deleted");
+  }
+  
   std::cout << "Created binary: a.out\n";
   return;
 }
