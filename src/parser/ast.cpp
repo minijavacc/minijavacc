@@ -437,7 +437,7 @@ static ir_entity *print_entity = NULL;
 
 ir_entity *StaticLibraryCallExpression::getFirmEntity() {
   if (!print_entity) {
-    print_entity = new_global_entity(get_glob_type(), new_id_from_str(AMD64LdNamePrefix + "println"),
+    print_entity = new_global_entity(get_glob_type(), new_id_from_str((std::string(AMD64LdNamePrefix) + std::string("println")).c_str()),
                                     getFirmType(), ir_visibility_external,
                                     IR_LINKAGE_DEFAULT);
   }
