@@ -61,6 +61,8 @@ namespace cmpl
     long allocateReg(ir_node *node);
     Label getLabel(ir_node *node);
     shared_ptr<LabeledBlock> getCurrentBlock();
+
+    void allocI2to1();
   };
   
   class GraphAssemblerError : public std::runtime_error

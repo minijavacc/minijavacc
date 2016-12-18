@@ -16,14 +16,17 @@ void Backend::run(std::string filepath)
     irgAssembler.push_back(ga.run());
   }
   
-  //createAssemblerFile(filepath);
-  //runExternalLinker();
+  createAssemblerFile(filepath);
+  runExternalLinker();
 }
 
 void Backend::createAssemblerFile(std::string filepath)
 {
   // create and open output file
   ofstream outputFile("asm.s");
+  
+  outputFile << ".text\n";
+  outputFile << ".globl " << std::string(AMD64LdNamePrefix) << "main\n\n";
   
   for (auto assembler : irgAssembler)
   {

@@ -1,5 +1,6 @@
 #include "../stringtable/stringtable.h"
 #include "ast.h"
+#include "amd64instructions.h"
 
 #include <memory>
 #include <string>
@@ -432,17 +433,11 @@ ir_type *StaticLibraryCallExpression::getFirmType() {
   return print_type;
 }
 
-#ifdef __APPLE__
-#define PRINTLN_NAME "_println"
-#else
-#define PRINTLN_NAME "println"
-#endif
-
 static ir_entity *print_entity = NULL;
 
 ir_entity *StaticLibraryCallExpression::getFirmEntity() {
   if (!print_entity) {
-    print_entity = new_global_entity(get_glob_type(), new_id_from_str(PRINTLN_NAME),
+    print_entity = new_global_entity(get_glob_type(), new_id_from_str(AMD64LdNamePrefix + "println"),
                                     getFirmType(), ir_visibility_external,
                                     IR_LINKAGE_DEFAULT);
   }

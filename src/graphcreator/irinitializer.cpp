@@ -77,18 +77,12 @@ void IRInitializer::dispatch(std::shared_ptr<ClassDeclaration> n) {
   }
 };
 
-#ifdef __APPLE__
-#define MAIN_NAME "_main"
-#else
-#define MAIN_NAME "main"
-#endif
-
 void IRInitializer::dispatch(std::shared_ptr<MainMethod> n) {
   std::string name = StringTable::lookupIdentifier(n->ID);
   ir_type *t = new_type_method(0, 1, false, cc_cdecl_set, mtp_no_property);
   assert(t);
   set_method_res_type(t, 0, Types::getIntNode()->getFirmType());
-  ir_entity *e = new_entity(currentClassDeclaration->declared_type, new_id_from_str(MAIN_NAME), t);
+  ir_entity *e = new_entity(currentClassDeclaration->declared_type, new_id_from_str(AMD64LdNamePrefix + "main"), t);
   assert(e);
   ir_graph *g = new_ir_graph(e, (int) n->localVariables.size());
   assert(g);

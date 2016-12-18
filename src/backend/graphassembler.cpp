@@ -20,11 +20,21 @@ Label GraphAssembler::getLabel(ir_node *node) {
     return nodeNrToLabel.at(get_irn_node_nr(node));
   }
   
-  string p = labelPrefix;
-  Label l = p + to_string(nextFreeLabel);
-  nodeNrToLabel.emplace(get_irn_node_nr(node), l);
-  nextFreeLabel = nextFreeLabel + 1;
-  return l;
+  // if is the first label, take the function name
+  if (nodeNrToLabel.empty())
+  {
+    Label l = get_entity_ld_name(get_irg_entity(irg));
+    nodeNrToLabel.emplace(get_irn_node_nr(node), l);
+    return l;
+  }
+  else
+  {
+    string p = labelPrefix;
+    Label l = p + to_string(nextFreeLabel);
+    nodeNrToLabel.emplace(get_irn_node_nr(node), l);
+    nextFreeLabel = nextFreeLabel + 1;
+    return l;
+  }
 }
 
 shared_ptr<LabeledBlock> GraphAssembler::getCurrentBlock() {
@@ -50,8 +60,12 @@ void GraphAssembler::insertProlog() {
   bl->instructions->insert(it + 1, m);
   it = bl->instructions->begin();
   bl->instructions->insert(it + 2, s);
+
+  // rename first label to function name
 }
 
+// Epilog is implicit in buildReturn()
+// move to single location to avoid code duplication?
 
 
 
@@ -300,7 +314,7 @@ string GraphAssembler::run()
 
 void GraphAssembler::irgSerialize()
 {
-  labelPrefix = "L" + std::to_string(get_irg_graph_nr(irg)) + "_";
+  labelPrefix = AMD64LabelPrefix + std::to_string(get_irg_graph_nr(irg)) + "_";
   
   // Walk graph
   irg_walk_topological(irg, irgNodeWalker, static_cast<void*>(this));
@@ -411,20 +425,6 @@ void GraphAssembler::irgRegisterAllocation()
     lb->instructions = instructions_;
   }
   
-  
-  
-  for (auto const& label : *labels) {
-    cout << label << ":\n";
-    
-    auto instructions = blocks->at(label)->instructions;
-    
-    for (auto const& instruction : *instructions) {
-      cout << "\t" + instruction->generate() << "\n";
-    }
-  }
-  
-  
-  
   // enhanced: from https://en.wikipedia.org/wiki/X86_calling_conventions#x86-64_calling_conventions
   // System V AMD64: 6 times int/pointer {RDI, RSI, RDX, RCX, R8, R9} ["certain" floating point {XMM0–7} probably irrelevant for us] Caller Stack aligned on 16 bytes
   // after the allocation only 6 registers must be used
@@ -434,7 +434,17 @@ void GraphAssembler::irgRegisterAllocation()
 string GraphAssembler::irgCodeGeneration()
 {
   // call generate() for every instruction, set labels, create one long string
-  // add function prolog/epilog
+  std::string assembler;
   
-  return move(string(""));
+  for (auto const& label : *labels) {
+    assembler += label + ":\n";
+    
+    auto instructions = blocks->at(label)->instructions;
+    
+    for (auto const& instruction : *instructions) {
+      assembler += "\t" + instruction->generate() + "\n";
+    }
+  }
+  
+  return move(assembler);
 }

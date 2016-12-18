@@ -1,11 +1,23 @@
 #pragma once
 
-#include "backend.h"
-
 #include <libfirm/firm.h>
 #include <string>
 #include <assert.h>
 #include <iostream>
+
+#ifdef _WIN32
+  // TODO
+#elif __APPLE__
+  #define AMD64AssDirAllign ".p2align 4,0x90,15"
+  #define AMD64LdNamePrefix "_"
+  #define AMD64LabelPrefix "L"
+#elif __linux__
+  #define AMD64AssDirAllign ".p2align 4,,15"
+  #define AMD64LdNamePrefix 
+  #define AMD64LabelPrefix ".L"
+#else
+  #error "platform not supported"
+#endif
 
 namespace cmpl
 {
@@ -15,24 +27,15 @@ namespace cmpl
   
   static const char* const x86_64RegisterNames[] = 
   {
-    "%rax", 
-    "%rbx", 
-    "%rcx", 
-    "%rdx", 
+    "%eax", 
+    "%ebx", 
+    "%ecx", 
+    "%edx", 
     // registers 4-7 have special purposes
-    "%rbp", 
-    "%rsp", 
-    "%rsi", 
-    "%rdi", 
-    // ---
-    "%r8", 
-    "%r9", 
-    "%r10", 
-    "%r11", 
-    "%r12", 
-    "%r13", 
-    "%r14", 
-    "%r15"
+    "%ebp", 
+    "%esp", 
+    "%esi", 
+    "%edi", 
   };
   
   // describes one instruction
@@ -50,10 +53,8 @@ namespace cmpl
     
     static std::string getRegisterName(regNum reg)
     {
-      assert(reg < 16);
-      
+      assert(reg < 4);
       // registers 4-7 must not be used as general purpose registers
-      assert(reg < 4 || reg > 7);
       
       return std::string(x86_64RegisterNames[reg]);
     }
