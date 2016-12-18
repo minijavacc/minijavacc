@@ -38,7 +38,7 @@ Label GraphAssembler::getLabel(ir_node *node) {
 }
 
 shared_ptr<LabeledBlock> GraphAssembler::getCurrentBlock() {
-  return blocks->at(labels->back());
+  return blocks.at(labels.back());
 }
 
 
@@ -52,14 +52,14 @@ void GraphAssembler::insertProlog() {
   auto s = make_shared<subq_rsp>();
   s->nslots = (unsigned) nextFreeRegister;
   
-  Label fl = labels->front();
-  auto bl = blocks->at(fl);
-  auto it = bl->instructions->begin();
-  bl->instructions->insert(it, p);
-  it = bl->instructions->begin();
-  bl->instructions->insert(it + 1, m);
-  it = bl->instructions->begin();
-  bl->instructions->insert(it + 2, s);
+  Label fl = labels.front();
+  auto bl = blocks.at(fl);
+  auto it = bl->instructions.begin();
+  bl->instructions.insert(it, p);
+  it = bl->instructions.begin();
+  bl->instructions.insert(it + 1, m);
+  it = bl->instructions.begin();
+  bl->instructions.insert(it + 2, s);
 
   // rename first label to function name
 }
@@ -83,16 +83,16 @@ void GraphAssembler::handlePhi(ir_node *node) {
     ir_node *jbl = get_nodes_block(j);
     
     Label l = nodeNrToLabel.at(get_irn_node_nr(jbl));
-    shared_ptr<LabeledBlock> lb = blocks->at(l);
+    shared_ptr<LabeledBlock> lb = blocks.at(l);
     
     auto m = make_shared<movl>();
     m->src1 = inReg;
     m->dest = outReg;
     
-    for (int i_ = 0; i_ < lb->instructions->size(); i_++) {
-      if ((*(lb->instructions))[i_] == lb->exitInstruction) {
-        auto it = lb->instructions->begin();
-        lb->instructions->insert(it + i_, m);
+    for (int i_ = 0; i_ < lb->instructions.size(); i_++) {
+      if (lb->instructions[i_] == lb->exitInstruction) {
+        auto it = lb->instructions.begin();
+        lb->instructions.insert(it + i_, m);
         break;
       }
     }
@@ -108,8 +108,8 @@ void GraphAssembler::buildBlock(ir_node *node) {
   Label l = getLabel(node);
   auto lb = make_shared<LabeledBlock>();
   lb->label = l;
-  blocks->emplace(l, lb);
-  labels->push_back(l);
+  blocks.emplace(l, lb);
+  labels.push_back(l);
 }
 
 void GraphAssembler::buildConst(ir_node *node) {
@@ -120,7 +120,7 @@ void GraphAssembler::buildConst(ir_node *node) {
   long oreg = allocateReg(node);
   m->dest = oreg;
   
-  getCurrentBlock()->instructions->push_back(m);
+  getCurrentBlock()->instructions.push_back(m);
 }
 
 void GraphAssembler::buildCond(ir_node *node) {
@@ -165,16 +165,16 @@ void GraphAssembler::buildCond(ir_node *node) {
   auto cmp = make_shared<cmpl_>();
   cmp->src1 = lreg;
   cmp->src2 = rreg;
-  getCurrentBlock()->instructions->push_back(cmp);
+  getCurrentBlock()->instructions.push_back(cmp);
   
   auto br = make_shared<Branch>();
   br->relation = get_Cmp_relation(s);
   br->label = trueLabel;
-  getCurrentBlock()->instructions->push_back(br);
+  getCurrentBlock()->instructions.push_back(br);
   
   auto j = make_shared<jmp>();
   j->label = falseLabel;
-  getCurrentBlock()->instructions->push_back(j);
+  getCurrentBlock()->instructions.push_back(j);
   
   getCurrentBlock()->exitInstruction = cmp;
 }
@@ -187,7 +187,7 @@ void GraphAssembler::buildJmp(ir_node *node) {
     
     auto j = make_shared<jmp>();
     j->label = l;
-    getCurrentBlock()->instructions->push_back(j);
+    getCurrentBlock()->instructions.push_back(j);
     
     auto lb = getCurrentBlock();
     lb->exitInstruction = j;
@@ -205,7 +205,7 @@ void GraphAssembler::buildProj(ir_node *node) {
       m->offset = get_Proj_num(node);
       long oreg = allocateReg(node);
       m->dest = oreg;
-      getCurrentBlock()->instructions->push_back(m);
+      getCurrentBlock()->instructions.push_back(m);
     }
   }
 }
@@ -222,7 +222,7 @@ void GraphAssembler::buildAdd(ir_node *node) {
   inst->src1 = lreg;
   inst->src2 = rreg;
   inst->dest = oreg;
-  getCurrentBlock()->instructions->push_back(inst);
+  getCurrentBlock()->instructions.push_back(inst);
 }
 
 void GraphAssembler::buildReturn(ir_node *node) {
@@ -231,14 +231,100 @@ void GraphAssembler::buildReturn(ir_node *node) {
     long r = registers[get_irn_node_nr(pred)];
     auto inst = make_shared<movl_to_rax>();
     inst->src1 = r;
-    getCurrentBlock()->instructions->push_back(inst);
+    getCurrentBlock()->instructions.push_back(inst);
   }
   
   auto pop = make_shared<popq_rbp>();
-  getCurrentBlock()->instructions->push_back(pop);
+  getCurrentBlock()->instructions.push_back(pop);
   auto ret = make_shared<retq>();
-  getCurrentBlock()->instructions->push_back(ret);
+  getCurrentBlock()->instructions.push_back(ret);
 }
+
+
+void GraphAssembler::allocI2to1(shared_ptr<Instruction> instr, I2to1 *i, vector<shared_ptr<Instruction>> &instructions_)
+{
+  // load arg1
+  auto m1 = make_shared<movl_from_stack>();
+  m1->offset = (unsigned) (i->src1 + nargs);
+  m1->dest = 0;
+
+  // load arg2
+  auto m2 = make_shared<movl_from_stack>();
+  m2->offset = (unsigned) (i->src2 + nargs);
+  m2->dest = 1;
+  
+  // store dest
+  auto m3 = make_shared<movl_to_stack>();
+  m3->offset = (unsigned) (i->dest + nargs);
+  m3->src = m2->dest;
+
+  i->src1 = m1->dest;
+  i->src2 = m2->dest;
+  i->dest = i->src2;
+  
+  instructions_.push_back(m1);
+  instructions_.push_back(m2);
+  instructions_.push_back(instr);
+  instructions_.push_back(m3);
+}
+
+void GraphAssembler::allocI1to1(shared_ptr<Instruction> instr, I1to1 *i, vector<shared_ptr<Instruction>> &instructions_)
+{
+  // load arg1
+  auto m1 = make_shared<movl_from_stack>();
+  m1->offset = (unsigned) (i->src1 + nargs);
+  m1->dest = 0;
+  
+  // store dest
+  auto m3 = make_shared<movl_to_stack>();
+  m3->offset = (unsigned) (i->dest + nargs);
+  m3->src = 1;
+  
+  i->src1 = 0;
+  i->dest = 1;
+  
+  instructions_.push_back(m1);
+  instructions_.push_back(instr);
+  instructions_.push_back(m3);
+}
+
+void GraphAssembler::allocI1to0(shared_ptr<Instruction> instr, I1to0 *i, vector<shared_ptr<Instruction>> &instructions_)
+{
+  // load arg1
+  auto m1 = make_shared<movl_from_stack>();
+  m1->offset = (unsigned) (i->src1 + nargs);
+  m1->dest = 0;
+
+  i->src1 = m1->dest;
+
+  instructions_.push_back(m1);
+  instructions_.push_back(instr);
+}
+
+void GraphAssembler::allocMoveFromStack(shared_ptr<Instruction> instr, movl_from_stack *i, vector<shared_ptr<Instruction>> &instructions_)
+{
+  // save result to stack
+  auto m = make_shared<movl_to_stack>();
+  m->offset = (unsigned) (i->dest + nargs);
+  i->dest = 0;
+  m->src = i->dest;
+
+  instructions_.push_back(instr);
+  instructions_.push_back(m);
+}
+
+void GraphAssembler::allocMoveFromImm(shared_ptr<Instruction> instr, movl_from_imm *i, vector<shared_ptr<Instruction>> &instructions_)
+{
+  // save result to stack
+  auto m = make_shared<movl_to_stack>();
+  m->offset = (unsigned) (i->dest + nargs);
+  i->dest = 0;
+  m->src = i->dest;
+
+  instructions_.push_back(instr);
+  instructions_.push_back(m);
+}
+
 
 
 int nodeNum=0;
@@ -290,8 +376,8 @@ string GraphAssembler::run()
 {
   // Store number of arguments
   string assemblerOutput;
-  blocks = make_shared<map<Label, shared_ptr<LabeledBlock>>>();
-  labels = make_shared<vector<Label>>();
+  blocks = map<Label, shared_ptr<LabeledBlock>>();
+  labels = vector<Label>();
   ir_entity *ent = get_irg_entity(irg);
   ir_type *ty = get_entity_type(ent);
   nargs = get_method_n_params(ty);
@@ -329,100 +415,28 @@ void GraphAssembler::irgRegisterAllocation()
 {
   // work with instructions-vector
   // primitive: just use 2 registers
-  for (auto const& label : *labels) {
-    auto lb = blocks->at(label);
+  for (auto const& label : labels) {
+    auto lb = blocks.at(label);
     auto instructions = lb->instructions;
-    auto instructions_ = make_shared<vector<shared_ptr<Instruction>>>();
+    auto instructions_ = vector<shared_ptr<Instruction>>();
     
-    for (auto const& instruction : *instructions) {
+    for (auto const& instruction : instructions) {
       if (auto i = dynamic_cast<I2to1*>(instruction.get())) {
-        // load arg1
-        auto m1 = make_shared<movl_from_stack>();
-        m1->offset = (unsigned) (i->src1 + nargs);
-        m1->dest = 0;
-
-        // load arg2
-        auto m2 = make_shared<movl_from_stack>();
-        m2->offset = (unsigned) (i->src2 + nargs);
-        m2->dest = 1;
-        
-        // store dest
-        auto m3 = make_shared<movl_to_stack>();
-        m3->offset = (unsigned) (i->dest + nargs);
-        m3->src = m2->dest;
-
-        i->src1 = m1->dest;
-        i->src2 = m2->dest;
-        i->dest = i->src2;
-        
-        instructions_->push_back(m1);
-        instructions_->push_back(m2);
-        instructions_->push_back(instruction);
-        instructions_->push_back(m3);
-        continue;
+        allocI2to1(instruction, i, instructions_);
+      } else if (auto i = dynamic_cast<I1to1*>(instruction.get())) {
+        allocI1to1(instruction, i, instructions_);
+      } else if (auto i = dynamic_cast<I1to0*>(instruction.get())) {
+        allocI1to0(instruction, i, instructions_);
+      } else if (auto i = dynamic_cast<movl_from_stack*>(instruction.get())) {
+        allocMoveFromStack(instruction, i, instructions_);
+      } else if (auto i = dynamic_cast<movl_from_imm*>(instruction.get())) {
+        allocMoveFromImm(instruction, i, instructions_);
+      } else {
+        instructions_.push_back(instruction);
       }
-      
-      if (auto i = dynamic_cast<I1to1*>(instruction.get())) {
-        // load arg1
-        auto m1 = make_shared<movl_from_stack>();
-        m1->offset = (unsigned) (i->src1 + nargs);
-        m1->dest = 0;
-        
-        // store dest
-        auto m3 = make_shared<movl_to_stack>();
-        m3->offset = (unsigned) (i->dest + nargs);
-        m3->src = 1;
-        
-        i->src1 = 0;
-        i->dest = 1;
-        
-        instructions_->push_back(m1);
-        instructions_->push_back(instruction);
-        instructions_->push_back(m3);
-        continue;
-      }
-      
-      if (auto i = dynamic_cast<I1to0*>(instruction.get())) {
-        // load arg1
-        auto m1 = make_shared<movl_from_stack>();
-        m1->offset = (unsigned) (i->src1 + nargs);
-        m1->dest = 0;
-
-        i->src1 = m1->dest;
-
-        instructions_->push_back(m1);
-        instructions_->push_back(instruction);
-        continue;
-      }
-
-      if (auto i = dynamic_cast<movl_from_stack*>(instruction.get())) {
-        // save result to stack
-        auto m = make_shared<movl_to_stack>();
-        m->offset = (unsigned) (i->dest + nargs);
-        i->dest = 0;
-        m->src = i->dest;
-
-        instructions_->push_back(instruction);
-        instructions_->push_back(m);
-        continue;
-      }
-
-      if (auto i = dynamic_cast<movl_from_imm*>(instruction.get())) {
-        // save result to stack
-        auto m = make_shared<movl_to_stack>();
-        m->offset = (unsigned) (i->dest + nargs);
-        i->dest = 0;
-        m->src = i->dest;
-        
-        instructions_->push_back(instruction);
-        instructions_->push_back(m);
-        continue;
-      }
-      
-      instructions_->push_back(instruction);
     }
     
-    lb->instructions = instructions_;
+    lb->instructions = std::move(instructions_);
   }
   
   // enhanced: from https://en.wikipedia.org/wiki/X86_calling_conventions#x86-64_calling_conventions
@@ -436,12 +450,12 @@ string GraphAssembler::irgCodeGeneration()
   // call generate() for every instruction, set labels, create one long string
   std::string assembler;
   
-  for (auto const& label : *labels) {
+  for (auto const& label : labels) {
     assembler += label + ":\n";
     
-    auto instructions = blocks->at(label)->instructions;
+    auto instructions = blocks.at(label)->instructions;
     
-    for (auto const& instruction : *instructions) {
+    for (auto const& instruction : instructions) {
       assembler += "\t" + instruction->generate() + "\n";
     }
   }

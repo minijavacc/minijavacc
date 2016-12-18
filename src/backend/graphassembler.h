@@ -17,11 +17,11 @@ namespace cmpl
   class LabeledBlock {
   public:
     Label label;
-    shared_ptr<vector<shared_ptr<Instruction>>> instructions;
+    vector<shared_ptr<Instruction>> instructions;
     shared_ptr<Instruction> exitInstruction;
     
     LabeledBlock() {
-      instructions = make_shared<vector<shared_ptr<Instruction>>>();
+      instructions = vector<shared_ptr<Instruction>>();
     }
   };
 
@@ -50,8 +50,8 @@ namespace cmpl
     ir_graph* irg;
     size_t nargs;
     
-    shared_ptr<map<Label, shared_ptr<LabeledBlock>>> blocks;
-    shared_ptr<vector<Label>> labels; // topological order
+    map<Label, shared_ptr<LabeledBlock>> blocks;
+    vector<Label> labels; // topological order 
     map<long, long> registers;
     map<long, Label> nodeNrToLabel;
     long nextFreeRegister = 0;
@@ -62,7 +62,11 @@ namespace cmpl
     Label getLabel(ir_node *node);
     shared_ptr<LabeledBlock> getCurrentBlock();
 
-    void allocI2to1();
+    void allocI2to1(shared_ptr<Instruction> instr, I2to1 *i, vector<shared_ptr<Instruction>> &instructions_);
+    void allocI1to1(shared_ptr<Instruction> instr, I1to1 *i, vector<shared_ptr<Instruction>> &instructions_);
+    void allocI1to0(shared_ptr<Instruction> instr, I1to0 *i, vector<shared_ptr<Instruction>> &instructions_);
+    void allocMoveFromStack(shared_ptr<Instruction> instr, movl_from_stack *i, vector<shared_ptr<Instruction>> &instructions_);
+    void allocMoveFromImm(shared_ptr<Instruction> instr, movl_from_imm *i, vector<shared_ptr<Instruction>> &instructions_);
   };
   
   class GraphAssemblerError : public std::runtime_error
