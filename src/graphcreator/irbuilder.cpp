@@ -780,7 +780,7 @@ ir_node *IRBuilder::callCallocNode(ir_node *num, ir_type *result_type) {
     set_method_res_type(calloc_type, 0, result_type);
     set_method_param_type(calloc_type, 0, new_type_primitive(mode_Is));
     set_method_param_type(calloc_type, 1, new_type_primitive(mode_Is));
-    calloc_ent = new_entity(get_glob_type(), new_id_from_str(AMD64LdNamePrefix + "calloc"), calloc_type);
+    calloc_ent = new_entity(get_glob_type(), new_id_from_str((std::string(AMD64LdNamePrefix) + std::string("calloc")).c_str()), calloc_type);
     set_entity_visibility(calloc_ent, ir_visibility_external);
   }
   

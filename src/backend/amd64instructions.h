@@ -48,6 +48,7 @@ namespace cmpl
 
     virtual std::string generate() {
       assert(false);
+      return "";
     };
 
     
