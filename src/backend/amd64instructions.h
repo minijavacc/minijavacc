@@ -13,6 +13,28 @@ namespace cmpl
   typedef long regNum;
   typedef std::string Label;
   
+  static const char* const x86_64RegisterNames[] = 
+  {
+    "%rax", 
+    "%rbx", 
+    "%rcx", 
+    "%rdx", 
+    // registers 4-7 have special purposes
+    "%rbp", 
+    "%rsp", 
+    "%rsi", 
+    "%rdi", 
+    // ---
+    "%r8", 
+    "%r9", 
+    "%r10", 
+    "%r11", 
+    "%r12", 
+    "%r13", 
+    "%r14", 
+    "%r15"
+  };
+  
   // describes one instruction
   class Instruction
   {
@@ -28,25 +50,12 @@ namespace cmpl
     
     static std::string getRegisterName(regNum reg)
     {
-      return std::to_string(reg);
+      assert(reg < 16);
       
-      switch (reg)
-      {
-      case 0:
-        return "%eax";
-        break;
-        
-      case 1:
-        return "%ebx";
-        break;
+      // registers 4-7 must not be used as general purpose registers
+      assert(reg < 4 || reg > 7);
       
-      // TODO: include all available amd64 registers
-      
-      default:
-        // TODO: solve forward declarations problem here
-        //throw BackendError("can not map register to hardware");
-        assert(false);
-      }
+      return std::string(x86_64RegisterNames[reg]);
     }
   };
   
@@ -57,7 +66,7 @@ namespace cmpl
     regNum src2;
     
     std::string generate() override {
-      return mnemonic() + " " + std::to_string(src1) + ", " + std::to_string(src2);
+      return mnemonic() + " " + getRegisterName(src1) + ", " + getRegisterName(src2);
     }
   };
   
@@ -67,7 +76,7 @@ namespace cmpl
     regNum src2;
     
     std::string generate() override {
-      return mnemonic() + " " + std::to_string(src1) + ", " + std::to_string(src2);
+      return mnemonic() + " " + getRegisterName(src1) + ", " + getRegisterName(src2);
     }
   };
   
@@ -76,7 +85,7 @@ namespace cmpl
     regNum src1;
     
     std::string generate() override {
-      return mnemonic() + " " + std::to_string(src1);
+      return mnemonic() + " " + getRegisterName(src1);
     }
   };
   
@@ -86,7 +95,7 @@ namespace cmpl
     regNum dest;
     
     std::string generate() override {
-      return mnemonic() + " " + std::to_string(src1) + ", " + std::to_string(dest);
+      return mnemonic() + " " + getRegisterName(src1) + ", " + std::to_string(dest);
     }
   };
   
