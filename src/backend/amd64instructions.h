@@ -170,7 +170,7 @@ namespace cmpl
     regNum src;
     
     std::string generate() override {
-      return "movl " + getRegisterName(src) + " "+ std::to_string((signed)offset * -4) + "(%ebp)";
+      return "movl " + getRegisterName(src) + ", "+ std::to_string((signed)offset * -4) + "(%ebp)";
     }
   };
   
@@ -231,7 +231,7 @@ namespace cmpl
   class movq_rsp_rbp : public Instruction {
   public:
     std::string generate() override {
-      return "movq %rsp %rbp";
+      return "movq %rsp, %rbp";
     }
   };
   
@@ -239,7 +239,7 @@ namespace cmpl
   public:
     unsigned nslots;
     std::string generate() override {
-      return "subq " + std::to_string(nslots * 4) + " %rsp";
+      return "subq " + std::to_string(nslots * 4) + ", %rsp";
     }
   };
 
