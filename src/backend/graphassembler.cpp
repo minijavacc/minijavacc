@@ -240,6 +240,80 @@ void GraphAssembler::buildReturn(ir_node *node) {
   getCurrentBlock()->instructions.push_back(ret);
 }
 
+void GraphAssembler::buildSub(ir_node *node) {
+  ir_node *l = get_Sub_left(node);
+  ir_node *r = get_Sub_right(node);
+  
+  long lreg = registers[get_irn_node_nr(l)];
+  long rreg = registers[get_irn_node_nr(r)];
+  long oreg = allocateReg(node);
+  
+  auto inst = make_shared<subl>();
+  inst->src1 = lreg;
+  inst->src2 = rreg;
+  inst->dest = oreg;
+  getCurrentBlock()->instructions.push_back(inst);
+}
+
+void GraphAssembler::buildMul(ir_node *node) {
+  ir_node *l = get_Mul_left(node);
+  ir_node *r = get_Mul_right(node);
+  
+  long lreg = registers[get_irn_node_nr(l)];
+  long rreg = registers[get_irn_node_nr(r)];
+  long oreg = allocateReg(node);
+  
+  auto inst = make_shared<imull>();
+  inst->src1 = lreg;
+  inst->src2 = rreg;
+  inst->dest = oreg;
+  getCurrentBlock()->instructions.push_back(inst);
+}
+
+void GraphAssembler::buildDiv(ir_node *node) {
+  ir_node *l = get_Div_left(node);
+  ir_node *r = get_Div_right(node);
+  
+  long lreg = registers[get_irn_node_nr(l)];
+  long rreg = registers[get_irn_node_nr(r)];
+  long oreg = allocateReg(node);
+  
+  auto inst = make_shared<idivl>();
+  inst->src1 = lreg;
+  inst->src2 = rreg;
+  inst->dest = oreg;
+  getCurrentBlock()->instructions.push_back(inst);
+  //TODO: read result from %eax
+}
+
+void GraphAssembler::buildMod(ir_node *node) {
+  ir_node *l = get_Mod_left(node);
+  ir_node *r = get_Mod_right(node);
+  
+  long lreg = registers[get_irn_node_nr(l)];
+  long rreg = registers[get_irn_node_nr(r)];
+  long oreg = allocateReg(node);
+  
+  auto inst = make_shared<idivl>();
+  inst->src1 = lreg;
+  inst->src2 = rreg;
+  inst->dest = oreg;
+  getCurrentBlock()->instructions.push_back(inst);
+  //TODO: read result from %edx
+}
+
+void GraphAssembler::buildMinus(ir_node *node) {
+  ir_node *m = get_Minus_op(node);
+
+  long mreg = registers[get_irn_node_nr(m)];
+  long oreg = allocateReg(node);
+  
+  auto inst = make_shared<negl>();
+  inst->src1 = mreg;
+  inst->dest = oreg;
+  getCurrentBlock()->instructions.push_back(inst);
+}
+
 
 void GraphAssembler::allocI2to1(shared_ptr<Instruction> instr, I2to1 *i, vector<shared_ptr<Instruction>> &instructions_)
 {
@@ -364,6 +438,27 @@ void irgNodeWalker(ir_node *node, void *env)
   if (is_Return(node)) {
     _this->buildReturn(node);
   }
+    
+  if (is_Sub(node)) {
+    _this->buildSub(node);
+  }
+  
+  if (is_Mul(node)) {
+    _this->buildMul(node);
+  }
+ 
+  if (is_Div(node)) {
+    _this->buildDiv(node);
+  }
+
+  if (is_Mod(node)) {
+    _this->buildMod(node);
+  } 
+ 
+  if (is_Minus(node)) {
+    _this->buildMinus(node);
+  }  
+  
 }
 
 

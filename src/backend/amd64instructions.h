@@ -211,6 +211,24 @@ namespace cmpl
     }
   };
   
+  class negl : public I1to1 {
+    std::string mnemonic() override {
+      return "negl";
+    }
+  };
+  
+  class subl : public I2to1 {
+    std::string mnemonic() override {
+      return "subl";
+    }
+  };
+  
+  class idivl : public I2to1 {
+	//quotient in %eax, remainder in %edx 
+    std::string mnemonic() override {
+      return "idivl";
+    }
+  };
   
   class imull : public I2to1 {
     std::string mnemonic() override {

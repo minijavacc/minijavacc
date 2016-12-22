@@ -44,6 +44,11 @@ namespace cmpl
     void buildJmp(ir_node *node);
     void buildProj(ir_node *node);
     void buildAdd(ir_node *node);
+	void buildSub(ir_node *node);
+	void buildDiv(ir_node *node);
+	void buildMul(ir_node *node);
+	void buildMinus(ir_node *node);
+	void buildMod(ir_node *node);	
     void buildReturn(ir_node *node);
     
   private:
