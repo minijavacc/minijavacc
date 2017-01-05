@@ -342,6 +342,26 @@ void GraphAssembler::allocI2to1(shared_ptr<Instruction> instr, I2to1 *i, vector<
   instructions_.push_back(m3);
 }
 
+void GraphAssembler::allocI2to0(shared_ptr<Instruction> instr, I2to0 *i, vector<shared_ptr<Instruction>> &instructions_)
+{
+  // load arg1
+  auto m1 = make_shared<movl_from_stack>();
+  m1->offset = (unsigned) (i->src1 + nargs);
+  m1->dest = 0;
+  
+  // load arg2
+  auto m2 = make_shared<movl_from_stack>();
+  m2->offset = (unsigned) (i->src2 + nargs);
+  m2->dest = 1;
+  
+  i->src1 = m1->dest;
+  i->src2 = m2->dest;
+  
+  instructions_.push_back(m1);
+  instructions_.push_back(m2);
+  instructions_.push_back(instr);
+}
+
 void GraphAssembler::allocI1to1(shared_ptr<Instruction> instr, I1to1 *i, vector<shared_ptr<Instruction>> &instructions_)
 {
   // load arg1
@@ -518,6 +538,8 @@ void GraphAssembler::irgRegisterAllocation()
     for (auto const& instruction : instructions) {
       if (auto i = dynamic_cast<I2to1*>(instruction.get())) {
         allocI2to1(instruction, i, instructions_);
+      } else if (auto i = dynamic_cast<I2to0*>(instruction.get())) {
+        allocI2to0(instruction, i, instructions_);
       } else if (auto i = dynamic_cast<I1to1*>(instruction.get())) {
         allocI1to1(instruction, i, instructions_);
       } else if (auto i = dynamic_cast<I1to0*>(instruction.get())) {
