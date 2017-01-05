@@ -3,16 +3,11 @@ class Simple {
   }
   
   public int foo(int a) {
-  int b = 1;
-  
-    if (a == 3) {
-      b = 42;
+    int b = 23;
+    if (a == 42) {
+      b = a;
     }
     
-    if (a == 4) {
-      b = 23;
-    }
-    
-    return a + b;
+    return b;
   }
 }

@@ -18,10 +18,17 @@ namespace cmpl
   public:
     Label label;
     vector<shared_ptr<Instruction>> instructions;
-    shared_ptr<Instruction> exitInstruction;
+    vector<ir_node *> phis;
+    vector<shared_ptr<Instruction>> exitInstructions;
     
     LabeledBlock() {
       instructions = vector<shared_ptr<Instruction>>();
+    }
+    
+    void finalize() {
+      for (auto inst : exitInstructions) {
+        instructions.push_back(inst);
+      }
     }
   };
 
@@ -34,21 +41,22 @@ namespace cmpl
     void irgSerialize();
     void irgRegisterAllocation();
     std::string irgCodeGeneration();
+    void phiInsertion();
     
     // methods should be private, but must be called from irgNodeWalker()
     void insertProlog();
-    void handlePhi(ir_node *node);
+    void collectPhi(ir_node *node);
     void buildBlock(ir_node *node);
     void buildConst(ir_node *node);
     void buildCond(ir_node *node);
     void buildJmp(ir_node *node);
     void buildProj(ir_node *node);
     void buildAdd(ir_node *node);
-	void buildSub(ir_node *node);
-	void buildDiv(ir_node *node);
-	void buildMul(ir_node *node);
-	void buildMinus(ir_node *node);
-	void buildMod(ir_node *node);	
+    void buildSub(ir_node *node);
+    void buildDiv(ir_node *node);
+    void buildMul(ir_node *node);
+    void buildMinus(ir_node *node);
+    void buildMod(ir_node *node);
     void buildReturn(ir_node *node);
     
   private:
@@ -58,14 +66,15 @@ namespace cmpl
     map<Label, shared_ptr<LabeledBlock>> blocks;
     vector<Label> labels; // topological order 
     map<long, long> registers;
+    map<long, long> helperRegisters;
     map<long, Label> nodeNrToLabel;
     long nextFreeRegister = 0;
     long nextFreeLabel = 0;
     string labelPrefix;
     
-    long allocateReg(ir_node *node);
+    long getRegister(ir_node *node);
+    long getHelperRegister(ir_node *node);
     Label getLabel(ir_node *node);
-    shared_ptr<LabeledBlock> getCurrentBlock();
 
     void allocI2to1(shared_ptr<Instruction> instr, I2to1 *i, vector<shared_ptr<Instruction>> &instructions_);
     void allocI2to0(shared_ptr<Instruction> instr, I2to0 *i, vector<shared_ptr<Instruction>> &instructions_);

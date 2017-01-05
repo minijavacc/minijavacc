@@ -4,13 +4,33 @@
 #include <libfirm/firm.h>
 
 
+
+// TODO: Builds on get_nodes_block() being reliable which might not be the case
+#define GET_LABELED_BLOCK_FOR_IR_NODE(node) blocks.at(nodeNrToLabel.at(get_irn_node_nr(get_nodes_block(node))))
+
+
 using namespace cmpl;
 
 #pragma mark - Misc
 
-long GraphAssembler::allocateReg(ir_node *node) {
+long GraphAssembler::getRegister(ir_node *node) {
+  if (registers.count(get_irn_node_nr(node)) > 0) {
+    return registers.at(get_irn_node_nr(node));
+  }
+  
   long r = nextFreeRegister;
   registers.emplace(get_irn_node_nr(node), r);
+  nextFreeRegister = nextFreeRegister + 1;
+  return r;
+}
+
+long GraphAssembler::getHelperRegister(ir_node *node) {
+  if (helperRegisters.count(get_irn_node_nr(node)) > 0) {
+    return helperRegisters.at(get_irn_node_nr(node));
+  }
+  
+  long r = nextFreeRegister;
+  helperRegisters.emplace(get_irn_node_nr(node), r);
   nextFreeRegister = nextFreeRegister + 1;
   return r;
 }
@@ -35,10 +55,6 @@ Label GraphAssembler::getLabel(ir_node *node) {
     nextFreeLabel = nextFreeLabel + 1;
     return l;
   }
-}
-
-shared_ptr<LabeledBlock> GraphAssembler::getCurrentBlock() {
-  return blocks.at(labels.back());
 }
 
 
@@ -70,33 +86,16 @@ void GraphAssembler::insertProlog() {
 
 
 
+
+
 #pragma mark - Instruction builders
 
-void GraphAssembler::handlePhi(ir_node *node) {
-  regNum outReg = allocateReg(node);
+void GraphAssembler::collectPhi(ir_node *node) {
+  // Step 1: Collect all phi nodes of every block
   ir_node *bl = get_nodes_block(node);
-  for (int i = 0; i < get_Phi_n_preds(node); i++) {
-    ir_node *phipred = get_Phi_pred(node, i);
-    regNum inReg = registers.at(get_irn_node_nr(phipred));
-    
-    ir_node *j = get_Block_cfgpred(bl, i);
-    ir_node *jbl = get_nodes_block(j);
-    
-    Label l = nodeNrToLabel.at(get_irn_node_nr(jbl));
-    shared_ptr<LabeledBlock> lb = blocks.at(l);
-    
-    auto m = make_shared<movl>();
-    m->src1 = inReg;
-    m->dest = outReg;
-    
-    for (int i_ = 0; i_ < lb->instructions.size(); i_++) {
-      if (lb->instructions[i_] == lb->exitInstruction) {
-        auto it = lb->instructions.begin();
-        lb->instructions.insert(it + i_, m);
-        break;
-      }
-    }
-  }
+  Label l = nodeNrToLabel.at(get_irn_node_nr(bl));
+  shared_ptr<LabeledBlock> lb = blocks.at(l);
+  lb->phis.push_back(node);
 }
 
 void GraphAssembler::buildBlock(ir_node *node) {
@@ -117,10 +116,10 @@ void GraphAssembler::buildConst(ir_node *node) {
   long l = get_tarval_long(val);
   auto m = make_shared<movl_from_imm>();
   m->imm_value = l;
-  long oreg = allocateReg(node);
+  long oreg = getRegister(node);
   m->dest = oreg;
   
-  getCurrentBlock()->instructions.push_back(m);
+  GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(m);
 }
 
 void GraphAssembler::buildCond(ir_node *node) {
@@ -165,18 +164,19 @@ void GraphAssembler::buildCond(ir_node *node) {
   auto cmp = make_shared<cmpl_>();
   cmp->src1 = lreg;
   cmp->src2 = rreg;
-  getCurrentBlock()->instructions.push_back(cmp);
+//  getCurrentBlock()->instructions.push_back(cmp);
+  GET_LABELED_BLOCK_FOR_IR_NODE(node)->exitInstructions.push_back(cmp);
   
   auto br = make_shared<Branch>();
   br->relation = get_Cmp_relation(s);
   br->label = trueLabel;
-  getCurrentBlock()->instructions.push_back(br);
+//  getCurrentBlock()->instructions.push_back(br);
+  GET_LABELED_BLOCK_FOR_IR_NODE(node)->exitInstructions.push_back(br);
   
   auto j = make_shared<jmp>();
   j->label = falseLabel;
-  getCurrentBlock()->instructions.push_back(j);
-  
-  getCurrentBlock()->exitInstruction = cmp;
+//  getCurrentBlock()->instructions.push_back(j);
+  GET_LABELED_BLOCK_FOR_IR_NODE(node)->exitInstructions.push_back(j);
 }
 
 void GraphAssembler::buildJmp(ir_node *node) {
@@ -187,10 +187,9 @@ void GraphAssembler::buildJmp(ir_node *node) {
     
     auto j = make_shared<jmp>();
     j->label = l;
-    getCurrentBlock()->instructions.push_back(j);
+//    getCurrentBlock()->instructions.push_back(j);
     
-    auto lb = getCurrentBlock();
-    lb->exitInstruction = j;
+    GET_LABELED_BLOCK_FOR_IR_NODE(node)->exitInstructions.push_back(j);
     return;
   }
 }
@@ -203,9 +202,9 @@ void GraphAssembler::buildProj(ir_node *node) {
       // Is an argument
       auto m = make_shared<movl_from_stack>();
       m->offset = get_Proj_num(node);
-      long oreg = allocateReg(node);
+      long oreg = getRegister(node);
       m->dest = oreg;
-      getCurrentBlock()->instructions.push_back(m);
+      GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(m);
     }
   }
 }
@@ -216,28 +215,29 @@ void GraphAssembler::buildAdd(ir_node *node) {
   
   long lreg = registers[get_irn_node_nr(l)];
   long rreg = registers[get_irn_node_nr(r)];
-  long oreg = allocateReg(node);
+  long oreg = getRegister(node);
   
   auto inst = make_shared<addl>();
   inst->src1 = lreg;
   inst->src2 = rreg;
   inst->dest = oreg;
-  getCurrentBlock()->instructions.push_back(inst);
+
+  GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(inst);
 }
 
 void GraphAssembler::buildReturn(ir_node *node) {
   if (get_Return_n_ress(node) > 0) {
     ir_node *pred = get_Return_res(node, 0);
     long r = registers[get_irn_node_nr(pred)];
-    auto inst = make_shared<movl_to_rax>();
+    auto inst = make_shared<movl_to_eax>();
     inst->src1 = r;
-    getCurrentBlock()->instructions.push_back(inst);
+    GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(inst);
   }
   
   auto pop = make_shared<popq_rbp>();
-  getCurrentBlock()->instructions.push_back(pop);
+  GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(pop);
   auto ret = make_shared<retq>();
-  getCurrentBlock()->instructions.push_back(ret);
+  GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(ret);
 }
 
 void GraphAssembler::buildSub(ir_node *node) {
@@ -246,13 +246,13 @@ void GraphAssembler::buildSub(ir_node *node) {
   
   long lreg = registers[get_irn_node_nr(l)];
   long rreg = registers[get_irn_node_nr(r)];
-  long oreg = allocateReg(node);
+  long oreg = getRegister(node);
   
   auto inst = make_shared<subl>();
   inst->src1 = lreg;
   inst->src2 = rreg;
   inst->dest = oreg;
-  getCurrentBlock()->instructions.push_back(inst);
+  GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(inst);
 }
 
 void GraphAssembler::buildMul(ir_node *node) {
@@ -261,13 +261,13 @@ void GraphAssembler::buildMul(ir_node *node) {
   
   long lreg = registers[get_irn_node_nr(l)];
   long rreg = registers[get_irn_node_nr(r)];
-  long oreg = allocateReg(node);
+  long oreg = getRegister(node);
   
   auto inst = make_shared<imull>();
   inst->src1 = lreg;
   inst->src2 = rreg;
   inst->dest = oreg;
-  getCurrentBlock()->instructions.push_back(inst);
+  GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(inst);
 }
 
 void GraphAssembler::buildDiv(ir_node *node) {
@@ -276,13 +276,13 @@ void GraphAssembler::buildDiv(ir_node *node) {
   
   long lreg = registers[get_irn_node_nr(l)];
   long rreg = registers[get_irn_node_nr(r)];
-  long oreg = allocateReg(node);
+  long oreg = getRegister(node);
   
   auto inst = make_shared<idivl>();
   inst->src1 = lreg;
   inst->src2 = rreg;
   inst->dest = oreg;
-  getCurrentBlock()->instructions.push_back(inst);
+  GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(inst);
   //TODO: read result from %eax
 }
 
@@ -292,13 +292,13 @@ void GraphAssembler::buildMod(ir_node *node) {
   
   long lreg = registers[get_irn_node_nr(l)];
   long rreg = registers[get_irn_node_nr(r)];
-  long oreg = allocateReg(node);
+  long oreg = getRegister(node);
   
   auto inst = make_shared<idivl>();
   inst->src1 = lreg;
   inst->src2 = rreg;
   inst->dest = oreg;
-  getCurrentBlock()->instructions.push_back(inst);
+  GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(inst);
   //TODO: read result from %edx
 }
 
@@ -306,12 +306,12 @@ void GraphAssembler::buildMinus(ir_node *node) {
   ir_node *m = get_Minus_op(node);
 
   long mreg = registers[get_irn_node_nr(m)];
-  long oreg = allocateReg(node);
+  long oreg = getRegister(node);
   
   auto inst = make_shared<negl>();
   inst->src1 = mreg;
   inst->dest = oreg;
-  getCurrentBlock()->instructions.push_back(inst);
+  GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(inst);
 }
 
 
@@ -444,7 +444,7 @@ void irgNodeWalker(ir_node *node, void *env)
   }
   
   if (is_Phi(node)) {
-    _this->handlePhi(node);
+    _this->collectPhi(node);
   }
   
   if (is_Proj(node)) {
@@ -520,8 +520,87 @@ void GraphAssembler::irgSerialize()
   // Walk graph
   irg_walk_topological(irg, irgNodeWalker, static_cast<void*>(this));
   
+  // Handle phis
+  phiInsertion();
+  
+  // Finalise (append exit instructions to instruction list)
+  for (auto pair : blocks) {
+    auto bl = pair.second;
+    bl->finalize();
+  }
+  
   // Insert prolog
   insertProlog();
+}
+
+
+
+void GraphAssembler::phiInsertion()
+{
+  for (auto const& l : labels) {
+    auto lb = blocks.at(l);
+    
+    // Step 2: Load all phis into temporary helper registers
+    for (auto const& phi : lb->phis) {
+      auto bl = get_nodes_block(phi);
+      
+      for (int i = 0; i < get_Phi_n_preds(phi); i++) {
+        ir_node *phipred = get_Phi_pred(phi, i);
+        regNum inReg = registers.at(get_irn_node_nr(phipred));
+        regNum helper = getHelperRegister(phipred);
+        
+        ir_node *j = get_Block_cfgpred(bl, i);
+        ir_node *jbl = get_nodes_block(j);
+        
+        Label l = nodeNrToLabel.at(get_irn_node_nr(jbl));
+        shared_ptr<LabeledBlock> lb = blocks.at(l);
+        
+        auto m = make_shared<movl>();
+        m->src1 = inReg;
+        m->dest = helper;
+        
+        lb->instructions.push_back(m);
+        
+//        for (int i_ = 0; i_ < lb->instructions.size(); i_++) {
+//          if (lb->instructions[i_] == lb->exitInstruction) {
+//            auto it = lb->instructions.begin();
+//            lb->instructions.insert(it + i_, m);
+//            break;
+//          }
+//        }
+      }
+    }
+    
+    // Step 3: Load all phis from temporary helper to out register
+    for (auto const& phi : lb->phis) {
+      auto bl = get_nodes_block(phi);
+      regNum outReg = getRegister(phi);
+      
+      for (int i = 0; i < get_Phi_n_preds(phi); i++) {
+        ir_node *phipred = get_Phi_pred(phi, i);
+        regNum helper = getHelperRegister(phipred);
+        
+        ir_node *j = get_Block_cfgpred(bl, i);
+        ir_node *jbl = get_nodes_block(j);
+        
+        Label l = nodeNrToLabel.at(get_irn_node_nr(jbl));
+        shared_ptr<LabeledBlock> lb = blocks.at(l);
+        
+        auto m = make_shared<movl>();
+        m->src1 = helper;
+        m->dest = outReg;
+        
+        lb->instructions.push_back(m);
+//        for (int i_ = 0; i_ < lb->instructions.size(); i_++) {
+//          if (lb->instructions[i_] == lb->exitInstruction) {
+//            auto it = lb->instructions.begin();
+//            lb->instructions.insert(it + i_, m);
+//            break;
+//          }
+//        }
+      }
+    }
+  }
 }
 
 

@@ -97,7 +97,7 @@ namespace cmpl
     regNum dest;
     
     std::string generate() override {
-      return mnemonic() + " " + getRegisterName(src1) + ", " + std::to_string(dest);
+      return mnemonic() + " " + getRegisterName(src1) + ", " + getRegisterName(dest);
     }
   };
   
@@ -197,10 +197,10 @@ namespace cmpl
   };
   
   
-  class movl_to_rax : public I1to0 {
+  class movl_to_eax : public I1to0 {
   public:
     std::string generate() override {
-      return "movl " + getRegisterName(src1) + ", %rax";
+      return "movl " + getRegisterName(src1) + ", %eax";
     }
   };
   
