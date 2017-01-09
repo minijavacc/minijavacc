@@ -9,9 +9,11 @@
 #pragma once
 
 #include <libfirm/firm.h>
+#include "ast.h"
 
 namespace cmpl {
   
-  class ConstantPropagation : public Dispatcher, public std::enable_shared_from_this<IRInitializer> {
-  }
+  class ConstantPropagation : public Dispatcher, public std::enable_shared_from_this<ConstantPropagation> {
+  };
+  
 }
