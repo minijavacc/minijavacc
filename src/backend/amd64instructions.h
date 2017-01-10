@@ -253,6 +253,15 @@ namespace cmpl
       return "subq " + std::to_string(nslots * 4) + ", %rsp";
     }
   };
+  
+  
+  class call : public Instruction {
+  public:
+    Label label;
+    std::string generate() override {
+      return "call " + label;
+    }
+  };
 
 
 

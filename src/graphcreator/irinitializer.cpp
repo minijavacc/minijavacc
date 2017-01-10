@@ -141,6 +141,8 @@ void IRInitializer::dispatch(std::shared_ptr<Method> n) {
   //                           ^---- M = Method
   ir_entity *e = new_entity(currentClassDeclaration->declared_type, new_id_from_str(mangledName.c_str()), t);
   
+  set_entity_visibility(e, ir_visibility_local);
+  
   // Build graph
   int num = (int) (1 + n->parameters.size() + n->localVariables.size());
   ir_graph *g = new_ir_graph(e, num);

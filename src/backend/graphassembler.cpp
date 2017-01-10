@@ -240,6 +240,39 @@ void GraphAssembler::buildReturn(ir_node *node) {
   getCurrentBlock()->instructions.push_back(ret);
 }
 
+void GraphAssembler::buildCall(ir_node *node) {
+  ir_entity *e = get_Call_callee(node);
+  ir_visibility v = get_entity_visibility(e);
+  
+  // check if internal or external call
+  if (v == ir_visibility_external)
+  {
+    // use standardized x86_64 calling convention: 
+    // http://eli.thegreenplace.net/2011/09/06/stack-frame-layout-on-x86-64
+    // "According to the ABI, the first 6 integer or pointer arguments to a function are passed in registers."
+    
+    int paramsNum = get_Call_n_params(node);
+    for (int i = paramsNum - 1; i >= 0; i--)
+    {
+      ir_node *a = get_Call_param(node, i);
+      long reg = registers[get_irn_node_nr(a)];
+      // ...
+    }
+    
+    
+    // align base pointer to 2^8
+    
+    getCurrentBlock()->instructions.push_back(make_shared<popq_rbp>());
+  }
+  else
+  {
+    // use simplified calling convention: 
+    // all arguments on stack
+    
+    
+  }
+}
+
 
 void GraphAssembler::allocI2to1(shared_ptr<Instruction> instr, I2to1 *i, vector<shared_ptr<Instruction>> &instructions_)
 {
@@ -325,7 +358,25 @@ void GraphAssembler::allocMoveFromImm(shared_ptr<Instruction> instr, movl_from_i
   instructions_.push_back(m);
 }
 
-
+// TODO: not called and not finished!
+void GraphAssembler::allocCall(shared_ptr<Instruction> instr, movl_from_imm *i, vector<shared_ptr<Instruction>> &instructions_)
+{
+  // check if internal or external call
+  if (true /* how to determine if call is internal or external? */)
+  {
+    // use standardized x86_64 calling convention: 
+    
+    
+    getCurrentBlock()->instructions.push_back(make_shared<popq_rbp>());
+  }
+  else
+  {
+    // use simplified calling convention: 
+    // all arguments on stack
+    
+    
+  }
+}
 
 int nodeNum=0;
 // for use with irg_walk_topological()
@@ -363,6 +414,10 @@ void irgNodeWalker(ir_node *node, void *env)
     
   if (is_Return(node)) {
     _this->buildReturn(node);
+  }
+  
+  if (is_Call(node)) {
+    _this->buildCall(node);
   }
 }
 
