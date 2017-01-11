@@ -13,25 +13,38 @@ using namespace cmpl;
 
 #pragma mark - Misc
 
-long GraphAssembler::getRegister(ir_node *node) {
+shared_ptr<Register> GraphAssembler::getRegister(ir_node *node) {
   if (registers.count(get_irn_node_nr(node)) > 0) {
     return registers.at(get_irn_node_nr(node));
   }
   
-  long r = nextFreeRegister;
+  auto r = make_shared<Register>(get_irn_mode(node));
   registers.emplace(get_irn_node_nr(node), r);
-  nextFreeRegister = nextFreeRegister + 1;
   return r;
 }
 
-long GraphAssembler::getHelperRegister(ir_node *node) {
+long GraphAssembler::getStackOffsetForRegister(shared_ptr<Register> r) {
+  if (registerToStackOffset.count(r) > 0) {
+    return registerToStackOffset.at(r);
+  }
+  
+  if (r->size == RegisterSize32) {
+    topOfStack -= 4;
+  } else {
+    topOfStack -= 8;
+  }
+  
+  registerToStackOffset.emplace(r, topOfStack);
+  return topOfStack;
+}
+
+shared_ptr<Register> GraphAssembler::getHelperRegister(ir_node *node) {
   if (helperRegisters.count(get_irn_node_nr(node)) > 0) {
     return helperRegisters.at(get_irn_node_nr(node));
   }
   
-  long r = nextFreeRegister;
+  auto r = make_shared<Register>(get_irn_mode(node));
   helperRegisters.emplace(get_irn_node_nr(node), r);
-  nextFreeRegister = nextFreeRegister + 1;
   return r;
 }
 
@@ -63,10 +76,15 @@ Label GraphAssembler::getLabel(ir_node *node) {
 #pragma mark - Function prolog/epilog
 
 void GraphAssembler::insertProlog() {
-  auto p = make_shared<pushq_rbp>();
-  auto m = make_shared<movq_rsp_rbp>();
+  auto p = make_shared<push>();
+  p->src1 = Register::rbp();
+  
+  auto m = make_shared<mov>();
+  m->src1 = Register::rsp();
+  m->dest = Register::rbp();
+  
   auto s = make_shared<subq_rsp>();
-  s->nslots = (unsigned) nextFreeRegister;
+  s->nslots = (unsigned) Register::numberOfDynamicRegisters();
   
   Label fl = labels.front();
   auto bl = blocks.at(fl);
@@ -96,6 +114,10 @@ void GraphAssembler::collectPhi(ir_node *node) {
   Label l = nodeNrToLabel.at(get_irn_node_nr(bl));
   shared_ptr<LabeledBlock> lb = blocks.at(l);
   lb->phis.push_back(node);
+  
+  // Important: destination register has to be known right after this point in time
+  // We allocate it now
+  getRegister(node);
 }
 
 void GraphAssembler::buildBlock(ir_node *node) {
@@ -114,9 +136,9 @@ void GraphAssembler::buildBlock(ir_node *node) {
 void GraphAssembler::buildConst(ir_node *node) {
   ir_tarval *val = get_Const_tarval(node);
   long l = get_tarval_long(val);
-  auto m = make_shared<movl_from_imm>();
+  auto m = make_shared<mov_from_imm>();
   m->imm_value = l;
-  long oreg = getRegister(node);
+  auto oreg = getRegister(node);
   m->dest = oreg;
   
   GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(m);
@@ -158,14 +180,14 @@ void GraphAssembler::buildCond(ir_node *node) {
   ir_node *l = get_Cmp_left(s);
   ir_node *r = get_Cmp_right(s);
   
-  long lreg = registers[get_irn_node_nr(l)];
-  long rreg = registers[get_irn_node_nr(r)];
+  auto lreg = registers[get_irn_node_nr(l)];
+  auto rreg = registers[get_irn_node_nr(r)];
   
-  auto cmp = make_shared<cmpl_>();
-  cmp->src1 = lreg;
-  cmp->src2 = rreg;
+  auto comp = make_shared<cmp>();
+  comp->src1 = lreg;
+  comp->src2 = rreg;
 //  getCurrentBlock()->instructions.push_back(cmp);
-  GET_LABELED_BLOCK_FOR_IR_NODE(node)->exitInstructions.push_back(cmp);
+  GET_LABELED_BLOCK_FOR_IR_NODE(node)->exitInstructions.push_back(comp);
   
   auto br = make_shared<Branch>();
   br->relation = get_Cmp_relation(s);
@@ -200,9 +222,9 @@ void GraphAssembler::buildProj(ir_node *node) {
     ir_node *ppred = get_Proj_pred(pred);
     if (is_Start(ppred)) {
       // Is an argument
-      auto m = make_shared<movl_from_stack>();
+      auto m = make_shared<mov_from_stack>();
       m->offset = get_Proj_num(node);
-      long oreg = getRegister(node);
+      auto oreg = getRegister(node);
       m->dest = oreg;
       GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(m);
     }
@@ -213,11 +235,11 @@ void GraphAssembler::buildAdd(ir_node *node) {
   ir_node *l = get_Add_left(node);
   ir_node *r = get_Add_right(node);
   
-  long lreg = registers[get_irn_node_nr(l)];
-  long rreg = registers[get_irn_node_nr(r)];
-  long oreg = getRegister(node);
+  auto lreg = registers[get_irn_node_nr(l)];
+  auto rreg = registers[get_irn_node_nr(r)];
+  auto oreg = getRegister(node);
   
-  auto inst = make_shared<addl>();
+  auto inst = make_shared<add>();
   inst->src1 = lreg;
   inst->src2 = rreg;
   inst->dest = oreg;
@@ -228,14 +250,16 @@ void GraphAssembler::buildAdd(ir_node *node) {
 void GraphAssembler::buildReturn(ir_node *node) {
   if (get_Return_n_ress(node) > 0) {
     ir_node *pred = get_Return_res(node, 0);
-    long r = registers[get_irn_node_nr(pred)];
-    auto inst = make_shared<movl_to_eax>();
+    auto r = registers[get_irn_node_nr(pred)];
+    auto inst = make_shared<mov>();
     inst->src1 = r;
+    inst->dest = Register::_ax(inst->src1->size);
     GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(inst);
   }
   
-  auto pop = make_shared<popq_rbp>();
-  GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(pop);
+  auto po = make_shared<pop>();
+  po->dest = Register::rbp();
+  GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(po);
   auto ret = make_shared<retq>();
   GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(ret);
 }
@@ -244,11 +268,11 @@ void GraphAssembler::buildSub(ir_node *node) {
   ir_node *l = get_Sub_left(node);
   ir_node *r = get_Sub_right(node);
   
-  long lreg = registers[get_irn_node_nr(l)];
-  long rreg = registers[get_irn_node_nr(r)];
-  long oreg = getRegister(node);
+  auto lreg = registers[get_irn_node_nr(l)];
+  auto rreg = registers[get_irn_node_nr(r)];
+  auto oreg = getRegister(node);
   
-  auto inst = make_shared<subl>();
+  auto inst = make_shared<sub>();
   inst->src1 = lreg;
   inst->src2 = rreg;
   inst->dest = oreg;
@@ -259,11 +283,11 @@ void GraphAssembler::buildMul(ir_node *node) {
   ir_node *l = get_Mul_left(node);
   ir_node *r = get_Mul_right(node);
   
-  long lreg = registers[get_irn_node_nr(l)];
-  long rreg = registers[get_irn_node_nr(r)];
-  long oreg = getRegister(node);
+  auto lreg = registers[get_irn_node_nr(l)];
+  auto rreg = registers[get_irn_node_nr(r)];
+  auto oreg = getRegister(node);
   
-  auto inst = make_shared<imull>();
+  auto inst = make_shared<imul>();
   inst->src1 = lreg;
   inst->src2 = rreg;
   inst->dest = oreg;
@@ -274,11 +298,11 @@ void GraphAssembler::buildDiv(ir_node *node) {
   ir_node *l = get_Div_left(node);
   ir_node *r = get_Div_right(node);
   
-  long lreg = registers[get_irn_node_nr(l)];
-  long rreg = registers[get_irn_node_nr(r)];
-  long oreg = getRegister(node);
+  auto lreg = registers[get_irn_node_nr(l)];
+  auto rreg = registers[get_irn_node_nr(r)];
+  auto oreg = getRegister(node);
   
-  auto inst = make_shared<idivl>();
+  auto inst = make_shared<idiv>();
   inst->src1 = lreg;
   inst->src2 = rreg;
   inst->dest = oreg;
@@ -290,11 +314,11 @@ void GraphAssembler::buildMod(ir_node *node) {
   ir_node *l = get_Mod_left(node);
   ir_node *r = get_Mod_right(node);
   
-  long lreg = registers[get_irn_node_nr(l)];
-  long rreg = registers[get_irn_node_nr(r)];
-  long oreg = getRegister(node);
+  auto lreg = registers[get_irn_node_nr(l)];
+  auto rreg = registers[get_irn_node_nr(r)];
+  auto oreg = getRegister(node);
   
-  auto inst = make_shared<idivl>();
+  auto inst = make_shared<idiv>();
   inst->src1 = lreg;
   inst->src2 = rreg;
   inst->dest = oreg;
@@ -305,35 +329,68 @@ void GraphAssembler::buildMod(ir_node *node) {
 void GraphAssembler::buildMinus(ir_node *node) {
   ir_node *m = get_Minus_op(node);
 
-  long mreg = registers[get_irn_node_nr(m)];
-  long oreg = getRegister(node);
+  auto mreg = registers[get_irn_node_nr(m)];
+  auto oreg = getRegister(node);
   
-  auto inst = make_shared<negl>();
+  auto inst = make_shared<neg>();
   inst->src1 = mreg;
   inst->dest = oreg;
   GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(inst);
 }
 
 
+
+
+
+#pragma mark - Physical register allocation
+
+shared_ptr<Instruction> GraphAssembler::getMovFromStackOrPhysicalRegister(shared_ptr<Register> from, shared_ptr<Register> to) {
+  if (from->type == RegisterTypePhysical) {
+    auto m1 = make_shared<mov>();
+    m1->src1 = from;
+    m1->dest = to;
+    return m1;
+  }
+  
+  auto m1 = make_shared<mov_from_stack>();
+  m1->offset = getStackOffsetForRegister(from);
+  m1->dest = to;
+  
+  return m1;
+}
+
+
+shared_ptr<Instruction> GraphAssembler::getMovToStackOrPhysicalRegister(shared_ptr<Register> from, shared_ptr<Register> to) {
+  if (to->type == RegisterTypePhysical) {
+    auto m1 = make_shared<mov>();
+    m1->src1 = from;
+    m1->dest = to;
+    return m1;
+  }
+  
+  auto m1 = make_shared<mov_to_stack>();
+  m1->offset = getStackOffsetForRegister(to);
+  m1->src = from;
+  
+  return m1;
+}
+
+
 void GraphAssembler::allocI2to1(shared_ptr<Instruction> instr, I2to1 *i, vector<shared_ptr<Instruction>> &instructions_)
 {
-  // load arg1
-  auto m1 = make_shared<movl_from_stack>();
-  m1->offset = (unsigned) (i->src1 + nargs);
-  m1->dest = 0;
+  // load arg1 to _ax
+  auto ax = Register::_ax(i->src1->size);
+  auto m1 = getMovFromStackOrPhysicalRegister(i->src1, ax);
 
-  // load arg2
-  auto m2 = make_shared<movl_from_stack>();
-  m2->offset = (unsigned) (i->src2 + nargs);
-  m2->dest = 1;
+  // load arg2 to _bx
+  auto bx = Register::_bx(i->src2->size);
+  auto m2 = getMovFromStackOrPhysicalRegister(i->src2, bx);
   
   // store dest
-  auto m3 = make_shared<movl_to_stack>();
-  m3->offset = (unsigned) (i->dest + nargs);
-  m3->src = m2->dest;
+  auto m3 = getMovToStackOrPhysicalRegister(bx, i->dest);
 
-  i->src1 = m1->dest;
-  i->src2 = m2->dest;
+  i->src1 = ax;
+  i->src2 = bx;
   i->dest = i->src2;
   
   instructions_.push_back(m1);
@@ -344,18 +401,16 @@ void GraphAssembler::allocI2to1(shared_ptr<Instruction> instr, I2to1 *i, vector<
 
 void GraphAssembler::allocI2to0(shared_ptr<Instruction> instr, I2to0 *i, vector<shared_ptr<Instruction>> &instructions_)
 {
-  // load arg1
-  auto m1 = make_shared<movl_from_stack>();
-  m1->offset = (unsigned) (i->src1 + nargs);
-  m1->dest = 0;
+  // load arg1 to _ax
+  auto ax = Register::_ax(i->src1->size);
+  auto m1 = getMovFromStackOrPhysicalRegister(i->src1, ax);
   
-  // load arg2
-  auto m2 = make_shared<movl_from_stack>();
-  m2->offset = (unsigned) (i->src2 + nargs);
-  m2->dest = 1;
+  // load arg2 to _bx
+  auto bx = Register::_bx(i->src2->size);
+  auto m2 = getMovFromStackOrPhysicalRegister(i->src2, bx);
   
-  i->src1 = m1->dest;
-  i->src2 = m2->dest;
+  i->src1 = ax;
+  i->src2 = bx;
   
   instructions_.push_back(m1);
   instructions_.push_back(m2);
@@ -364,18 +419,16 @@ void GraphAssembler::allocI2to0(shared_ptr<Instruction> instr, I2to0 *i, vector<
 
 void GraphAssembler::allocI1to1(shared_ptr<Instruction> instr, I1to1 *i, vector<shared_ptr<Instruction>> &instructions_)
 {
-  // load arg1
-  auto m1 = make_shared<movl_from_stack>();
-  m1->offset = (unsigned) (i->src1 + nargs);
-  m1->dest = 0;
+  // load arg1 to _ax
+  auto ax = Register::_ax(i->src1->size);
+  auto m1 = getMovFromStackOrPhysicalRegister(i->src1, ax);
   
   // store dest
-  auto m3 = make_shared<movl_to_stack>();
-  m3->offset = (unsigned) (i->dest + nargs);
-  m3->src = 1;
+  auto bx = Register::_bx(i->dest->size);
+  auto m3 = getMovToStackOrPhysicalRegister(bx, i->dest);
   
-  i->src1 = 0;
-  i->dest = 1;
+  i->src1 = ax;
+  i->dest = bx;
   
   instructions_.push_back(m1);
   instructions_.push_back(instr);
@@ -383,40 +436,39 @@ void GraphAssembler::allocI1to1(shared_ptr<Instruction> instr, I1to1 *i, vector<
 }
 
 void GraphAssembler::allocI1to0(shared_ptr<Instruction> instr, I1to0 *i, vector<shared_ptr<Instruction>> &instructions_)
-{
-  // load arg1
-  auto m1 = make_shared<movl_from_stack>();
-  m1->offset = (unsigned) (i->src1 + nargs);
-  m1->dest = 0;
+{ 
+  // load arg1 to _ax
+  auto ax = Register::_ax(i->src1->size);
+  auto m1 = getMovFromStackOrPhysicalRegister(i->src1, ax);
 
-  i->src1 = m1->dest;
+  i->src1 = ax;
 
   instructions_.push_back(m1);
   instructions_.push_back(instr);
 }
 
-void GraphAssembler::allocMoveFromStack(shared_ptr<Instruction> instr, movl_from_stack *i, vector<shared_ptr<Instruction>> &instructions_)
+void GraphAssembler::allocMoveFromStack(shared_ptr<Instruction> instr, mov_from_stack *i, vector<shared_ptr<Instruction>> &instructions_)
 {
-  // save result to stack
-  auto m = make_shared<movl_to_stack>();
-  m->offset = (unsigned) (i->dest + nargs);
-  i->dest = 0;
-  m->src = i->dest;
-
-  instructions_.push_back(instr);
-  instructions_.push_back(m);
+//  // save result to stack
+//  auto m = make_shared<movl_to_stack>();
+//  m->offset = getStackOffsetForRegister(i->dest);
+//  i->dest = Register::_ax(i->dest->size);
+//  m->src = i->dest;
+//
+//  instructions_.push_back(instr);
+//  instructions_.push_back(m);
 }
 
-void GraphAssembler::allocMoveFromImm(shared_ptr<Instruction> instr, movl_from_imm *i, vector<shared_ptr<Instruction>> &instructions_)
+void GraphAssembler::allocMoveFromImm(shared_ptr<Instruction> instr, mov_from_imm *i, vector<shared_ptr<Instruction>> &instructions_)
 {
-  // save result to stack
-  auto m = make_shared<movl_to_stack>();
-  m->offset = (unsigned) (i->dest + nargs);
-  i->dest = 0;
-  m->src = i->dest;
-
-  instructions_.push_back(instr);
-  instructions_.push_back(m);
+//  // save result to stack
+//  auto m = make_shared<movl_to_stack>();
+//  m->offset = getStackOffsetForRegister(i->dest);
+//  i->dest = Register::_ax(i->dest->size);
+//  m->src = i->dest;
+//
+//  instructions_.push_back(instr);
+//  instructions_.push_back(m);
 }
 
 
@@ -546,8 +598,8 @@ void GraphAssembler::phiInsertion()
       
       for (int i = 0; i < get_Phi_n_preds(phi); i++) {
         ir_node *phipred = get_Phi_pred(phi, i);
-        regNum inReg = registers.at(get_irn_node_nr(phipred));
-        regNum helper = getHelperRegister(phipred);
+        auto inReg = registers.at(get_irn_node_nr(phipred));
+        auto helper = getHelperRegister(phipred);
         
         ir_node *j = get_Block_cfgpred(bl, i);
         ir_node *jbl = get_nodes_block(j);
@@ -555,30 +607,22 @@ void GraphAssembler::phiInsertion()
         Label l = nodeNrToLabel.at(get_irn_node_nr(jbl));
         shared_ptr<LabeledBlock> lb = blocks.at(l);
         
-        auto m = make_shared<movl>();
+        auto m = make_shared<mov>();
         m->src1 = inReg;
         m->dest = helper;
         
         lb->instructions.push_back(m);
-        
-//        for (int i_ = 0; i_ < lb->instructions.size(); i_++) {
-//          if (lb->instructions[i_] == lb->exitInstruction) {
-//            auto it = lb->instructions.begin();
-//            lb->instructions.insert(it + i_, m);
-//            break;
-//          }
-//        }
       }
     }
     
     // Step 3: Load all phis from temporary helper to out register
     for (auto const& phi : lb->phis) {
       auto bl = get_nodes_block(phi);
-      regNum outReg = getRegister(phi);
+      auto outReg = getRegister(phi);
       
       for (int i = 0; i < get_Phi_n_preds(phi); i++) {
         ir_node *phipred = get_Phi_pred(phi, i);
-        regNum helper = getHelperRegister(phipred);
+        auto helper = getHelperRegister(phipred);
         
         ir_node *j = get_Block_cfgpred(bl, i);
         ir_node *jbl = get_nodes_block(j);
@@ -586,18 +630,11 @@ void GraphAssembler::phiInsertion()
         Label l = nodeNrToLabel.at(get_irn_node_nr(jbl));
         shared_ptr<LabeledBlock> lb = blocks.at(l);
         
-        auto m = make_shared<movl>();
+        auto m = make_shared<mov>();
         m->src1 = helper;
         m->dest = outReg;
         
         lb->instructions.push_back(m);
-//        for (int i_ = 0; i_ < lb->instructions.size(); i_++) {
-//          if (lb->instructions[i_] == lb->exitInstruction) {
-//            auto it = lb->instructions.begin();
-//            lb->instructions.insert(it + i_, m);
-//            break;
-//          }
-//        }
       }
     }
   }
@@ -623,9 +660,9 @@ void GraphAssembler::irgRegisterAllocation()
         allocI1to1(instruction, i, instructions_);
       } else if (auto i = dynamic_cast<I1to0*>(instruction.get())) {
         allocI1to0(instruction, i, instructions_);
-      } else if (auto i = dynamic_cast<movl_from_stack*>(instruction.get())) {
+      } else if (auto i = dynamic_cast<mov_from_stack*>(instruction.get())) {
         allocMoveFromStack(instruction, i, instructions_);
-      } else if (auto i = dynamic_cast<movl_from_imm*>(instruction.get())) {
+      } else if (auto i = dynamic_cast<mov_from_imm*>(instruction.get())) {
         allocMoveFromImm(instruction, i, instructions_);
       } else {
         instructions_.push_back(instruction);
