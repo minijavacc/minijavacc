@@ -3,6 +3,7 @@
 #include "compiler.h"
 
 #include <functional>
+#include <map>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -12,10 +13,9 @@ namespace cmpl
   class Option
   {
     public:
-      Option(std::string string, std::function<int(std::ifstream &, std::string filename)> fn) :
-        string(string), fn(fn) { }
+      Option(std::function<int(std::ifstream &, std::string filename)> fn) :
+        fn(fn) { }
       
-      std::string string;
       std::function<int(std::ifstream &, std::string filename)> fn;
       std::string filename;
   };
@@ -29,17 +29,17 @@ namespace cmpl
       
     private:
       // known parameters, their functions and whether they need an additional input file
-      const std::vector<Option> knownOptions = {
-        Option("--echo", Compiler::echo),
-        Option("--lextest", Compiler::lextest),
-        Option("--parsetest", Compiler::parsetest),
-        Option("--print-ast", Compiler::printast),
-        Option("--check", Compiler::semcheck),
-        Option("--graph", Compiler::creategraph), 
-        Option("--compile-firm", Compiler::compilefirm), 
-        Option("--compile", Compiler::compile)
+      const std::map<std::string, Option> knownOptions = {
+        {"--echo",         Option(Compiler::echo)},
+        {"--lextest",      Option(Compiler::lextest)},
+        {"--parsetest",    Option(Compiler::parsetest)},
+        {"--print-ast",    Option(Compiler::printast)},
+        {"--check",        Option(Compiler::semcheck)},
+        {"--graph",        Option(Compiler::creategraph)},
+        {"--compile-firm", Option(Compiler::compilefirm)},
+        {"--compile",      Option(Compiler::compile)}
       };
-
+      
       std::vector<Option> givenOptions;
   };
   

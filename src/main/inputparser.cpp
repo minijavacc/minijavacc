@@ -10,33 +10,24 @@ InputParser::InputParser() { }
 
 void InputParser::parseArgs(int &argc, char **argv)
 {
-  for (int i=1; i < argc; ++i)
-  {
-    bool paramFound = false;
-
-    for (Option opt : knownOptions)
-    {
-      if (opt.string.compare(std::string(argv[i])) == 0) // option known
-      {
-          if (++i < argc)
-          {
-            opt.filename = std::string(argv[i]);
-            givenOptions.push_back(opt);
-          }
-          else
-          {
-            std::string err("insufficient arguments\n");
-            throw ParameterError(err);
-          }
-        paramFound = true;
-        break;
-      }
-    }
+  for (int i=1; i < argc; ++i) {
+    std::string argument = std::string(argv[i]);
+    auto it = knownOptions.find(argument);
     
-    if (!paramFound)
-    {
-      std::string err("invalid parameters\n");
-      throw ParameterError(err);
+    if(it != knownOptions.end()) {
+      if (++i < argc) {
+        Option opt(it->second);
+        opt.filename = std::string(argv[i]);
+        givenOptions.push_back(opt);
+      } else {
+        std::string err("insufficient arguments\n");
+        throw ParameterError(err);
+      }
+    } else {
+      // try generic compile
+      Option opt(Compiler::compile);
+      opt.filename = argument;
+      givenOptions.push_back(opt);
     }
   }
 }
