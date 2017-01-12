@@ -45,6 +45,14 @@ namespace cmpl
   #define ID_SP 5
   #define ID_SI 6
   #define ID_DI 7
+	#define ID_08 8
+  #define ID_09 9
+  #define ID_10 10
+  #define ID_11 11
+  #define ID_12 12
+  #define ID_13 13
+  #define ID_14 14
+  #define ID_15 15
   
   class Register {
   public:
@@ -82,6 +90,22 @@ namespace cmpl
             return "%esi";
           case 7:
             return "%edi";
+					case 8:
+            return "%r8d";
+          case 9:
+            return "%r9d";
+          case 10:
+            return "%r10d";
+          case 11:
+            return "%r11d";
+          case 12:
+            return "%r12d";
+          case 13:
+            return "%r13d";
+          case 14:
+            return "%r14d";
+          case 15:
+            return "%r15d";
           default:
             assert(false);
             return 0;
@@ -104,6 +128,22 @@ namespace cmpl
             return "%rsi";
           case 7:
             return "%rdi";
+					case 8:
+            return "%r8";
+          case 9:
+            return "%r9";
+          case 10:
+            return "%r10";
+          case 11:
+            return "%r11";
+          case 12:
+            return "%r12";
+          case 13:
+            return "%r13";
+          case 14:
+            return "%r14";
+          case 15:
+            return "%r15";
           default:
             assert(false);
             return 0;

@@ -273,25 +273,44 @@ void GraphAssembler::buildCall(ir_node *node) {
 	
 	int paramsNum = get_Call_n_params(node);
 	
-	// DEBUG
-	std::cout << "\nregisters keys: (callNode = " << get_irn_node_nr(node) << ")\n";
-  for (const auto &entry : registers) {
-		std::cout << entry.first << ", ";
-	}
-	
-	// iterate over first 6 parameters (from back)
+	// iterate over first 6 parameters for the registers (from back)
 	for (int i = 0; i < 6 && i < paramsNum; i++)
 	{
-		ir_node *a = get_Call_param(node, paramsNum - 1 - i);
+		ir_node *a = get_Call_param(node, i);
 		
 		assert(registers.count(get_irn_node_nr(a)) > 0);
 		shared_ptr<Register> reg = registers[get_irn_node_nr(a)];
 		
-		// make sure %*sp and %*bp are not used
-		long identifier = i;
-		if (identifier > 3)
+		// map each parameter to register according to ABI
+		long identifier;
+		switch (i)
 		{
-			identifier += 2;
+			case 0:
+				identifier = 7;
+				break;
+			
+			case 1:
+				identifier = 6;
+				break;
+				
+			case 2:
+				identifier = 3;
+				break;
+			
+			case 3:
+				identifier = 2;
+				break;
+			
+			case 4:
+				identifier = 8;
+				break;
+			
+			case 5:
+				identifier = 9;
+				break;
+			
+			default:
+				assert(false);
 		}
 		
 		if (reg->type == RegisterTypeVirtual)
@@ -317,6 +336,19 @@ void GraphAssembler::buildCall(ir_node *node) {
 		}
 	}
 	
+	// iterate over the remaining parameters for the stack
+	for (int i = paramsNum - 1; i > 5 && i < paramsNum; i++)
+	{
+		ir_node *a = get_Call_param(node, i);
+		
+		assert(registers.count(get_irn_node_nr(a)) > 0);
+		shared_ptr<Register> reg = registers[get_irn_node_nr(a)];
+		
+		// create mov instruction to move value to stack
+		auto m = make_shared<push>();
+		m->src1 = reg;
+		getLabeledBlockForIrNode(node)->instructions.push_back(m);
+	}
 	
 	// align base pointer to 2^8
 	
