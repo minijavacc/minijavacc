@@ -78,6 +78,8 @@ namespace cmpl
     shared_ptr<Register> getHelperRegister(ir_node *node);
     Label getLabel(ir_node *node);
     long getStackOffsetForRegister(shared_ptr<Register> r);
+		
+		shared_ptr<LabeledBlock> getLabeledBlockForIrNode(ir_node *node);
     
     shared_ptr<Instruction> getMovFromStackOrPhysicalRegister(shared_ptr<Register> from, shared_ptr<Register> to);
     shared_ptr<Instruction> getMovToStackOrPhysicalRegister(shared_ptr<Register> from, shared_ptr<Register> to);

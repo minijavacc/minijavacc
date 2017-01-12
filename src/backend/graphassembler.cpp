@@ -4,14 +4,14 @@
 #include <libfirm/firm.h>
 
 
-
-// TODO: Builds on get_nodes_block() being reliable which might not be the case
-#define GET_LABELED_BLOCK_FOR_IR_NODE(node) blocks.at(nodeNrToLabel.at(get_irn_node_nr(get_nodes_block(node))))
-
-
 using namespace cmpl;
 
 #pragma mark - Misc
+
+inline shared_ptr<LabeledBlock> GraphAssembler::getLabeledBlockForIrNode(ir_node *node)
+{
+	return blocks.at(nodeNrToLabel.at(get_irn_node_nr(get_nodes_block(node))));
+}
 
 shared_ptr<Register> GraphAssembler::getRegister(ir_node *node) {
   if (registers.count(get_irn_node_nr(node)) > 0) {
@@ -141,7 +141,7 @@ void GraphAssembler::buildConst(ir_node *node) {
   auto oreg = getRegister(node);
   m->dest = oreg;
   
-  GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(m);
+  getLabeledBlockForIrNode(node)->instructions.push_back(m);
 }
 
 void GraphAssembler::buildCond(ir_node *node) {
@@ -187,18 +187,18 @@ void GraphAssembler::buildCond(ir_node *node) {
   comp->src1 = lreg;
   comp->src2 = rreg;
 //  getCurrentBlock()->instructions.push_back(cmp);
-  GET_LABELED_BLOCK_FOR_IR_NODE(node)->exitInstructions.push_back(comp);
+  getLabeledBlockForIrNode(node)->exitInstructions.push_back(comp);
   
   auto br = make_shared<Branch>();
   br->relation = get_Cmp_relation(s);
   br->label = trueLabel;
 //  getCurrentBlock()->instructions.push_back(br);
-  GET_LABELED_BLOCK_FOR_IR_NODE(node)->exitInstructions.push_back(br);
+  getLabeledBlockForIrNode(node)->exitInstructions.push_back(br);
   
   auto j = make_shared<jmp>();
   j->label = falseLabel;
 //  getCurrentBlock()->instructions.push_back(j);
-  GET_LABELED_BLOCK_FOR_IR_NODE(node)->exitInstructions.push_back(j);
+  getLabeledBlockForIrNode(node)->exitInstructions.push_back(j);
 }
 
 void GraphAssembler::buildJmp(ir_node *node) {
@@ -211,7 +211,7 @@ void GraphAssembler::buildJmp(ir_node *node) {
     j->label = l;
 //    getCurrentBlock()->instructions.push_back(j);
     
-    GET_LABELED_BLOCK_FOR_IR_NODE(node)->exitInstructions.push_back(j);
+    getLabeledBlockForIrNode(node)->exitInstructions.push_back(j);
     return;
   }
 }
@@ -226,7 +226,7 @@ void GraphAssembler::buildProj(ir_node *node) {
       m->offset = get_Proj_num(node);
       auto oreg = getRegister(node);
       m->dest = oreg;
-      GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(m);
+      getLabeledBlockForIrNode(node)->instructions.push_back(m);
     }
   }
 }
@@ -244,7 +244,7 @@ void GraphAssembler::buildAdd(ir_node *node) {
   inst->src2 = rreg;
   inst->dest = oreg;
 
-  GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(inst);
+  getLabeledBlockForIrNode(node)->instructions.push_back(inst);
 }
 
 void GraphAssembler::buildReturn(ir_node *node) {
@@ -254,14 +254,73 @@ void GraphAssembler::buildReturn(ir_node *node) {
     auto inst = make_shared<mov>();
     inst->src1 = r;
     inst->dest = Register::_ax(inst->src1->size);
-    GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(inst);
+    getLabeledBlockForIrNode(node)->instructions.push_back(inst);
   }
   
   auto po = make_shared<pop>();
   po->dest = Register::rbp();
-  GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(po);
+  getLabeledBlockForIrNode(node)->instructions.push_back(po);
   auto ret = make_shared<retq>();
-  GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(ret);
+  getLabeledBlockForIrNode(node)->instructions.push_back(ret);
+}
+
+void GraphAssembler::buildCall(ir_node *node) {
+	ir_entity *e = get_Call_callee(node);
+  
+	// use standardized x86_64 calling convention: 
+	// http://eli.thegreenplace.net/2011/09/06/stack-frame-layout-on-x86-64
+	// "According to the ABI, the first 6 integer or pointer arguments to a function are passed in registers."
+	
+	int paramsNum = get_Call_n_params(node);
+	
+	// DEBUG
+	std::cout << "\nregisters keys: (callNode = " << get_irn_node_nr(node) << ")\n";
+  for (const auto &entry : registers) {
+		std::cout << entry.first << ", ";
+	}
+	
+	// iterate over first 6 parameters (from back)
+	for (int i = 0; i < 6 && i < paramsNum; i++)
+	{
+		ir_node *a = get_Call_param(node, paramsNum - 1 - i);
+		
+		assert(registers.count(get_irn_node_nr(a)) > 0);
+		shared_ptr<Register> reg = registers[get_irn_node_nr(a)];
+		
+		// make sure %*sp and %*bp are not used
+		long identifier = i;
+		if (identifier > 3)
+		{
+			identifier += 2;
+		}
+		
+		if (reg->type == RegisterTypeVirtual)
+		{
+			// if the register is still virtual, we can set it to a physical one
+			reg->type = RegisterTypePhysical;
+			reg->identifier = identifier;
+		}
+		else
+		{
+			// if the register is already physical, we have to insert a move instruction
+			// TODO: this is dependend from the register allocator!
+			// TODO: we insert a move without checking if the dest-register is currently used for any other variable
+			auto r = make_shared<Register>();
+			r->size = reg->size;
+			r->type = RegisterTypePhysical;
+			r->identifier = identifier;
+			
+			auto m = make_shared<mov>();
+			m->src1 = reg;
+			m->dest = r;
+			getLabeledBlockForIrNode(node)->instructions.push_back(m);
+		}
+	}
+	
+	
+	// align base pointer to 2^8
+	
+	//getLabeledBlockForIrNode(node)->instructions.push_back(make_shared<popq_rbp>());
 }
 
 void GraphAssembler::buildSub(ir_node *node) {
@@ -276,7 +335,7 @@ void GraphAssembler::buildSub(ir_node *node) {
   inst->src1 = lreg;
   inst->src2 = rreg;
   inst->dest = oreg;
-  GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(inst);
+  getLabeledBlockForIrNode(node)->instructions.push_back(inst);
 }
 
 void GraphAssembler::buildMul(ir_node *node) {
@@ -291,7 +350,7 @@ void GraphAssembler::buildMul(ir_node *node) {
   inst->src1 = lreg;
   inst->src2 = rreg;
   inst->dest = oreg;
-  GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(inst);
+  getLabeledBlockForIrNode(node)->instructions.push_back(inst);
 }
 
 void GraphAssembler::buildDiv(ir_node *node) {
@@ -306,7 +365,7 @@ void GraphAssembler::buildDiv(ir_node *node) {
   inst->src1 = lreg;
   inst->src2 = rreg;
   inst->dest = oreg;
-  GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(inst);
+  getLabeledBlockForIrNode(node)->instructions.push_back(inst);
   //TODO: read result from %eax
 }
 
@@ -322,7 +381,7 @@ void GraphAssembler::buildMod(ir_node *node) {
   inst->src1 = lreg;
   inst->src2 = rreg;
   inst->dest = oreg;
-  GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(inst);
+  getLabeledBlockForIrNode(node)->instructions.push_back(inst);
   //TODO: read result from %edx
 }
 
@@ -335,7 +394,7 @@ void GraphAssembler::buildMinus(ir_node *node) {
   auto inst = make_shared<neg>();
   inst->src1 = mreg;
   inst->dest = oreg;
-  GET_LABELED_BLOCK_FOR_IR_NODE(node)->instructions.push_back(inst);
+  getLabeledBlockForIrNode(node)->instructions.push_back(inst);
 }
 
 

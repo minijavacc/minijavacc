@@ -3,6 +3,7 @@
 #include <libfirm/firm.h>
 #include <string>
 #include <assert.h>
+#include <memory>
 #include <iostream>
 
 #ifdef _WIN32
