@@ -188,6 +188,15 @@ namespace cmpl
       r->identifier = ID_AX;
       return r;
     };
+	
+	 // TODO: make singleton
+    static shared_ptr<Register> edx() {
+      auto r = make_shared<Register>();
+      r->size = RegisterSize32;
+      r->type = RegisterTypePhysical;
+      r->identifier = ID_DX;
+      return r;
+    };
     
     // TODO: make singleton
     static shared_ptr<Register> ebx() {

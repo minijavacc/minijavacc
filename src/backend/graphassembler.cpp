@@ -398,7 +398,11 @@ void GraphAssembler::buildDiv(ir_node *node) {
   inst->src2 = rreg;
   inst->dest = oreg;
   getLabeledBlockForIrNode(node)->instructions.push_back(inst);
-  //TODO: read result from %eax
+  // result of div is in %eax
+  auto inst2 = make_shared<mov>();
+  inst2->src1 = Register::eax();
+  inst2->dest = oreg;
+  getLabeledBlockForIrNode(node)->instructions.push_back(inst2);
 }
 
 void GraphAssembler::buildMod(ir_node *node) {
@@ -414,7 +418,11 @@ void GraphAssembler::buildMod(ir_node *node) {
   inst->src2 = rreg;
   inst->dest = oreg;
   getLabeledBlockForIrNode(node)->instructions.push_back(inst);
-  //TODO: read result from %edx
+  //result of mod is in %edx
+  auto inst2 = make_shared<mov>();
+  inst2->src1 = Register::edx();
+  inst2->dest = oreg;
+  getLabeledBlockForIrNode(node)->instructions.push_back(inst2);
 }
 
 void GraphAssembler::buildMinus(ir_node *node) {
