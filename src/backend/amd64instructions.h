@@ -332,7 +332,7 @@ namespace cmpl
       return mnemonic() + suffix + " " + src1->getRegisterName() + ", " + src2->getRegisterName();
     }
   };
-  
+    
   class I2to0 : public Instruction {
   public:
     shared_ptr<Register> src1;
@@ -486,8 +486,15 @@ namespace cmpl
     }
   };
   
-  class idiv : public I2to1 {
-    // quotient in %eax, remainder in %edx
+  class div : public I2to0 {
+    // result in %eax
+    std::string mnemonic() override {
+      return "idiv";
+    }
+  };
+  
+  class mod : public I2to0 {
+    // result in %edx
     std::string mnemonic() override {
       return "idiv";
     }

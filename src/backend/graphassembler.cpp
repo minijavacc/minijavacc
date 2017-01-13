@@ -404,18 +404,17 @@ void GraphAssembler::buildDiv(ir_node *node) {
   
   auto lreg = registers[get_irn_node_nr(l)];
   auto rreg = registers[get_irn_node_nr(r)];
-  auto oreg = getRegister(node);
   
-  auto inst = make_shared<idiv>();
+  auto inst = make_shared<div>();
   inst->src1 = lreg;
   inst->src2 = rreg;
-  inst->dest = oreg;
+
   getLabeledBlockForIrNode(node)->instructions.push_back(inst);
   // result of div is in %eax
-  auto inst2 = make_shared<mov>();
-  inst2->src1 = Register::eax();
-  inst2->dest = oreg;
-  getLabeledBlockForIrNode(node)->instructions.push_back(inst2);
+//  auto inst2 = make_shared<mov>();
+ // inst2->src1 = Register::eax();
+ // inst2->dest = oreg;
+ // getLabeledBlockForIrNode(node)->instructions.push_back(inst2);
 }
 
 void GraphAssembler::buildMod(ir_node *node) {
@@ -424,18 +423,17 @@ void GraphAssembler::buildMod(ir_node *node) {
   
   auto lreg = registers[get_irn_node_nr(l)];
   auto rreg = registers[get_irn_node_nr(r)];
-  auto oreg = getRegister(node);
-  
-  auto inst = make_shared<idiv>();
+
+  auto inst = make_shared<mod>();
   inst->src1 = lreg;
   inst->src2 = rreg;
-  inst->dest = oreg;
+
   getLabeledBlockForIrNode(node)->instructions.push_back(inst);
   //result of mod is in %edx
-  auto inst2 = make_shared<mov>();
-  inst2->src1 = Register::edx();
-  inst2->dest = oreg;
-  getLabeledBlockForIrNode(node)->instructions.push_back(inst2);
+//  auto inst2 = make_shared<mov>();
+//  inst2->src1 = Register::edx();
+ // inst2->dest = oreg;
+//  getLabeledBlockForIrNode(node)->instructions.push_back(inst2);
 }
 
 void GraphAssembler::buildMinus(ir_node *node) {
