@@ -656,6 +656,8 @@ string GraphAssembler::run()
   // activate all edges in graph
   edges_activate(irg);
   
+  lower_highlevel_graph(irg);
+  
   irgSerialize();
   irgRegisterAllocation();
   assemblerOutput = irgCodeGeneration();
