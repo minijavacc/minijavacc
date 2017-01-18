@@ -177,6 +177,60 @@ namespace cmpl
       r->identifier = ID_BX;
       return r;
     };
+		
+		// TODO: make singleton
+    static shared_ptr<Register> _cx(RegisterSize s) {
+      auto r = make_shared<Register>();
+      r->size = s;
+      r->type = RegisterTypePhysical;
+      r->identifier = ID_CX;
+      return r;
+    };
+    
+    // TODO: make singleton
+    static shared_ptr<Register> _dx(RegisterSize s) {
+      auto r = make_shared<Register>();
+      r->size = s;
+      r->type = RegisterTypePhysical;
+      r->identifier = ID_DX;
+      return r;
+    };
+		
+		// TODO: make singleton
+    static shared_ptr<Register> _di(RegisterSize s) {
+      auto r = make_shared<Register>();
+      r->size = s;
+      r->type = RegisterTypePhysical;
+      r->identifier = ID_DI;
+      return r;
+    };
+    
+    // TODO: make singleton
+    static shared_ptr<Register> _si(RegisterSize s) {
+      auto r = make_shared<Register>();
+      r->size = s;
+      r->type = RegisterTypePhysical;
+      r->identifier = ID_SI;
+      return r;
+    };
+		
+		// TODO: make singleton
+    static shared_ptr<Register> r8_(RegisterSize s) {
+      auto r = make_shared<Register>();
+      r->size = s;
+      r->type = RegisterTypePhysical;
+      r->identifier = ID_08;
+      return r;
+    };
+    
+    // TODO: make singleton
+    static shared_ptr<Register> r9_(RegisterSize s) {
+      auto r = make_shared<Register>();
+      r->size = s;
+      r->type = RegisterTypePhysical;
+      r->identifier = ID_09;
+      return r;
+    };
     
     // ...
     
@@ -529,6 +583,19 @@ namespace cmpl
     std::string generate() override {
       return "call " + label;
     }
+  };
+	
+	// static instruction that generates a predefined string
+  class StaticInstruction : public Instruction
+  {
+  public:
+		std::string str;
+		
+		StaticInstruction(std::string str) : str(str) {};
+
+    virtual std::string generate() {
+      return str;
+    };
   };
 
 
