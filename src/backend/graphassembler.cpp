@@ -227,8 +227,17 @@ void GraphAssembler::buildProj(ir_node *node) {
       auto oreg = getRegister(node);
       m->dest = oreg;
       getLabeledBlockForIrNode(node)->instructions.push_back(m);
+			
+			return;
     }
   }
+	
+	// else: if predecessor maps to a register, map to the same one
+	// hacky, but should work
+	if (registers.count(get_irn_node_nr(pred)) > 0)
+	{
+		registers.emplace(get_irn_node_nr(node), registers[get_irn_node_nr(pred)]);	
+	}
 }
 
 void GraphAssembler::buildAdd(ir_node *node) {
@@ -277,9 +286,6 @@ void GraphAssembler::buildCall(ir_node *node) {
 	for (int i = 0; i < 6 && i < paramsNum; i++)
 	{
 		ir_node *a = get_Call_param(node, i);
-		
-		// DEBUG
-		std::cout << "buildCall: " << i << ". argument #" << get_irn_node_nr(a) << "\n";
 		
 		assert(registers.count(get_irn_node_nr(a)) > 0);
 		shared_ptr<Register> reg = registers[get_irn_node_nr(a)];
@@ -576,9 +582,6 @@ int nodeNum=0;
 void irgNodeWalker(ir_node *node, void *env)
 {
   GraphAssembler *_this = static_cast<GraphAssembler*>(env);
-	
-	// DEBUG
-	std::cout << "irgNodeWalker: #" << get_irn_node_nr(node) << "\n";
   
   if (is_Block(node)) {
     _this->buildBlock(node);
@@ -624,9 +627,6 @@ void irgNodeWalker(ir_node *node, void *env)
   }
 	else {
 		// not every node type needs a buildNode function!
-		
-		// DEBUG
-		std::cerr << "buildNode not implemented (yet) for this node\n";
 	}
   
 }
