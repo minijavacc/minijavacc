@@ -45,7 +45,7 @@ namespace cmpl
   #define ID_SP 5
   #define ID_SI 6
   #define ID_DI 7
-	#define ID_08 8
+  #define ID_08 8
   #define ID_09 9
   #define ID_10 10
   #define ID_11 11
@@ -70,84 +70,86 @@ namespace cmpl
     Register(ir_mode *mode) : Register(registerSizeFromIRMode(mode)) {};
     
     string getRegisterName() {
-      assert(type == RegisterTypePhysical);
-      
-      if (size == RegisterSize32) {
-        switch (identifier) {
-          case 0:
-            return "%eax";
-          case 1:
-            return "%ebx";
-          case 2:
-            return "%ecx";
-          case 3:
-            return "%edx";
-          case 4:
-            return "%ebp";
-          case 5:
-            return "%rsp";
-          case 6:
-            return "%esi";
-          case 7:
-            return "%edi";
-					case 8:
-            return "%r8d";
-          case 9:
-            return "%r9d";
-          case 10:
-            return "%r10d";
-          case 11:
-            return "%r11d";
-          case 12:
-            return "%r12d";
-          case 13:
-            return "%r13d";
-          case 14:
-            return "%r14d";
-          case 15:
-            return "%r15d";
-          default:
-            assert(false);
-            return 0;
+      if (type == RegisterTypePhysical) {
+        if (size == RegisterSize32) {
+          switch (identifier) {
+            case 0:
+              return "%eax";
+            case 1:
+              return "%ebx";
+            case 2:
+              return "%ecx";
+            case 3:
+              return "%edx";
+            case 4:
+              return "%ebp";
+            case 5:
+              return "%rsp";
+            case 6:
+              return "%esi";
+            case 7:
+              return "%edi";
+            case 8:
+              return "%r8d";
+            case 9:
+              return "%r9d";
+            case 10:
+              return "%r10d";
+            case 11:
+              return "%r11d";
+            case 12:
+              return "%r12d";
+            case 13:
+              return "%r13d";
+            case 14:
+              return "%r14d";
+            case 15:
+              return "%r15d";
+            default:
+              assert(false);
+              return 0;
+          }
+        } else {
+          switch (identifier) {
+            case 0:
+              return "%rax";
+            case 1:
+              return "%rbx";
+            case 2:
+              return "%rcx";
+            case 3:
+              return "%rdx";
+            case 4:
+              return "%rbp";
+            case 5:
+              return "%rsp";
+            case 6:
+              return "%rsi";
+            case 7:
+              return "%rdi";
+            case 8:
+              return "%r8";
+            case 9:
+              return "%r9";
+            case 10:
+              return "%r10";
+            case 11:
+              return "%r11";
+            case 12:
+              return "%r12";
+            case 13:
+              return "%r13";
+            case 14:
+              return "%r14";
+            case 15:
+              return "%r15";
+            default:
+              assert(false);
+              return 0;
+          }
         }
       } else {
-        switch (identifier) {
-          case 0:
-            return "%rax";
-          case 1:
-            return "%rbx";
-          case 2:
-            return "%rcx";
-          case 3:
-            return "%rdx";
-          case 4:
-            return "%rbp";
-          case 5:
-            return "%rsp";
-          case 6:
-            return "%rsi";
-          case 7:
-            return "%rdi";
-					case 8:
-            return "%r8";
-          case 9:
-            return "%r9";
-          case 10:
-            return "%r10";
-          case 11:
-            return "%r11";
-          case 12:
-            return "%r12";
-          case 13:
-            return "%r13";
-          case 14:
-            return "%r14";
-          case 15:
-            return "%r15";
-          default:
-            assert(false);
-            return 0;
-        }
+        return "v" + std::to_string(identifier);
       }
     };
     
@@ -177,8 +179,8 @@ namespace cmpl
       r->identifier = ID_BX;
       return r;
     };
-		
-		// TODO: make singleton
+    
+    // TODO: make singleton
     static shared_ptr<Register> _cx(RegisterSize s) {
       auto r = make_shared<Register>();
       r->size = s;
@@ -195,8 +197,8 @@ namespace cmpl
       r->identifier = ID_DX;
       return r;
     };
-		
-		// TODO: make singleton
+    
+    // TODO: make singleton
     static shared_ptr<Register> _di(RegisterSize s) {
       auto r = make_shared<Register>();
       r->size = s;
@@ -213,8 +215,8 @@ namespace cmpl
       r->identifier = ID_SI;
       return r;
     };
-		
-		// TODO: make singleton
+    
+    // TODO: make singleton
     static shared_ptr<Register> r8_(RegisterSize s) {
       auto r = make_shared<Register>();
       r->size = s;
@@ -584,14 +586,14 @@ namespace cmpl
       return "call " + label;
     }
   };
-	
-	// static instruction that generates a predefined string
+  
+  // static instruction that generates a predefined string
   class StaticInstruction : public Instruction
   {
   public:
-		std::string str;
-		
-		StaticInstruction(std::string str) : str(str) {};
+    std::string str;
+    
+    StaticInstruction(std::string str) : str(str) {};
 
     virtual std::string generate() {
       return str;
