@@ -227,8 +227,17 @@ void GraphAssembler::buildProj(ir_node *node) {
       auto oreg = getRegister(node);
       m->dest = oreg;
       getLabeledBlockForIrNode(node)->instructions.push_back(m);
+			
+			return;
     }
   }
+	
+	// else: if predecessor maps to a register, map to the same one
+	// hacky, but should work
+	if (registers.count(get_irn_node_nr(pred)) > 0)
+	{
+		registers.emplace(get_irn_node_nr(node), registers[get_irn_node_nr(pred)]);	
+	}
 }
 
 void GraphAssembler::buildAdd(ir_node *node) {
@@ -273,7 +282,7 @@ void GraphAssembler::buildCall(ir_node *node) {
 	
 	int paramsNum = get_Call_n_params(node);
 	
-	// iterate over first 6 parameters for the registers (from back)
+	// iterate over first 6 parameters for the registers
 	for (int i = 0; i < 6 && i < paramsNum; i++)
 	{
 		ir_node *a = get_Call_param(node, i);
@@ -281,62 +290,44 @@ void GraphAssembler::buildCall(ir_node *node) {
 		assert(registers.count(get_irn_node_nr(a)) > 0);
 		shared_ptr<Register> reg = registers[get_irn_node_nr(a)];
 		
-		// map each parameter to register according to ABI
-		long identifier;
+		// move parameter to physical register
+    auto inst = make_shared<mov>();
+    inst->src1 = reg;
+		
 		switch (i)
-		{
 			case 0:
-				identifier = 7;
+		{
+				inst->dest = Register::_di(inst->src1->size);
 				break;
 			
 			case 1:
-				identifier = 6;
+				inst->dest = Register::_si(inst->src1->size);
 				break;
 				
 			case 2:
-				identifier = 3;
+				inst->dest = Register::_dx(inst->src1->size);
 				break;
 			
 			case 3:
-				identifier = 2;
+				inst->dest = Register::_cx(inst->src1->size);
 				break;
 			
 			case 4:
-				identifier = 8;
+				inst->dest = Register::r8_(inst->src1->size);
 				break;
 			
 			case 5:
-				identifier = 9;
+				inst->dest = Register::r9_(inst->src1->size);
 				break;
 			
 			default:
 				assert(false);
 		}
 		
-		if (reg->type == RegisterTypeVirtual)
-		{
-			// if the register is still virtual, we can set it to a physical one
-			reg->type = RegisterTypePhysical;
-			reg->identifier = identifier;
-		}
-		else
-		{
-			// if the register is already physical, we have to insert a move instruction
-			// TODO: this is dependend from the register allocator!
-			// TODO: we insert a move without checking if the dest-register is currently used for any other variable
-			auto r = make_shared<Register>();
-			r->size = reg->size;
-			r->type = RegisterTypePhysical;
-			r->identifier = identifier;
-			
-			auto m = make_shared<mov>();
-			m->src1 = reg;
-			m->dest = r;
-			getLabeledBlockForIrNode(node)->instructions.push_back(m);
-		}
+    getLabeledBlockForIrNode(node)->instructions.push_back(inst);
 	}
 	
-	// iterate over the remaining parameters for the stack
+	// iterate over the remaining parameters for the stack (reversed order)
 	for (int i = paramsNum - 1; i > 5 && i < paramsNum; i++)
 	{
 		ir_node *a = get_Call_param(node, i);
@@ -350,9 +341,31 @@ void GraphAssembler::buildCall(ir_node *node) {
 		getLabeledBlockForIrNode(node)->instructions.push_back(m);
 	}
 	
-	// align base pointer to 2^8
+	// save old stack pointer
+	getLabeledBlockForIrNode(node)->instructions.push_back(make_shared<StaticInstruction>("pushq %rsp"));
+	getLabeledBlockForIrNode(node)->instructions.push_back(make_shared<StaticInstruction>("pushq (%rsp)"));
 	
-	//getLabeledBlockForIrNode(node)->instructions.push_back(make_shared<popq_rbp>());
+	// align base pointer to 2^8
+	getLabeledBlockForIrNode(node)->instructions.push_back(make_shared<StaticInstruction>("andq $-0x10, %rsp"));
+	
+	// call the function
+	const char* ldname = get_entity_ld_name(e);
+	auto c = make_shared<call>();
+	c->label = ldname;
+	getLabeledBlockForIrNode(node)->instructions.push_back(c);
+	
+	// restore old stack pointer
+	getLabeledBlockForIrNode(node)->instructions.push_back(make_shared<StaticInstruction>("movq 8(%rsp), %rsp"));
+	
+	// if non-void function: add return value to registers map 
+	// TODO: is is correct to check for void-Functions like this?
+	ir_type* t = get_entity_type(e);
+	if (t != NULL)
+	{
+		ir_mode* m = get_type_mode(t);
+		auto r = Register::_ax(Register::registerSizeFromIRMode(m));
+		registers.emplace(get_irn_node_nr(node), r);
+	}
 }
 
 void GraphAssembler::buildSub(ir_node *node) {
@@ -580,59 +593,49 @@ void irgNodeWalker(ir_node *node, void *env)
   
   if (is_Block(node)) {
     _this->buildBlock(node);
-  }
-  
-  if (is_Const(node)) {
+  }  
+  else if (is_Const(node)) {
     _this->buildConst(node);
   }
-      
-  if (is_Cond(node)) {
+  else if (is_Cond(node)) {
     _this->buildCond(node);
   }
-  
-  if (is_Jmp(node)) {
+  else if (is_Jmp(node)) {
     _this->buildJmp(node);
   }
-  
-  if (is_Phi(node)) {
+  else if (is_Phi(node)) {
     _this->collectPhi(node);
   }
-  
-  if (is_Proj(node)) {
+  else if (is_Proj(node)) {
     _this->buildProj(node);
-  }
-    
-  if (is_Add(node)) {
+  }    
+  else if (is_Add(node)) {
     _this->buildAdd(node);
-  }
-    
-  if (is_Return(node)) {
+  }    
+  else if (is_Return(node)) {
     _this->buildReturn(node);
   }
-
-  if (is_Call(node)) {
+	else if (is_Call(node)) {
     _this->buildCall(node);
   }
-    
-  if (is_Sub(node)) {
+  else if (is_Sub(node)) {
     _this->buildSub(node);
   }
-  
-  if (is_Mul(node)) {
+  else if (is_Mul(node)) {
     _this->buildMul(node);
   }
- 
-  if (is_Div(node)) {
+  else if (is_Div(node)) {
     _this->buildDiv(node);
   }
-
-  if (is_Mod(node)) {
+  else if (is_Mod(node)) {
     _this->buildMod(node);
-  } 
- 
-  if (is_Minus(node)) {
-    _this->buildMinus(node);
   }  
+  else if (is_Minus(node)) {
+    _this->buildMinus(node);
+  }
+	else {
+		// not every node type needs a buildNode function!
+	}
   
 }
 
