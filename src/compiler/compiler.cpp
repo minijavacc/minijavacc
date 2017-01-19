@@ -7,6 +7,7 @@
 #include "prettyprinter.h"
 #include "creator.h"
 #include "backend.h"
+#include "optimizer.h"
 
 #include <iostream>
 #include <istream>
@@ -154,6 +155,10 @@ int Compiler::creategraph(std::ifstream &file, std::string filename)
     
     Creator creator(checker);
     creator.run();
+    
+    Optimizer optimizer(creator);
+    optimizer.run();
+    
     creator.dumpGraphs();
     std::cout << "dumped graph files *.vcg\n";
     
@@ -198,6 +203,10 @@ int Compiler::compilefirm(std::ifstream &file, std::string filename)
     
     Creator creator(checker);
     creator.run();
+    
+    Optimizer optimizer(creator);
+    optimizer.run();
+    
     creator.createBinary(filename);
     
     return 0;
@@ -241,6 +250,9 @@ int Compiler::compile(std::ifstream &file, std::string filename)
     
     Creator creator(checker);
     creator.run();
+    
+    Optimizer optimizer(creator);
+    optimizer.run();
     
     Backend backend(creator);
     backend.run(filename);

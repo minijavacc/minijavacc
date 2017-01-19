@@ -13,7 +13,11 @@
 
 namespace cmpl {
   
-  class ConstantPropagation : public Dispatcher, public std::enable_shared_from_this<ConstantPropagation> {
+  class ConstantPropagation : public std::enable_shared_from_this<ConstantPropagation> {
+  public:
+    ConstantPropagation(ir_graph* irg) : irg(irg) {};
+    ir_graph* irg;
+    void run();
   };
   
 }

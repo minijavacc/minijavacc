@@ -831,7 +831,7 @@ void IRBuilder::dispatch(std::shared_ptr<MainMethod> n) {
   add_immBlock_pred(end, ret);
   mature_immBlock(get_r_cur_block(g));
   
-  irg_finalize_cons(g);
+//  irg_finalize_cons(g);
 };
 
 void IRBuilder::dispatch(std::shared_ptr<Field> n) {};
@@ -859,7 +859,7 @@ void IRBuilder::dispatch(std::shared_ptr<Method> n) {
     mature_immBlock(get_r_cur_block(g));
   }
   
-  irg_finalize_cons(g);
+//  irg_finalize_cons(g);
 };
 
 void IRBuilder::dispatch(std::shared_ptr<Parameter> n) { };
