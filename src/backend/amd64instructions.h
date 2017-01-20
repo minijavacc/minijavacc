@@ -25,7 +25,6 @@ using namespace std;
 namespace cmpl
 {
   static int lastUsedRegisterIdentifier = 1000;
-  static unsigned nallocated = 0;
   
   enum RegisterSize {
     RegisterSize64,
@@ -64,7 +63,6 @@ namespace cmpl
     
     Register(RegisterSize s) : size(s), type(RegisterTypeVirtual) {
       identifier = lastUsedRegisterIdentifier++;
-      nallocated++;
     };
     
     Register(ir_mode *mode) : Register(registerSizeFromIRMode(mode)) {};
@@ -156,10 +154,6 @@ namespace cmpl
     static RegisterSize registerSizeFromIRMode(ir_mode *mode) {
       if (mode_is_int(mode)) return RegisterSize32;
       return RegisterSize64;
-    }
-    
-    static unsigned numberOfDynamicRegisters() {
-      return nallocated;
     }
     
     // TODO: make singleton
@@ -534,9 +528,18 @@ namespace cmpl
   // Special case, may be restructured later
   class subq_rsp : public Instruction {
   public:
-    unsigned nslots;
+    unsigned bytes;
     std::string generate() override {
-      return "subq " + std::to_string(nslots * 4) + ", %rsp";
+      return "subq $" + std::to_string(bytes) + ", %rsp";
+    }
+  };
+  
+  // Special case, may be restructured later
+  class addq_rsp : public Instruction {
+  public:
+    unsigned bytes;
+    std::string generate() override {
+      return "addq $" + std::to_string(bytes) + ", %rsp";
     }
   };
   
@@ -598,6 +601,8 @@ namespace cmpl
   class call : public Instruction {
   public:
     Label label;
+    shared_ptr<Register> dest; // only for register allocator (will not be printed in assembler)
+    
     std::string generate() override {
       return "call " + label;
     }

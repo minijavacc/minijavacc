@@ -88,7 +88,7 @@ void GraphAssembler::insertProlog() {
   m->dest = Register::rbp();
   
   auto s = make_shared<subq_rsp>();
-  s->nslots = (unsigned) Register::numberOfDynamicRegisters();
+  s->bytes = (unsigned) topOfStack;
   
   Label fl = labels.front();
   auto bl = blocks.at(fl);
@@ -222,26 +222,73 @@ void GraphAssembler::buildJmp(ir_node *node) {
 
 void GraphAssembler::buildProj(ir_node *node) {
   ir_node *pred = get_Proj_pred(node);
-  if (is_Proj(pred)) {
-    ir_node *ppred = get_Proj_pred(pred);
-    if (is_Start(ppred)) {
-      // Is an argument
+  
+  // check if Proj gets an argument
+  if (is_Start(pred)) {
+    
+    // get arg index
+    unsigned int i = get_Proj_num(node);
+    auto size = Register::registerSizeFromIRMode(get_irn_mode(node));
+    
+    // if one of the first 6 arguments, move it from the register
+    if (i < 6)
+    {
+      // move parameter to physical register
+      auto inst = make_shared<mov>();
+      inst->dest = getRegister(node);
+      
+      switch (i)
+      {
+        case 0:
+          inst->src1 = Register::_di(size);
+          break;
+        
+        case 1:
+          inst->src1 = Register::_si(size);
+          break;
+          
+        case 2:
+          inst->src1 = Register::_dx(size);
+          break;
+        
+        case 3:
+          inst->src1 = Register::_cx(size);
+          break;
+        
+        case 4:
+          inst->src1 = Register::r8_(size);
+          break;
+        
+        case 5:
+          inst->src1 = Register::r9_(size);
+          break;
+        
+        default:
+          assert(false);
+      }
+      
+      getLabeledBlockForIrNode(node)->instructions.push_back(inst);
+    }
+    // if argument > 5 move from stack
+    else
+    {
       auto m = make_shared<mov_from_stack>();
-      m->offset = get_Proj_num(node);
-      auto oreg = getRegister(node);
-      m->dest = oreg;
+      
+      m->offset = i * 8;
+      
+      m->dest = getRegister(node);
       getLabeledBlockForIrNode(node)->instructions.push_back(m);
-			
-			return;
     }
   }
-	
-	// else: if predecessor maps to a register, map to the same one
-	// hacky, but should work
-	if (registers.count(get_irn_node_nr(pred)) > 0)
-	{
-		registers.emplace(get_irn_node_nr(node), registers[get_irn_node_nr(pred)]);	
-	}
+  else
+  {
+    // else: if predecessor maps to a register, map to the same one
+    // hacky, but should work
+    if (registers.count(get_irn_node_nr(pred)) > 0)
+    {
+      registers.emplace(get_irn_node_nr(node), registers[get_irn_node_nr(pred)]);	
+    }
+  }
 }
 
 void GraphAssembler::buildAdd(ir_node *node) {
@@ -279,6 +326,7 @@ void GraphAssembler::buildReturn(ir_node *node) {
 
 void GraphAssembler::buildCall(ir_node *node) {
 	ir_entity *e = get_Call_callee(node);
+  ir_type* t = get_entity_type(e);
   
 	// use standardized x86_64 calling convention: 
 	// http://eli.thegreenplace.net/2011/09/06/stack-frame-layout-on-x86-64
@@ -299,8 +347,8 @@ void GraphAssembler::buildCall(ir_node *node) {
     inst->src1 = reg;
 		
 		switch (i)
+    {
 			case 0:
-		{
 				inst->dest = Register::_di(inst->src1->size);
 				break;
 			
@@ -330,20 +378,30 @@ void GraphAssembler::buildCall(ir_node *node) {
 		
     getLabeledBlockForIrNode(node)->instructions.push_back(inst);
 	}
-	
-	// iterate over the remaining parameters for the stack (reversed order)
-	for (int i = paramsNum - 1; i > 5 && i < paramsNum; i++)
-	{
-		ir_node *a = get_Call_param(node, i);
-		
-		assert(registers.count(get_irn_node_nr(a)) > 0);
-		shared_ptr<Register> reg = registers[get_irn_node_nr(a)];
-		
-		// create mov instruction to move value to stack
-		auto m = make_shared<push>();
-		m->src1 = reg;
-		getLabeledBlockForIrNode(node)->instructions.push_back(m);
-	}
+  
+  // do exist more than 6 parameters?
+  if (paramsNum > 5)
+  {
+    // change stack pointer
+    auto s = make_shared<subq_rsp>();
+    s->bytes = (unsigned) 8 * (paramsNum - 6);
+    getLabeledBlockForIrNode(node)->instructions.push_back(s);
+
+    // iterate over the remaining parameters for the stack (reversed order)
+    for (int i = paramsNum - 1; i > 5 && i < paramsNum; i--)
+    {
+      ir_node *a = get_Call_param(node, i);
+      
+      assert(registers.count(get_irn_node_nr(a)) > 0);
+      shared_ptr<Register> reg = registers[get_irn_node_nr(a)];
+      
+      // create mov instruction to move value to stack
+      auto m = make_shared<mov_to_stack>();
+      m->src = reg;
+      m->offset = (i - 6) * 8;
+      getLabeledBlockForIrNode(node)->instructions.push_back(m);
+    }
+  }
 	
 	// save old stack pointer
 	getLabeledBlockForIrNode(node)->instructions.push_back(make_shared<StaticInstruction>("pushq %rsp"));
@@ -356,19 +414,32 @@ void GraphAssembler::buildCall(ir_node *node) {
 	const char* ldname = get_entity_ld_name(e);
 	auto c = make_shared<call>();
 	c->label = ldname;
+  
+  // do exist more than 6 parameters?
+  if (paramsNum > 5)
+  {
+    // change stack pointer
+    auto s = make_shared<addq_rsp>();
+    s->bytes = (unsigned) 8 * (paramsNum - 6);
+    getLabeledBlockForIrNode(node)->instructions.push_back(s);
+  }
+  
+  // if non-void function: allocate virtual register
+  if (get_method_n_ress(t) > 0)
+  {
+    c->dest = getRegister(node);
+  }
+  
 	getLabeledBlockForIrNode(node)->instructions.push_back(c);
 	
 	// restore old stack pointer
 	getLabeledBlockForIrNode(node)->instructions.push_back(make_shared<StaticInstruction>("movq 8(%rsp), %rsp"));
 	
-	// if non-void function: add return value to registers map 
-	// TODO: is is correct to check for void-Functions like this?
-	ir_type* t = get_entity_type(e);
+	// if non-void function: move return value to virtual register
 	if (get_method_n_ress(t) > 0)
 	{
 		ir_mode* m = get_type_mode(t);
-		auto r = Register::_ax(Register::registerSizeFromIRMode(m));
-		registers.emplace(get_irn_node_nr(node), r);
+		registers.emplace(get_irn_node_nr(node), c->dest);
 	}
 }
 
@@ -559,6 +630,21 @@ void GraphAssembler::allocI1to0(shared_ptr<Instruction> instr, I1to0 *i, vector<
 
   instructions_.push_back(m1);
   instructions_.push_back(instr);
+}
+
+void GraphAssembler::allocCall(shared_ptr<Instruction> instr, call *i, vector<shared_ptr<Instruction>> &instructions_)
+{ 
+  // if function returns void, i->dest is NULL
+  
+  if (i->dest != nullptr)
+  {
+    // move result to stack
+    auto ax = Register::_ax(i->dest->size);
+    auto m1 = getMovToStackOrPhysicalRegister(ax, i->dest);
+    
+    instructions_.push_back(instr);
+    instructions_.push_back(m1);
+  }
 }
 
 void GraphAssembler::allocMoveFromStack(shared_ptr<Instruction> instr, mov_from_stack *i, vector<shared_ptr<Instruction>> &instructions_)
@@ -770,6 +856,8 @@ void GraphAssembler::irgRegisterAllocation()
         allocI1to1(instruction, i, instructions_);
       } else if (auto i = dynamic_cast<I1to0*>(instruction.get())) {
         allocI1to0(instruction, i, instructions_);
+      } else if (auto i = dynamic_cast<call*>(instruction.get())) {
+        allocCall(instruction, i, instructions_);
       } else if (auto i = dynamic_cast<mov_from_stack*>(instruction.get())) {
         allocMoveFromStack(instruction, i, instructions_);
       } else if (auto i = dynamic_cast<mov_from_imm*>(instruction.get())) {

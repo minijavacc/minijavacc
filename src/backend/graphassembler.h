@@ -91,7 +91,7 @@ namespace cmpl
     void allocI1to0(shared_ptr<Instruction> instr, I1to0 *i, vector<shared_ptr<Instruction>> &instructions_);
     void allocMoveFromStack(shared_ptr<Instruction> instr, mov_from_stack *i, vector<shared_ptr<Instruction>> &instructions_);
     void allocMoveFromImm(shared_ptr<Instruction> instr, mov_from_imm *i, vector<shared_ptr<Instruction>> &instructions_);
-    void allocCall(shared_ptr<Instruction> instr, mov_from_imm *i, vector<shared_ptr<Instruction>> &instructions_);
+    void allocCall(shared_ptr<Instruction> instr, call *i, vector<shared_ptr<Instruction>> &instructions_);
   };
   
   class GraphAssemblerError : public std::runtime_error
