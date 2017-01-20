@@ -17,7 +17,7 @@ using namespace std;
 
 struct Env {
   queue<ir_node *> *q;
-  map<long, ir_tarval *> *m;
+  map<ir_node *, ir_tarval *> *m;
 };
 
 
@@ -46,23 +46,23 @@ ir_tarval *supremum(ir_tarval *tv1, ir_tarval *tv2) {
 }
 
 
-bool transferConst(ir_node *n, map<long, ir_tarval *> *m) {
-  auto tvo  = m->at(get_irn_node_nr(n));
+bool transferConst(ir_node *n, map<ir_node *, ir_tarval *> *m) {
+  auto tvo  = m->at(n);
   auto tvo_ = get_Const_tarval(n);
   
-  (*m)[get_irn_node_nr(n)] = tvo_;
+  (*m)[n] = tvo_;
   return tvo != tvo_;
 }
 
 
-bool transferAdd(ir_node *n, map<long, ir_tarval *> *m) {
+bool transferAdd(ir_node *n, map<ir_node *, ir_tarval *> *m) {
   ir_node *l = get_Add_left(n);
   ir_node *r = get_Add_right(n);
   
-  ir_tarval *tvl = m->at(get_irn_node_nr(l));
-  ir_tarval *tvr = m->at(get_irn_node_nr(r));
+  ir_tarval *tvl = m->at(l);
+  ir_tarval *tvr = m->at(r);
   
-  ir_tarval *tvo = m->at(get_irn_node_nr(n));
+  ir_tarval *tvo = m->at(n);
   ir_tarval *tvo_;
   
   if (tvl == tarval_unknown || tvr == tarval_unknown) {
@@ -73,19 +73,19 @@ bool transferAdd(ir_node *n, map<long, ir_tarval *> *m) {
     tvo_ = tarval_add(tvl, tvr);
   }
   
-  (*m)[get_irn_node_nr(n)] = tvo_;
+  (*m)[n] = tvo_;
   return tvo != tvo_;
 }
 
 
-bool transferSub(ir_node *n, map<long, ir_tarval *> *m) {
+bool transferSub(ir_node *n, map<ir_node *, ir_tarval *> *m) {
   ir_node *l = get_Sub_left(n);
   ir_node *r = get_Sub_right(n);
   
-  ir_tarval *tvl = m->at(get_irn_node_nr(l));
-  ir_tarval *tvr = m->at(get_irn_node_nr(r));
+  ir_tarval *tvl = m->at(l);
+  ir_tarval *tvr = m->at(r);
   
-  ir_tarval *tvo = m->at(get_irn_node_nr(n));
+  ir_tarval *tvo = m->at(n);
   ir_tarval *tvo_;
   
   if (tvl == tarval_unknown || tvr == tarval_unknown) {
@@ -96,19 +96,19 @@ bool transferSub(ir_node *n, map<long, ir_tarval *> *m) {
     tvo_ = tarval_sub(tvl, tvr);
   }
   
-  (*m)[get_irn_node_nr(n)] = tvo_;
+  (*m)[n] = tvo_;
   return tvo != tvo_;
 }
 
 
-bool transferMul(ir_node *n, map<long, ir_tarval *> *m) {
+bool transferMul(ir_node *n, map<ir_node *, ir_tarval *> *m) {
   ir_node *l = get_Mul_left(n);
   ir_node *r = get_Mul_right(n);
   
-  ir_tarval *tvl = m->at(get_irn_node_nr(l));
-  ir_tarval *tvr = m->at(get_irn_node_nr(r));
+  ir_tarval *tvl = m->at(l);
+  ir_tarval *tvr = m->at(r);
   
-  ir_tarval *tvo = m->at(get_irn_node_nr(n));
+  ir_tarval *tvo = m->at(n);
   ir_tarval *tvo_;
   
   if (tvl == tarval_unknown || tvr == tarval_unknown) {
@@ -119,19 +119,19 @@ bool transferMul(ir_node *n, map<long, ir_tarval *> *m) {
     tvo_ = tarval_mul(tvl, tvr);
   }
   
-  (*m)[get_irn_node_nr(n)] = tvo_;
+  (*m)[n] = tvo_;
   return tvo != tvo_;
 }
 
 
-bool transferDiv(ir_node *n, map<long, ir_tarval *> *m) {
+bool transferDiv(ir_node *n, map<ir_node *, ir_tarval *> *m) {
   ir_node *l = get_Div_left(n);
   ir_node *r = get_Div_right(n);
   
-  ir_tarval *tvl = m->at(get_irn_node_nr(l));
-  ir_tarval *tvr = m->at(get_irn_node_nr(r));
+  ir_tarval *tvl = m->at(l);
+  ir_tarval *tvr = m->at(r);
   
-  ir_tarval *tvo = m->at(get_irn_node_nr(n));
+  ir_tarval *tvo = m->at(n);
   ir_tarval *tvo_;
   
   if (tvl == tarval_unknown || tvr == tarval_unknown) {
@@ -142,19 +142,19 @@ bool transferDiv(ir_node *n, map<long, ir_tarval *> *m) {
     tvo_ = tarval_div(tvl, tvr);
   }
   
-  (*m)[get_irn_node_nr(n)] = tvo_;
+  (*m)[n] = tvo_;
   return tvo != tvo_;
 }
 
 
-bool transferMod(ir_node *n, map<long, ir_tarval *> *m) {
+bool transferMod(ir_node *n, map<ir_node *, ir_tarval *> *m) {
   ir_node *l = get_Mod_left(n);
   ir_node *r = get_Mod_right(n);
   
-  ir_tarval *tvl = m->at(get_irn_node_nr(l));
-  ir_tarval *tvr = m->at(get_irn_node_nr(r));
+  ir_tarval *tvl = m->at(l);
+  ir_tarval *tvr = m->at(r);
   
-  ir_tarval *tvo = m->at(get_irn_node_nr(n));
+  ir_tarval *tvo = m->at(n);
   ir_tarval *tvo_;
   
   if (tvl == tarval_unknown || tvr == tarval_unknown) {
@@ -165,27 +165,27 @@ bool transferMod(ir_node *n, map<long, ir_tarval *> *m) {
     tvo_ = tarval_mod(tvl, tvr);
   }
   
-  (*m)[get_irn_node_nr(n)] = tvo_;
+  (*m)[n] = tvo_;
   return tvo != tvo_;
 }
 
 
-bool transferPhi(ir_node *n, map<long, ir_tarval *> *m) {
-  ir_tarval *tvo  = m->at(get_irn_node_nr(n));
+bool transferPhi(ir_node *n, map<ir_node *, ir_tarval *> *m) {
+  ir_tarval *tvo  = m->at(n);
   ir_tarval *tvo_ = tarval_unknown;
   
   for (int i = 0; i < get_Phi_n_preds(n); i++) {
     ir_node *pred = get_Phi_pred(n, i);
-    ir_tarval *tv = m->at(get_irn_node_nr(pred));
+    ir_tarval *tv = m->at(pred);
     tvo_ = supremum(tvo_, tv);
   }
   
-  (*m)[get_irn_node_nr(n)] = tvo_;
+  (*m)[n] = tvo_;
   return tvo != tvo_;
 }
 
 
-bool transfer(ir_node *n, map<long, ir_tarval *> *m) {
+bool transfer(ir_node *n, map<ir_node *, ir_tarval *> *m) {
   if (is_Const(n)) {
     return transferConst(n, m);
   }
@@ -223,27 +223,10 @@ void irgNodeCollector(ir_node *node, void *env)
 {
   Env *e = (Env *) env;
   
-  (*e->m)[get_irn_node_nr(node)] = tarval_unknown;
+  (*e->m)[node] = tarval_unknown;
   
   if (is_Const(node)) {
     e->q->push(node);
-  }
-}
-
-
-// for use with irg_walk_topological()
-void irgNodeTransformer(ir_node *node, void *env)
-{
-  Env *e = (Env *) env;
-  
-  if (e->m->count(get_irn_node_nr(node)) < 1) {
-    return;
-  }
-  
-  ir_tarval *tv = e->m->at(get_irn_node_nr(node));
-  if (tarval_is_constant(tv)) {
-    ir_node *node_ = new_Const(tv);
-    exchange(node, node_);
   }
 }
 
@@ -255,7 +238,7 @@ void ConstantPropagation::run() {
   // Worklist queue and lattice map
   Env *env = new Env();
   env->q = new queue<ir_node *>();
-  env->m = new map<long, ir_tarval *>();
+  env->m = new map<ir_node *, ir_tarval *>();
   
   // activate all edges in graph
   edges_activate(irg);
@@ -278,7 +261,14 @@ void ConstantPropagation::run() {
   }
   
   // Transform graph
-  irg_walk_topological(irg, irgNodeTransformer, env);
+  for (const auto& pair : *env->m) {
+    ir_node *node = pair.first;
+    ir_tarval *tv = env->m->at(node);
+    if (tarval_is_constant(tv)) {
+      ir_node *node_ = new_Const(tv);
+      exchange(node, node_);
+    }
+  }
   
   // deactivate edges
   edges_deactivate(irg);

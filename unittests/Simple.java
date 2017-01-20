@@ -3,11 +3,12 @@ class Simple {
   }
   
   public int foo(int a) {
-    int b = 23;
-    if (a == 42) {
-      b = a;
+    int x = 1;
+    
+    while (true) {
+      x = 2 - x;
     }
     
-    return b;
+    return x;
   }
 }
