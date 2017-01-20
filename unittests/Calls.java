@@ -13,7 +13,7 @@ class Calls
   {
     voidFunction();
     
-    return a;
+    return a + b + c + d + e + f + g + h;
   }
   
   public void voidFunction()

@@ -83,9 +83,7 @@ void GraphAssembler::insertProlog() {
   auto p = make_shared<push>();
   p->src1 = Register::rbp();
   
-  auto m = make_shared<mov>();
-  m->src1 = Register::rsp();
-  m->dest = Register::rbp();
+  auto m = make_shared<StaticInstruction>("movq %rsp, %rbp");
   
   auto s = make_shared<subq_rsp>();
   s->bytes = (unsigned) topOfStack;
@@ -222,9 +220,10 @@ void GraphAssembler::buildJmp(ir_node *node) {
 
 void GraphAssembler::buildProj(ir_node *node) {
   ir_node *pred = get_Proj_pred(node);
+  ir_node *ppred;
   
   // check if Proj gets an argument
-  if (is_Start(pred)) {
+  if (is_Proj(pred) && (ppred = get_Proj_pred(pred)) && is_Start(ppred)) {
     
     // get arg index
     unsigned int i = get_Proj_num(node);
@@ -564,19 +563,19 @@ shared_ptr<Instruction> GraphAssembler::getMovToStackOrPhysicalRegister(shared_p
 void GraphAssembler::allocI2to1(shared_ptr<Instruction> instr, I2to1 *i, vector<shared_ptr<Instruction>> &instructions_)
 {
   // load arg1 to _ax
-  auto ax = Register::_ax(i->src1->size);
-  auto m1 = getMovFromStackOrPhysicalRegister(i->src1, ax);
+  auto x1 = Register::r10_(i->src1->size);
+  auto m1 = getMovFromStackOrPhysicalRegister(i->src1, x1);
 
   // load arg2 to _bx
-  auto bx = Register::_bx(i->src2->size);
-  auto m2 = getMovFromStackOrPhysicalRegister(i->src2, bx);
+  auto x2 = Register::r11_(i->src2->size);
+  auto m2 = getMovFromStackOrPhysicalRegister(i->src2, x2);
   
   // store dest
-  auto m3 = getMovToStackOrPhysicalRegister(bx, i->dest);
+  auto m3 = getMovToStackOrPhysicalRegister(x1, i->dest);
 
-  i->src1 = ax;
-  i->src2 = bx;
-  i->dest = i->src2;
+  i->src1 = x1;
+  i->src2 = x2;
+  i->dest = x2;
   
   instructions_.push_back(m1);
   instructions_.push_back(m2);
@@ -586,16 +585,16 @@ void GraphAssembler::allocI2to1(shared_ptr<Instruction> instr, I2to1 *i, vector<
 
 void GraphAssembler::allocI2to0(shared_ptr<Instruction> instr, I2to0 *i, vector<shared_ptr<Instruction>> &instructions_)
 {
-  // load arg1 to _ax
-  auto ax = Register::_ax(i->src1->size);
-  auto m1 = getMovFromStackOrPhysicalRegister(i->src1, ax);
+  // load arg1
+  auto x1 = Register::r10_(i->src1->size);
+  auto m1 = getMovFromStackOrPhysicalRegister(i->src1, x1);
   
-  // load arg2 to _bx
-  auto bx = Register::_bx(i->src2->size);
-  auto m2 = getMovFromStackOrPhysicalRegister(i->src2, bx);
+  // load arg2
+  auto x2 = Register::r11_(i->src2->size);
+  auto m2 = getMovFromStackOrPhysicalRegister(i->src2, x2);
   
-  i->src1 = ax;
-  i->src2 = bx;
+  i->src1 = x1;
+  i->src2 = x2;
   
   instructions_.push_back(m1);
   instructions_.push_back(m2);
@@ -604,37 +603,64 @@ void GraphAssembler::allocI2to0(shared_ptr<Instruction> instr, I2to0 *i, vector<
 
 void GraphAssembler::allocI1to1(shared_ptr<Instruction> instr, I1to1 *i, vector<shared_ptr<Instruction>> &instructions_)
 {
-  // load arg1 to _ax
-  auto ax = Register::_ax(i->src1->size);
-  auto m1 = getMovFromStackOrPhysicalRegister(i->src1, ax);
+  // instructions like neg, mov, ...
+  auto x1 = Register::r10_(i->src1->size);
   
-  // store dest
-  auto bx = Register::_bx(i->dest->size);
-  auto m3 = getMovToStackOrPhysicalRegister(bx, i->dest);
+  if (i->src1->type == RegisterTypeVirtual)
+  {
+    // load arg1
+    auto m1 = getMovFromStackOrPhysicalRegister(i->src1, x1);
+    i->src1 = x1;
+    instructions_.push_back(m1);
+  }
   
-  i->src1 = ax;
-  i->dest = bx;
-  
-  instructions_.push_back(m1);
   instructions_.push_back(instr);
-  instructions_.push_back(m3);
+  
+  if (i->dest->type == RegisterTypeVirtual)
+  {
+    // store dest
+    auto m2 = getMovToStackOrPhysicalRegister(x1, i->dest);
+    i->dest = x1;
+    instructions_.push_back(m2);
+  }
 }
 
 void GraphAssembler::allocI1to0(shared_ptr<Instruction> instr, I1to0 *i, vector<shared_ptr<Instruction>> &instructions_)
 { 
-  // load arg1 to _ax
-  auto ax = Register::_ax(i->src1->size);
-  auto m1 = getMovFromStackOrPhysicalRegister(i->src1, ax);
+  if (i->src1->type == RegisterTypeVirtual)
+  {
+    // load arg1
+    auto x1 = Register::r10_(i->src1->size);
+    auto m1 = getMovFromStackOrPhysicalRegister(i->src1, x1);
 
-  i->src1 = ax;
+    i->src1 = x1;
 
-  instructions_.push_back(m1);
+    instructions_.push_back(m1);
+  }
+  
   instructions_.push_back(instr);
+}
+
+void GraphAssembler::allocI0to1(shared_ptr<Instruction> instr, I0to1 *i, vector<shared_ptr<Instruction>> &instructions_)
+{ 
+  instructions_.push_back(instr);
+  
+  if (i->dest->type == RegisterTypeVirtual)
+  {
+    // store dest
+    auto x1 = Register::r10_(i->dest->size);
+    auto m1 = getMovToStackOrPhysicalRegister(i->dest, x1);
+
+    i->dest = x1;
+    instructions_.push_back(m1);
+  }
 }
 
 void GraphAssembler::allocCall(shared_ptr<Instruction> instr, call *i, vector<shared_ptr<Instruction>> &instructions_)
 { 
   // if function returns void, i->dest is NULL
+  
+  instructions_.push_back(instr);
   
   if (i->dest != nullptr)
   {
@@ -642,33 +668,44 @@ void GraphAssembler::allocCall(shared_ptr<Instruction> instr, call *i, vector<sh
     auto ax = Register::_ax(i->dest->size);
     auto m1 = getMovToStackOrPhysicalRegister(ax, i->dest);
     
-    instructions_.push_back(instr);
     instructions_.push_back(m1);
   }
 }
 
 void GraphAssembler::allocMoveFromStack(shared_ptr<Instruction> instr, mov_from_stack *i, vector<shared_ptr<Instruction>> &instructions_)
 {
-//  // save result to stack
-//  auto m = make_shared<movl_to_stack>();
-//  m->offset = getStackOffsetForRegister(i->dest);
-//  i->dest = Register::_ax(i->dest->size);
-//  m->src = i->dest;
-//
-//  instructions_.push_back(instr);
-//  instructions_.push_back(m);
+  // save result to stack
+  auto m = make_shared<mov_to_stack>();
+  m->offset = getStackOffsetForRegister(i->dest);
+  i->dest = Register::r10_(i->dest->size);
+  m->src = i->dest;
+  
+  instructions_.push_back(instr);
+  instructions_.push_back(m);
+}
+
+void GraphAssembler::allocMoveToStack(shared_ptr<Instruction> instr, mov_to_stack *i, vector<shared_ptr<Instruction>> &instructions_)
+{
+  // load from stack
+  auto m = make_shared<mov_from_stack>();
+  m->offset = getStackOffsetForRegister(i->src);
+  i->src = Register::r10_(i->src->size);
+  m->dest = i->src;
+  
+  instructions_.push_back(m);
+  instructions_.push_back(instr);
 }
 
 void GraphAssembler::allocMoveFromImm(shared_ptr<Instruction> instr, mov_from_imm *i, vector<shared_ptr<Instruction>> &instructions_)
 {
-//  // save result to stack
-//  auto m = make_shared<movl_to_stack>();
-//  m->offset = getStackOffsetForRegister(i->dest);
-//  i->dest = Register::_ax(i->dest->size);
-//  m->src = i->dest;
-//
-//  instructions_.push_back(instr);
-//  instructions_.push_back(m);
+  // save result to physical register or stack
+  auto m = make_shared<mov_to_stack>();
+  m->offset = getStackOffsetForRegister(i->dest);
+  i->dest = Register::r10_(i->dest->size);
+  m->src = i->dest;
+  
+  instructions_.push_back(instr);
+  instructions_.push_back(m);
 }
 
 
@@ -850,20 +887,34 @@ void GraphAssembler::irgRegisterAllocation()
     for (auto const& instruction : instructions) {
       if (auto i = dynamic_cast<I2to1*>(instruction.get())) {
         allocI2to1(instruction, i, instructions_);
+        
       } else if (auto i = dynamic_cast<I2to0*>(instruction.get())) {
         allocI2to0(instruction, i, instructions_);
+        
       } else if (auto i = dynamic_cast<I1to1*>(instruction.get())) {
         allocI1to1(instruction, i, instructions_);
+        
       } else if (auto i = dynamic_cast<I1to0*>(instruction.get())) {
         allocI1to0(instruction, i, instructions_);
+        
+      } else if (auto i = dynamic_cast<I0to1*>(instruction.get())) {
+        allocI0to1(instruction, i, instructions_);
+        
       } else if (auto i = dynamic_cast<call*>(instruction.get())) {
         allocCall(instruction, i, instructions_);
+        
       } else if (auto i = dynamic_cast<mov_from_stack*>(instruction.get())) {
         allocMoveFromStack(instruction, i, instructions_);
+        
+      } else if (auto i = dynamic_cast<mov_to_stack*>(instruction.get())) {
+        allocMoveToStack(instruction, i, instructions_);
+        
       } else if (auto i = dynamic_cast<mov_from_imm*>(instruction.get())) {
         allocMoveFromImm(instruction, i, instructions_);
+        
       } else {
         instructions_.push_back(instruction);
+        
       }
     }
     

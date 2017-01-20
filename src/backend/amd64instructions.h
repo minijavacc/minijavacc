@@ -228,6 +228,24 @@ namespace cmpl
       return r;
     };
     
+    // TODO: make singleton
+    static shared_ptr<Register> r10_(RegisterSize s) {
+      auto r = make_shared<Register>();
+      r->size = s;
+      r->type = RegisterTypePhysical;
+      r->identifier = ID_10;
+      return r;
+    };
+    
+    // TODO: make singleton
+    static shared_ptr<Register> r11_(RegisterSize s) {
+      auto r = make_shared<Register>();
+      r->size = s;
+      r->type = RegisterTypePhysical;
+      r->identifier = ID_11;
+      return r;
+    };
+    
     // ...
     
     // TODO: make singleton
@@ -308,7 +326,8 @@ namespace cmpl
     shared_ptr<Register> src2;
     
     std::string generate() override {
-      assert(src2->identifier == dest->identifier);
+      // TODO: removed the assert to allow output of virtual registers
+      //assert(src2->identifier == dest->identifier);
       
       string suffix;
       if (dest->size == RegisterSize64
