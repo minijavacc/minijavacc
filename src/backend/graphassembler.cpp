@@ -286,7 +286,7 @@ void GraphAssembler::buildProj(ir_node *node) {
     // hacky, but should work
     if (registers.count(get_irn_node_nr(pred)) > 0)
     {
-      registers.emplace(get_irn_node_nr(node), registers[get_irn_node_nr(pred)]);	
+      setRegister(node, registers[get_irn_node_nr(pred)]);
     }
   }
 }
@@ -439,7 +439,7 @@ void GraphAssembler::buildCall(ir_node *node) {
 	if (get_method_n_ress(t) > 0)
 	{
 		ir_mode* m = get_type_mode(t);
-		registers.emplace(get_irn_node_nr(node), c->dest);
+    setRegister(node, c->dest);
 	}
 }
 
