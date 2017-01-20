@@ -75,6 +75,7 @@ namespace cmpl
     string labelPrefix;
     
     shared_ptr<Register> getRegister(ir_node *node);
+    void setRegister(ir_node *node, shared_ptr<Register> r);
     shared_ptr<Register> getHelperRegister(ir_node *node);
     Label getLabel(ir_node *node);
     long getStackOffsetForRegister(shared_ptr<Register> r);

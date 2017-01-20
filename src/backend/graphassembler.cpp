@@ -23,6 +23,10 @@ shared_ptr<Register> GraphAssembler::getRegister(ir_node *node) {
   return r;
 }
 
+void GraphAssembler::setRegister(ir_node *node, shared_ptr<Register> r) {
+  registers.emplace(get_irn_node_nr(node), r);
+}
+
 long GraphAssembler::getStackOffsetForRegister(shared_ptr<Register> r) {
   if (registerToStackOffset.count(r) > 0) {
     return registerToStackOffset.at(r);
