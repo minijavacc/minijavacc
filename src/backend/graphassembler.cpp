@@ -360,7 +360,7 @@ void GraphAssembler::buildCall(ir_node *node) {
 	// if non-void function: add return value to registers map 
 	// TODO: is is correct to check for void-Functions like this?
 	ir_type* t = get_entity_type(e);
-	if (t != NULL)
+	if (get_method_n_ress(t) > 0)
 	{
 		ir_mode* m = get_type_mode(t);
 		auto r = Register::_ax(Register::registerSizeFromIRMode(m));
