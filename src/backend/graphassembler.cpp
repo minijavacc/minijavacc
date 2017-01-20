@@ -32,11 +32,11 @@ long GraphAssembler::getStackOffsetForRegister(shared_ptr<Register> r) {
     return registerToStackOffset.at(r);
   }
   
-  if (r->size == RegisterSize32) {
-    topOfStack -= 4;
-  } else {
+//  if (r->size == RegisterSize32) {
+//    topOfStack -= 4;
+//  } else {
     topOfStack -= 8;
-  }
+//  }
   
   registerToStackOffset.emplace(r, topOfStack);
   return topOfStack;
