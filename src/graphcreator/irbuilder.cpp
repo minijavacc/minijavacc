@@ -448,8 +448,35 @@ void CRef::doExpr() {
   
   shared_from_this()->firm_node = res;
 }
-
+/*
 void StaticLibraryCallExpression::doExpr()
+{
+    //TODO
+  auto n = shared_from_this();
+  
+  ir_entity *meth = n->getFirmEntity();
+  
+  // println() only has one argument (no this-pointer!)
+  ir_node *addr = new_Address(meth);
+  ir_node *args[1];
+  
+  n->expression->doExpr();
+  assert(n->expression->firm_node);
+  
+  args[0] = n->expression->firm_node;
+  
+  ir_node *call = new_Call(get_store(), addr, 1, args, n->getFirmType());
+  ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
+  ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
+  //ir_node *res = new_Proj(tres, Types::getVoidNode()->type->getFirmMode(), 0);
+  
+  set_store(mem);
+  
+  // TODO: returntype is void... what do do?
+  n->firm_node = call;
+}*/
+
+void SLCPrintlnExpression::doExpr()
 {
   auto n = shared_from_this();
   
@@ -468,6 +495,74 @@ void StaticLibraryCallExpression::doExpr()
   ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
   ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
   //ir_node *res = new_Proj(tres, Types::getVoidNode()->type->getFirmMode(), 0);
+  
+  set_store(mem);
+  
+  // TODO: returntype is void... what do do?
+  n->firm_node = call;
+}
+
+void SLCWriteExpression::doExpr()
+{
+  auto n = shared_from_this();
+  
+  ir_entity *meth = n->getFirmEntity();
+  
+  // write() only has one argument (no this-pointer!)
+  ir_node *addr = new_Address(meth);
+  ir_node *args[1];
+  
+  n->expression->doExpr();
+  assert(n->expression->firm_node);
+  
+  args[0] = n->expression->firm_node;
+  
+  ir_node *call = new_Call(get_store(), addr, 1, args, n->getFirmType());
+  ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
+  ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
+  //ir_node *res = new_Proj(tres, Types::getVoidNode()->type->getFirmMode(), 0);
+  
+  set_store(mem);
+  
+  // TODO: returntype is void... what do do?
+  n->firm_node = call;
+}
+
+void SLCFlushExpression::doExpr()
+{
+  auto n = shared_from_this();
+  
+  ir_entity *meth = n->getFirmEntity();
+  
+  // flush() has no arguments (no this-pointer!)
+  //TODO
+  ir_node *addr = new_Address(meth);
+  
+  ir_node *call = new_Call(get_store(), addr, 0, NULL, n->getFirmType());
+  ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
+  ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
+  //ir_node *res = new_Proj(tres, Types::getVoidNode()->type->getFirmMode(), 0);
+  
+  set_store(mem);
+  
+  // TODO: returntype is void... what do do?
+  n->firm_node = call;
+}
+
+void SLCReadExpression::doExpr()
+{
+  //TODO
+  auto n = shared_from_this();
+  
+  ir_entity *meth = n->getFirmEntity();
+  
+  // println() only has one argument (no this-pointer!)
+  ir_node *addr = new_Address(meth);
+  
+  ir_node *call = new_Call(get_store(), addr, 0, NULL, n->getFirmType());
+  ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
+  ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
+  ir_node *res = new_Proj(tres, Types::getIntNode()->type->getFirmMode(), 0);
   
   set_store(mem);
   

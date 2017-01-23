@@ -177,7 +177,19 @@ void NewArray::accept(std::shared_ptr<Dispatcher> d) {
   d->dispatch(shared_from_this());
 }
 
-void StaticLibraryCallExpression::accept(std::shared_ptr<Dispatcher> d) {
+void SLCPrintlnExpression::accept(std::shared_ptr<Dispatcher> d) {
+  d->dispatch(shared_from_this());
+}
+
+void SLCWriteExpression::accept(std::shared_ptr<Dispatcher> d) {
+  d->dispatch(shared_from_this());
+}
+
+void SLCFlushExpression::accept(std::shared_ptr<Dispatcher> d) {
+  d->dispatch(shared_from_this());
+}
+
+void SLCReadExpression::accept(std::shared_ptr<Dispatcher> d) {
   d->dispatch(shared_from_this());
 }
 
@@ -413,34 +425,56 @@ ir_type * NullType::getFirmType() {
 }
 
 
-
-
-
-
-
-
-
-
-
-static ir_type *print_type = NULL;
-
-ir_type *StaticLibraryCallExpression::getFirmType() {
-  if (!print_type) {
-    print_type = new_type_method(1, 0, false, cc_cdecl_set, mtp_no_property);
-    set_method_param_type(print_type, 0, Types::getIntNode()->getFirmType());
+static ir_type *void_takes_int_type = NULL;
+inline ir_type *assureVoidTakesInt() {
+  if(!void_takes_int_type) {
+    void_takes_int_type = new_type_method(1, 0, false, cc_cdecl_set, mtp_no_property);
+    set_method_param_type(void_takes_int_type, 0, Types::getIntNode()->getFirmType());
   }
-  
-  return print_type;
+  return void_takes_int_type;
 }
 
-static ir_entity *print_entity = NULL;
+ir_type *SLCPrintlnExpression::getFirmType() {
+  return assureVoidTakesInt();
+}
+ir_type *SLCWriteExpression::getFirmType() {
+  return assureVoidTakesInt();
+}
 
-ir_entity *StaticLibraryCallExpression::getFirmEntity() {
-  if (!print_entity) {
-    print_entity = new_global_entity(get_glob_type(), new_id_from_str((std::string(AMD64LdNamePrefix) + std::string("println")).c_str()),
-                                    getFirmType(), ir_visibility_external,
-                                    IR_LINKAGE_DEFAULT);
+
+static ir_type *void_type = new_type_method(0, 0, false, cc_cdecl_set, mtp_no_property);
+ir_type *SLCFlushExpression::getFirmType() {
+  return void_type;
+}
+
+static ir_type *int_type = NULL;
+ir_type *SLCReadExpression::getFirmType() {
+  if(!int_type) {
+    int_type = new_type_method(0, 1, false, cc_cdecl_set, mtp_no_property);
+    set_method_res_type(int_type, 0, Types::getIntNode()->getFirmType());
   }
   
-  return print_entity;
+  return int_type;
+}
+
+static ir_entity *print_entity_print = new_global_entity(get_glob_type(), new_id_from_str((std::string(AMD64LdNamePrefix) + std::string("println")).c_str()),
+                                                         getFirmType(), ir_visibility_external, IR_LINKAGE_DEFAULT);
+static ir_entity *print_entity_write = new_global_entity(get_glob_type(), new_id_from_str((std::string(AMD64LdNamePrefix) + std::string("write")).c_str()),
+                                                         getFirmType(), ir_visibility_external, IR_LINKAGE_DEFAULT);
+static ir_entity *print_entity_flush = new_global_entity(get_glob_type(), new_id_from_str((std::string(AMD64LdNamePrefix) + std::string("flush")).c_str()),
+                                                         getFirmType(), ir_visibility_external, IR_LINKAGE_DEFAULT);
+static ir_entity *print_entity_read  = new_global_entity(get_glob_type(), new_id_from_str((std::string(AMD64LdNamePrefix) + std::string("read")).c_str()),
+                                                         getFirmType(), ir_visibility_external, IR_LINKAGE_DEFAULT);
+
+ir_entity *SLCPrintlnExpression::getFirmEntity() {
+  return print_entity_print;
+}
+ir_entity *SLCWriteExpression::getFirmEntity() {
+  return print_entity_write;
+}
+ir_entity *SLCFlushExpression::getFirmEntity() {
+  return print_entity_flush;
+}
+ir_entity *SLCReadExpression::getFirmEntity() {
+  return print_entity_read;
 }

@@ -440,10 +440,21 @@ void PrettyPrinter::dispatch(std::shared_ptr<NewArray> n) {
   }
 };
 
-void PrettyPrinter::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) {
+void PrettyPrinter::dispatch(std::shared_ptr<SLCPrintlnExpression> n) {
   print("System.out.println(");
   n->expression->accept(shared_from_this());
   print(")");
+};
+void PrettyPrinter::dispatch(std::shared_ptr<SLCWriteExpression> n) {
+  print("System.out.write(");
+  n->expression->accept(shared_from_this());
+  print(")");
+};
+void PrettyPrinter::dispatch(std::shared_ptr<SLCFlushExpression> n) {
+  print("System.out.flush()");
+};
+void PrettyPrinter::dispatch(std::shared_ptr<SLCReadExpression> n) {
+  print("System.in.read()");
 };
 
 void PrettyPrinter::dispatch(std::shared_ptr<Equals> n)             { print("=="); };

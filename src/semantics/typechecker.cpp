@@ -523,7 +523,7 @@ void TypeChecker::dispatch(std::shared_ptr<NewArray> n) {
   }
 };
 
-void TypeChecker::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) {
+void TypeChecker::dispatch(std::shared_ptr<SLCPrintlnExpression> n) {
   n->expression->accept(shared_from_this());
   
   if (!n->expression->type->equals(Types::getIntNode()))
@@ -532,6 +532,25 @@ void TypeChecker::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) {
   }
   
   n->type = Types::getVoidNode();
+};
+
+void TypeChecker::dispatch(std::shared_ptr<SLCWriteExpression> n) {
+  n->expression->accept(shared_from_this());
+  
+  if (!n->expression->type->equals(Types::getIntNode()))
+  {
+    error("library call parameter must be integer", n);
+  }
+  
+  n->type = Types::getVoidNode();
+};
+
+void TypeChecker::dispatch(std::shared_ptr<SLCFlushExpression> n) {
+  n->type = Types::getVoidNode();
+};
+
+void TypeChecker::dispatch(std::shared_ptr<SLCReadExpression> n) {
+  n->type = Types::getIntNode();
 };
 
 

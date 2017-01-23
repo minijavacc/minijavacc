@@ -67,8 +67,7 @@ void AstModifier::dispatch(std::shared_ptr<Block> n) {
 };
 
 void AstModifier::dispatch(std::shared_ptr<CRef> n) {
-  if (StringTable::lookupIdentifier(n->ID) == "System")
-  {
+  if (StringTable::lookupIdentifier(n->ID) == "System") {
     assert(currentClassDeclaration != nullptr);
     assert(mainMethod || (currentMethod != nullptr));
     
@@ -82,16 +81,11 @@ void AstModifier::dispatch(std::shared_ptr<CRef> n) {
     //    Aufruf der System.out.println-Funktion in der Standardbibliothek."
     if (currentClassDeclaration->fields.count(n->ID) == 0)
     {
-      if (mainMethod)
-      {
-        if (mainMethod->parameterID == n->ID)
-        {
-          identifierSystemExists = true;  
-        }
-        else
-        {
-          for (const std::shared_ptr<Node> &l : mainMethod->localVariables)
-          {
+      if (mainMethod) {
+        if (mainMethod->parameterID == n->ID) { // check args parameter
+          identifierSystemExists = true;
+        } else {
+          for (const std::shared_ptr<Node> &l : mainMethod->localVariables) {
             if ((lvc = dynamic_cast<LocalVariableDeclaration*>(l.get())) && 
               (StringTable::lookupIdentifier(lvc->ID) == "System"))
             {
@@ -106,9 +100,7 @@ void AstModifier::dispatch(std::shared_ptr<CRef> n) {
             }
           }
         }
-      }
-      else if (currentMethod->parameterMap.count(n->ID) == 0)
-      {
+      } else if (currentMethod->parameterMap.count(n->ID) == 0) {
         for (const std::shared_ptr<Node> &l : currentMethod->localVariables)
         {
           if ((lvc = dynamic_cast<LocalVariableDeclaration*>(l.get())) && 
@@ -131,6 +123,9 @@ void AstModifier::dispatch(std::shared_ptr<CRef> n) {
         cRefSystem = n;
       }
     }
+  } else {
+    //should not happen. Probably fatal.
+    assert (false);
   }
 };
 
@@ -341,7 +336,10 @@ void AstModifier::dispatch(std::shared_ptr<NewArray> n) {
   parentExpressionPtrStack.pop_back();
 };
 
-void AstModifier::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) { };
+void AstModifier::dispatch(std::shared_ptr<SLCPrintlnExpression> n) { };
+void AstModifier::dispatch(std::shared_ptr<SLCWriteExpression> n) { };
+void AstModifier::dispatch(std::shared_ptr<SLCFlushExpression> n) { };
+void AstModifier::dispatch(std::shared_ptr<SLCReadExpression> n) { };
 void AstModifier::dispatch(std::shared_ptr<LocalVariableDeclaration> n) { };
 void AstModifier::dispatch(std::shared_ptr<EmptyStatement> n) { };
 void AstModifier::dispatch(std::shared_ptr<ReturnStatement> n) { };
