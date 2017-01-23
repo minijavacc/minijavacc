@@ -781,10 +781,10 @@ string GraphAssembler::run()
   nargs = get_method_n_params(ty);
 
   
+  lower_highlevel_graph(irg);
+  
   // activate all edges in graph
   edges_activate(irg);
-  
-  lower_highlevel_graph(irg);
   
   irgSerialize();
   irgRegisterAllocation();
