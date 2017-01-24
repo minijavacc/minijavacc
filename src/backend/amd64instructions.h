@@ -304,13 +304,26 @@ namespace cmpl
   // describes one instruction
   class Instruction
   {
+  private:
+    int line;
+    const char *fnc;
+    
   protected:
     string size64suffix = "q";
     string size32suffix = "l";
     
   public:
+    Instruction(const char *fnc, int line) {
+      this->fnc = fnc;
+      this->line = line;
+    }
+    
     virtual std::string mnemonic() {
       return "X";
+    }
+    
+    virtual std::string annotation() {
+      return string(fnc) + ":" + to_string(line);
     }
 
     virtual std::string generate() {
@@ -320,6 +333,8 @@ namespace cmpl
   };
   
   class I2to1 : public Instruction {
+    using Instruction::Instruction;
+    
   public:
     shared_ptr<Register> dest;
     shared_ptr<Register> src1;
@@ -342,11 +357,13 @@ namespace cmpl
         // TODO: throw IllegalRegisterConfigurationException
         assert(false);
       }
-      return mnemonic() + suffix + " " + src1->getRegisterName() + ", " + src2->getRegisterName();
+      return mnemonic() + suffix + " " + src1->getRegisterName() + ", " + src2->getRegisterName() + "\t\t\t# " + annotation();
     }
   };
     
   class I2to0 : public Instruction {
+    using Instruction::Instruction;
+    
   public:
     shared_ptr<Register> src1;
     shared_ptr<Register> src2;
@@ -363,11 +380,13 @@ namespace cmpl
         // TODO: throw IllegalRegisterConfigurationException
         assert(false);
       }
-      return mnemonic() + suffix + " " + src1->getRegisterName() + ", " + src2->getRegisterName();
+      return mnemonic() + suffix + " " + src1->getRegisterName() + ", " + src2->getRegisterName() + "\t\t\t# " + annotation();
     }
   };
   
   class I1to0 : public Instruction {
+    using Instruction::Instruction;
+    
   public:
     shared_ptr<Register> src1;
     
@@ -378,11 +397,13 @@ namespace cmpl
       } else if (src1->size == RegisterSize32) {
         suffix = size32suffix;
       }
-      return mnemonic() + suffix + " " + src1->getRegisterName();
+      return mnemonic() + suffix + " " + src1->getRegisterName() + "\t\t\t# " + annotation();
     }
   };
   
   class I0to1 : public Instruction {
+    using Instruction::Instruction;
+    
   public:
     shared_ptr<Register> dest;
     
@@ -393,11 +414,13 @@ namespace cmpl
       } else if (dest->size == RegisterSize32) {
         suffix = size32suffix;
       }
-      return mnemonic() + suffix + " " + dest->getRegisterName();
+      return mnemonic() + suffix + " " + dest->getRegisterName() + "\t\t\t# " + annotation();
     }
   };
   
   class I1to1 : public Instruction {
+    using Instruction::Instruction;
+    
   public:
     shared_ptr<Register> src1;
     shared_ptr<Register> dest;
@@ -413,19 +436,22 @@ namespace cmpl
       } else {
         assert(false);
       }
-      return mnemonic() + suffix + " " + src1->getRegisterName() + ", " + dest->getRegisterName();
+      return mnemonic() + suffix + " " + src1->getRegisterName() + ", " + dest->getRegisterName() + "\t\t\t# " + annotation();
     }
   };
   
   class cmp : public I2to0 {
+    using I2to0::I2to0;
+    
     std::string mnemonic() override {
       return "cmp";
     }
   };
   
   class Branch : public Instruction {
-  public:
     using Instruction::Instruction;
+    
+  public:
     Label label;
     ir_relation relation;
     
@@ -461,20 +487,24 @@ namespace cmpl
     }
     
     std::string generate() override {
-      return mnemonic() + " " + label;
+      return mnemonic() + " " + label + "\t\t\t# " + annotation();;
     }
   };
   
   class jmp : public Instruction {
+    using Instruction::Instruction;
+    
   public:
     Label label;
     std::string generate() override {
-      return "jmp " + label;
+      return "jmp " + label + "\t\t\t# " + annotation();;
     }
   };
   
   
   class mov : public I1to1 {
+    using I1to1::I1to1;
+    
     std::string mnemonic() override {
       return "mov";
     }
@@ -482,24 +512,32 @@ namespace cmpl
   
   
   class add : public I2to1 {
+    using I2to1::I2to1;
+    
     std::string mnemonic() override {
       return "add";
     }
   };
   
   class neg : public I1to1 {
+    using I1to1::I1to1;
+    
     std::string mnemonic() override {
       return "neg";
     }
   };
   
   class sub : public I2to1 {
+    using I2to1::I2to1;
+    
     std::string mnemonic() override {
       return "sub";
     }
   };
   
   class div : public I2to0 {
+    using I2to0::I2to0;
+    
     // result in %eax
     std::string mnemonic() override {
       return "idiv";
@@ -507,6 +545,8 @@ namespace cmpl
   };
   
   class mod : public I2to0 {
+    using I2to0::I2to0;
+    
     // result in %edx
     std::string mnemonic() override {
       return "idiv";
@@ -514,12 +554,16 @@ namespace cmpl
   };
   
   class imul : public I2to1 {
+    using I2to1::I2to1;
+    
     std::string mnemonic() override {
       return "imul";
     }
   };
   
   class pop : public I0to1 {
+    using I0to1::I0to1;
+    
   public:
     std::string mnemonic() override {
       return "pop";
@@ -528,6 +572,8 @@ namespace cmpl
 
   
   class push : public I1to0 {
+    using I1to0::I1to0;
+    
   public:
     std::string mnemonic() override {
       return "push";
@@ -537,34 +583,42 @@ namespace cmpl
   
   // Special case, may be restructured later
   class retq : public Instruction {
+    using Instruction::Instruction;
+    
   public:
     std::string generate() override {
-      return "retq";
+      return string("retq") + "\t\t\t# " + annotation();
     }
   };
   
   
   // Special case, may be restructured later
   class subq_rsp : public Instruction {
+    using Instruction::Instruction;
+    
   public:
     unsigned bytes;
     std::string generate() override {
-      return "subq $" + std::to_string(bytes) + ", %rsp";
+      return "subq $" + std::to_string(bytes) + ", %rsp" + "\t\t\t# " + annotation();
     }
   };
   
   // Special case, may be restructured later
   class addq_rsp : public Instruction {
+    using Instruction::Instruction;
+    
   public:
     unsigned bytes;
     std::string generate() override {
-      return "addq $" + std::to_string(bytes) + ", %rsp";
+      return "addq $" + std::to_string(bytes) + ", %rsp" + "\t\t\t# " + annotation();
     }
   };
   
   
   // Special case, may be restructured later
   class mov_from_stack : public Instruction {
+    using Instruction::Instruction;
+    
   public:
     long offset = 0; // In bytes
     shared_ptr<Register> dest;
@@ -576,13 +630,15 @@ namespace cmpl
       } else if (dest->size == RegisterSize32) {
         suffix = size32suffix;
       }
-      return "mov" + suffix + " " + std::to_string(offset) + "(%ebp), " + dest->getRegisterName();
+      return "mov" + suffix + " " + std::to_string(offset) + "(%ebp), " + dest->getRegisterName() + "\t\t\t# " + annotation();
     }
   };
   
   
   // Special case, may be restructured later
   class mov_to_stack : public Instruction {
+    using Instruction::Instruction;
+    
   public:
     long offset = 0; // In bytes
     shared_ptr<Register> src;
@@ -594,13 +650,15 @@ namespace cmpl
       } else if (src->size == RegisterSize32) {
         suffix = size32suffix;
       }
-      return "mov" + suffix + " " + src->getRegisterName() + ", "+ std::to_string((signed)offset) + "(%ebp)";
+      return "mov" + suffix + " " + src->getRegisterName() + ", "+ std::to_string((signed)offset) + "(%ebp)" + "\t\t\t# " + annotation();
     }
   };
   
   
   // Special case, may be restructured later
   class mov_from_imm : public Instruction {
+    using Instruction::Instruction;
+    
   public:
     long imm_value;
     shared_ptr<Register> dest;
@@ -612,18 +670,20 @@ namespace cmpl
       } else if (dest->size == RegisterSize32) {
         suffix = size32suffix;
       }
-      return "mov" + suffix + " $" + std::to_string(imm_value) + ", " + dest->getRegisterName();
+      return "mov" + suffix + " $" + std::to_string(imm_value) + ", " + dest->getRegisterName() + "\t\t\t# " + annotation();
     }
   };
   
   
   class call : public Instruction {
+    using Instruction::Instruction;
+    
   public:
     Label label;
     shared_ptr<Register> dest; // only for register allocator (will not be printed in assembler)
     
     std::string generate() override {
-      return "call " + label;
+      return "call " + label + "\t\t\t# " + annotation();;
     }
   };
   
@@ -633,10 +693,10 @@ namespace cmpl
   public:
     std::string str;
     
-    StaticInstruction(std::string str) : str(str) {};
+    StaticInstruction(std::string str, const char *fnc, int line) : str(str), Instruction(fnc, line) {};
 
     virtual std::string generate() {
-      return str;
+      return str + "\t\t\t# " + annotation();
     };
   };
 
