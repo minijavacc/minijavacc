@@ -17,7 +17,7 @@ Creator::Creator(Checker &checker) : checker(checker), ast(checker.getAttributed
   //be_parse_arg("help");
   
   // set mode_P to P64
-  mode_P64 = new_reference_mode("P64", 64, 64);
+  mode_P64 = new_reference_mode("P64", irma_twos_complement, 64, 64);
   set_modeP(mode_P64);
   
   // set instruction set architecture
