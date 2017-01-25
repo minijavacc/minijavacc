@@ -155,8 +155,11 @@ void println(int a)
   }
   
   // delete temporary runtime file
-  system("rm _runtime.c");
-
+  if (system("rm _runtime.c") != 0)
+	{
+		throw CreatorBackendError("assembler file could not be deleted");
+	}
+	
   std::cout << "Created binary: a.out\n";
   return;
 }

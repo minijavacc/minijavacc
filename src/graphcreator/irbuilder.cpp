@@ -766,12 +766,6 @@ void CFalse::doCond(ir_node *trueBlock, ir_node *falseBlock) {
 
 #pragma mark - Helpers
 
-#ifdef __APPLE__
-#define CALLOC_NAME "_calloc"
-#else
-#define CALLOC_NAME "calloc"
-#endif
-
 inline void IRBuilder::error(const std::string &err)
 {
   throw IRBuilderError(("IRBuilder: " + err).c_str());
@@ -786,7 +780,7 @@ ir_node *IRBuilder::callCallocNode(ir_node *num, ir_type *result_type) {
     set_method_res_type(calloc_type, 0, result_type);
     set_method_param_type(calloc_type, 0, new_type_primitive(mode_Is));
     set_method_param_type(calloc_type, 1, new_type_primitive(mode_Is));
-    calloc_ent = new_entity(get_glob_type(), new_id_from_str(CALLOC_NAME), calloc_type);
+    calloc_ent = new_entity(get_glob_type(), new_id_from_str((std::string(AMD64LdNamePrefix) + std::string("calloc")).c_str()), calloc_type);
     set_entity_visibility(calloc_ent, ir_visibility_external);
   }
   
@@ -837,7 +831,7 @@ void IRBuilder::dispatch(std::shared_ptr<MainMethod> n) {
   add_immBlock_pred(end, ret);
   mature_immBlock(get_r_cur_block(g));
   
-  irg_finalize_cons(g);
+//  irg_finalize_cons(g);
 };
 
 void IRBuilder::dispatch(std::shared_ptr<Field> n) {};
@@ -865,7 +859,7 @@ void IRBuilder::dispatch(std::shared_ptr<Method> n) {
     mature_immBlock(get_r_cur_block(g));
   }
   
-  irg_finalize_cons(g);
+//  irg_finalize_cons(g);
 };
 
 void IRBuilder::dispatch(std::shared_ptr<Parameter> n) { };

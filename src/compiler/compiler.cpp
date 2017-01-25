@@ -6,6 +6,8 @@
 #include "checker.h"
 #include "prettyprinter.h"
 #include "creator.h"
+#include "backend.h"
+#include "optimizer.h"
 
 #include <iostream>
 #include <istream>
@@ -153,6 +155,10 @@ int Compiler::creategraph(std::ifstream &file, std::string filename)
     
     Creator creator(checker);
     creator.run();
+    
+    Optimizer optimizer(creator);
+    optimizer.run();
+    
     creator.dumpGraphs();
     std::cout << "dumped graph files *.vcg\n";
     
@@ -197,6 +203,10 @@ int Compiler::compilefirm(std::ifstream &file, std::string filename)
     
     Creator creator(checker);
     creator.run();
+    
+    Optimizer optimizer(creator);
+    optimizer.run();
+    
     creator.createBinary(filename);
     
     return 0;
@@ -222,6 +232,59 @@ int Compiler::compilefirm(std::ifstream &file, std::string filename)
   catch (CreatorError &e) 
   {
     std::cerr << "creator error: " << e.what() << "\n";
+    return 1;
+  }
+}
+
+int Compiler::compile(std::ifstream &file, std::string filename)
+{
+  try {
+    Lexer lexer(file);
+    lexer.run();
+  
+    Parser parser(lexer);
+    parser.run();
+    
+    Checker checker(parser);
+    checker.run();
+    
+    Creator creator(checker);
+    creator.run();
+    
+    Optimizer optimizer(creator);
+    optimizer.run();
+    
+    Backend backend(creator);
+    backend.run(filename);
+    
+    return 0;
+  }
+  catch (SyntaxError &e) 
+  {
+    std::cerr << "syntax error: " << e.what() << "\n";
+    std::cerr << sourcePreview(file, e.line, e.column) << "\n";
+    return 1;
+  }
+  catch (ParserError &e) 
+  {
+    std::cerr << "parser error: " << e.what() << "\n";
+    std::cerr << sourcePreview(file, e.line, e.column) << "\n";
+    return 1;
+  }
+  catch (SemanticError &e)
+  {
+    std::cerr << "semantic error: " << e.what() << "\n";
+    //std::cerr << sourcePreview(file, e.line, e.column) << "\n"; TODO: make semantic errors useful
+    return 1;
+  }
+  catch (CreatorError &e) 
+  {
+    std::cerr << "creator error: " << e.what() << "\n";
+    return 1;
+  }
+  catch (BackendError &e) 
+  {
+    std::cerr << "backend error: " << e.what() << "\n";
     return 1;
   }
 }

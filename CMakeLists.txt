@@ -27,6 +27,8 @@ include_directories(
   src/semantics
   src/symboltable
   src/graphcreator
+  src/backend
+  src/optimizer
   lib/libfirm/include
   lib/libfirm/build/gen/include/libfirm
 )

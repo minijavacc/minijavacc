@@ -2,6 +2,7 @@
 
 #include "ast.h"
 #include "creator.h"
+#include "amd64instructions.h"
 
 #include <libfirm/firm.h>
 
