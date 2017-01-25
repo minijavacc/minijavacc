@@ -1,5 +1,5 @@
-[submodule "tests"]
-	path = tests
+[submodule "mjtest"]
+	path = tests/mjtest
 	url = https://github.com/mj3-16/mjtest
 [submodule "lib/libfirm"]
 	path = lib/libfirm

@@ -12,8 +12,10 @@ namespace cmpl {
   class AstModifier : public Dispatcher, public std::enable_shared_from_this<AstModifier> {
   private:
     void error(const std::string &err);
-    std::shared_ptr<Expression> convertToStaticLibraryCallExpressionNode();
-    std::shared_ptr<Expression> converToCIntegerLiteralWithoutNegate();
+    std::shared_ptr<Expression> convertToStaticLibraryCallExpressionNode(std::shared_ptr<UnaryRightExpression> n);
+    std::shared_ptr<Expression> converToCIntegerLiteralWithoutNegate(std::shared_ptr<UnaryLeftExpression> n);
+    
+    std::vector<std::shared_ptr<Expression>*> parentExpressionPtrStack;
     
     std::shared_ptr<Expression> tmpExpression; // used in UnaryRightExpression
     std::shared_ptr<ClassDeclaration> currentClassDeclaration;
@@ -25,13 +27,11 @@ namespace cmpl {
     std::shared_ptr<Expression> exprSystemOut;
     std::shared_ptr<UnaryOp> fieldAccessOut;
     std::shared_ptr<UnaryOp> methodInvocationPrintln;
-    std::shared_ptr<UnaryRightExpression> unaryRightExpressionSystemOutPrintln;
     std::shared_ptr<Expression> printlnParamExpr;
     
     // needed for -CIntegerLiteral
     std::shared_ptr<Expression> cIntegerLiteral;
     std::shared_ptr<UnaryOp> minusOp;
-    std::shared_ptr<Expression> unaryLeftExpressionOpMinus;
   public:
     
     void dispatch(std::shared_ptr<Type> n);

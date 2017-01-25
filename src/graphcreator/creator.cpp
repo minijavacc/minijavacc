@@ -16,19 +16,21 @@ Creator::Creator(Checker &checker) : checker(checker), ast(checker.getAttributed
   // output backend options
   //be_parse_arg("help");
   
+  // set mode_P to P64
+  mode_P64 = new_reference_mode("P64", irma_twos_complement, 64, 64);
+  set_modeP(mode_P64);
+  
   // set instruction set architecture
   // has to be set before the graph is created
   if(!be_parse_arg("isa=amd64"))
   {
     throw CreatorBackendError("could not set isa=amd64");
   }
-
+  
   #ifdef _WIN32
     be_parse_arg("ia32-gasmode-mingw");
   #elif __APPLE__
-    be_parse_arg("ia32-gasmode=acho");
-    be_parse_arg("ia32-stackalign=4");
-    be_parse_arg("pic");
+    be_parse_arg("objectformat=mach-o");
   #elif __linux__
     be_parse_arg("ia32-gasmode=elf");
   #else
@@ -51,9 +53,9 @@ void Creator::run()
   ast->accept(c);
 }
 
-void Creator::dumpGraph()
+void Creator::dumpGraphs(std::string suffix)
 {
-  dump_all_ir_graphs("");
+  dump_all_ir_graphs(suffix.c_str());
 }
 
 /* inline functions from libfirm/ir/tr/type_t.h that get not 
@@ -69,8 +71,17 @@ static inline int is_method_type_(ir_type const *const type)
 }
 
 
-void Creator::createBinary(std::string filepath)
+void Creator::createBinary(std::string filepath, bool generateDebugInformation)
 {
+  // --- validate graphs ---
+  //irg_verify(irg);
+  
+  if (generateDebugInformation)
+  {
+    be_parse_arg("debug=basic");
+  }
+  
+  
   // --- lowering phase ---
   
   // 1. layout types
@@ -105,8 +116,8 @@ void Creator::createBinary(std::string filepath)
   }
   
   // 2. lower SELs
-  be_lower_for_target();
-  
+  lower_highlevel();
+  be_lower_for_target(); 
   
   // --- run backend to create assembler ---
   
@@ -115,37 +126,40 @@ void Creator::createBinary(std::string filepath)
   output = fopen("asm.s" , "w");
   
   // run backend to generate assembler file
-  be_main(output, "input.c");
+  be_main(output, filepath.c_str());
   fclose(output);
   
   std::cout << "Created assembler file: asm.s\n";
   
   
+  // --- create runtime library file in working directory ---
+  const char * runtimeSource = R"(
+#include <stdio.h>
+
+void println(int a)
+{
+  printf("%d\n", a);
+}
+  )";
+  
+  std::ofstream runtimeFile("_runtime.c");
+  runtimeFile << runtimeSource;
+  runtimeFile.close();
+  
+  
   // --- link to runtime library and create binary ---
   
-  pid_t pid;
-  if (pid = fork())
+  if (system("gcc -o a.out asm.s _runtime.c") != 0)
   {
-    // parent
-    int status;
-    waitpid(pid, &status, 0);
-    
-    if (status != 0)
-    {
-      throw CreatorBackendError("could not link assembler file to runtime library. Try running the link command manually:\n$ gcc -o a.out asm.s runtime/println.c");
-    }
-  }
-  else
-  {
-    // child
-    int ret = execlp("gcc", "gcc", "-o", "a.out", "asm.s", "runtime/println.c", NULL);
-    
-    if (ret != 0)
-    {
-      throw CreatorBackendError("error running linker");
-    }
+    throw CreatorBackendError("error running linker");
   }
   
+  // delete temporary runtime file
+  if (system("rm _runtime.c") != 0)
+	{
+		throw CreatorBackendError("assembler file could not be deleted");
+	}
+	
   std::cout << "Created binary: a.out\n";
   return;
 }

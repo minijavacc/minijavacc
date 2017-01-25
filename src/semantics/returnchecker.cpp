@@ -21,7 +21,11 @@ void ReturnChecker::dispatch(std::shared_ptr<ClassDeclaration> n) {
   }
 };
 
-void ReturnChecker::dispatch(std::shared_ptr<MainMethod> n) { };
+void ReturnChecker::dispatch(std::shared_ptr<MainMethod> n) {
+  currentMethodIsVoid = true;
+  n->block->accept(shared_from_this());
+};
+
 void ReturnChecker::dispatch(std::shared_ptr<Field> n) { };
 
 /* Checks whether
@@ -32,14 +36,8 @@ void ReturnChecker::dispatch(std::shared_ptr<Method> n) {
   
   n->block->accept(shared_from_this());
   
-  if (n->block->returns) { // did return
-    if(currentMethodIsVoid) {
-      error("Method " + StringTable::lookupIdentifier(n->ID) + " of type void would return a value");
-    }
-  } else {
-    if(!currentMethodIsVoid) {
-      error("Method " + StringTable::lookupIdentifier(n->ID) + " has missing return paths");
-    }
+  if (!n->block->returns && !currentMethodIsVoid) {
+    error("Method " + StringTable::lookupIdentifier(n->ID) + " has missing return paths");
   }
 };
 
@@ -66,9 +64,13 @@ void ReturnChecker::dispatch(std::shared_ptr<Block> n) {
 };
 
 // Do not return
-void ReturnChecker::dispatch(std::shared_ptr<IfStatement> n) { };
+void ReturnChecker::dispatch(std::shared_ptr<IfStatement> n) {
+  n->ifStatement->accept(shared_from_this());
+};
 void ReturnChecker::dispatch(std::shared_ptr<ExpressionStatement> n) { };
-void ReturnChecker::dispatch(std::shared_ptr<WhileStatement> n) { };
+void ReturnChecker::dispatch(std::shared_ptr<WhileStatement> n) {
+  n->statement->accept(shared_from_this());
+};
 void ReturnChecker::dispatch(std::shared_ptr<LocalVariableDeclaration> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) { };
 void ReturnChecker::dispatch(std::shared_ptr<EmptyStatement> n) { };
@@ -86,6 +88,7 @@ void ReturnChecker::dispatch(std::shared_ptr<ReturnStatement> n) {
   if (!currentMethodIsVoid) { // blank return statement is only allowed in void methods
     error("blank return statement in non-void method");
   }
+  n->returns = true;
 };
 
 void ReturnChecker::dispatch(std::shared_ptr<ReturnExpressionStatement> n) {

@@ -6,6 +6,11 @@ set(CMAKE_SOURCE_DIR src)
 set(CMAKE_LIBRARY_PATH lib)
 set(EXECUTABLE_OUTPUT_PATH bin)
 
+# read runtime library into variable
+#file (STRINGS "runtime/runtime.c" RUNTIME_SOURCE)
+#string(REPLACE "\"" "\\\"" RUNTIME_SOURCE ${RUNTIME_SOURCE})
+#configure_file(src/graphcreator/runtimesource.h.in src/graphcreator/runtimesource.h)
+
 # add libFirm
 add_custom_target(libfirm
   COMMAND $(MAKE) --silent
@@ -22,13 +27,11 @@ include_directories(
   src/semantics
   src/symboltable
   src/graphcreator
+  src/backend
+  src/optimizer
   lib/libfirm/include
   lib/libfirm/build/gen/include/libfirm
 )
-
-#link_directories(
-#  lib/libfirm/build/debug
-#)
 
 ADD_LIBRARY(firm STATIC IMPORTED)
 SET_TARGET_PROPERTIES(firm PROPERTIES

@@ -7,11 +7,13 @@ inline void AstModifier::error(const std::string &err)
   throw SysOutPrintError(err.c_str());
 }
 
-std::shared_ptr<Expression> AstModifier::convertToStaticLibraryCallExpressionNode()
+std::shared_ptr<Expression> AstModifier::convertToStaticLibraryCallExpressionNode(std::shared_ptr<UnaryRightExpression> n)
 {
+  assert(n);
+  
   // it is necessary to walk the tree a second time to get the expression
   // because the tree could have been modified meanwhile
-  MethodInvocation* mi = dynamic_cast<MethodInvocation*>(unaryRightExpressionSystemOutPrintln->op.get());
+  MethodInvocation* mi = dynamic_cast<MethodInvocation*>(n->op.get());
   assert(mi != nullptr);
   assert(mi->arguments.size() > 0);
   assert(mi->arguments[0] != nullptr);
@@ -24,8 +26,10 @@ std::shared_ptr<Expression> AstModifier::convertToStaticLibraryCallExpressionNod
   return node;
 }
 
-std::shared_ptr<Expression> AstModifier::converToCIntegerLiteralWithoutNegate()
+std::shared_ptr<Expression> AstModifier::converToCIntegerLiteralWithoutNegate(std::shared_ptr<UnaryLeftExpression> n)
 {
+  assert(n);
+  
   // add negation to the string of the integer literal
   CIntegerLiteral* cil = dynamic_cast<CIntegerLiteral*>(cIntegerLiteral.get());
   assert(cil != nullptr);
@@ -141,96 +145,54 @@ void AstModifier::dispatch(std::shared_ptr<Method> n) {
 
 
 void AstModifier::dispatch(std::shared_ptr<LocalVariableExpressionDeclaration> n) {
+  parentExpressionPtrStack.push_back(&(n->expression));
   n->expression->accept(shared_from_this());
-  
-  if (n->expression == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression = convertToStaticLibraryCallExpressionNode();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression)
-  {
-    n->expression = converToCIntegerLiteralWithoutNegate();
-  }
+  parentExpressionPtrStack.pop_back();
 };
 
 void AstModifier::dispatch(std::shared_ptr<IfStatement> n) {
+  parentExpressionPtrStack.push_back(&(n->expression));
   n->expression->accept(shared_from_this());
-  n->ifStatement->accept(shared_from_this());
+  parentExpressionPtrStack.pop_back();
   
-  if (n->expression == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression = convertToStaticLibraryCallExpressionNode();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression)
-  {
-    n->expression = converToCIntegerLiteralWithoutNegate();
-  }
+  n->ifStatement->accept(shared_from_this());
 };
 
 void AstModifier::dispatch(std::shared_ptr<IfElseStatement> n) {
+  parentExpressionPtrStack.push_back(&(n->expression));
   n->expression->accept(shared_from_this());
-  n->ifStatement->accept(shared_from_this());
-  n->elseStatement->accept(shared_from_this());
+  parentExpressionPtrStack.pop_back();
   
-  if (n->expression == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression = convertToStaticLibraryCallExpressionNode();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression)
-  {
-    n->expression = converToCIntegerLiteralWithoutNegate();
-  }
+  n->ifStatement->accept(shared_from_this());
+  
+  n->elseStatement->accept(shared_from_this());
 };
 
 void AstModifier::dispatch(std::shared_ptr<ExpressionStatement> n) {
+  parentExpressionPtrStack.push_back(&(n->expression));
   n->expression->accept(shared_from_this());
-  
-  if (n->expression == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression = convertToStaticLibraryCallExpressionNode();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression)
-  {
-    n->expression = converToCIntegerLiteralWithoutNegate();
-  }
+  parentExpressionPtrStack.pop_back();
 };
 
 void AstModifier::dispatch(std::shared_ptr<WhileStatement> n) {
+  parentExpressionPtrStack.push_back(&(n->expression));
   n->expression->accept(shared_from_this());
-  n->statement->accept(shared_from_this());
+  parentExpressionPtrStack.pop_back();
   
-  if (n->expression == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression = convertToStaticLibraryCallExpressionNode();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression)
-  {
-    n->expression = converToCIntegerLiteralWithoutNegate();
-  }
+  n->statement->accept(shared_from_this());
 };
 
 void AstModifier::dispatch(std::shared_ptr<ReturnExpressionStatement> n) {
+  parentExpressionPtrStack.push_back(&(n->expression));
   n->expression->accept(shared_from_this());
-  
-  if (n->expression == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression = convertToStaticLibraryCallExpressionNode();
-  }
-  
-  if (unaryLeftExpressionOpMinus == n->expression)
-  {
-    n->expression = converToCIntegerLiteralWithoutNegate();
-  }
+  parentExpressionPtrStack.pop_back();
 };
 
 void AstModifier::dispatch(std::shared_ptr<MethodInvocation> n) {
   for(int i = 0; i < n->arguments.size(); i++) {
+    parentExpressionPtrStack.push_back(&(n->arguments[i]));
     n->arguments[i]->accept(shared_from_this());
-    
-    if (unaryLeftExpressionOpMinus == n->arguments[i])
-    {
-      n->arguments[i] = converToCIntegerLiteralWithoutNegate();
-    }
+    parentExpressionPtrStack.pop_back();
   }
   
   if (StringTable::lookupIdentifier(n->ID) == "println")
@@ -246,209 +208,113 @@ void AstModifier::dispatch(std::shared_ptr<MethodInvocation> n) {
 };
 
 void AstModifier::dispatch(std::shared_ptr<ArrayAccess> n) {
+  parentExpressionPtrStack.push_back(&(n->expression));
   n->expression->accept(shared_from_this());
-  
-  if (n->expression == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression = convertToStaticLibraryCallExpressionNode();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression)
-  {
-    n->expression = converToCIntegerLiteralWithoutNegate();
-  }
+  parentExpressionPtrStack.pop_back();
 };
 
 void AstModifier::dispatch(std::shared_ptr<AssignmentExpression> n) {
+  parentExpressionPtrStack.push_back(&(n->expression1));
   n->expression1->accept(shared_from_this());
-  n->expression2->accept(shared_from_this());
+  parentExpressionPtrStack.pop_back();
   
-  if (n->expression1 == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression1 = convertToStaticLibraryCallExpressionNode();
-  }
-  else if (n->expression2 == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression2 = convertToStaticLibraryCallExpressionNode();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression1)
-  {
-    n->expression1 = converToCIntegerLiteralWithoutNegate();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression2)
-  {
-    n->expression2 = converToCIntegerLiteralWithoutNegate();
-  }
+  parentExpressionPtrStack.push_back(&(n->expression2));
+  n->expression2->accept(shared_from_this());
+  parentExpressionPtrStack.pop_back();
 };
 
 void AstModifier::dispatch(std::shared_ptr<LogicalOrExpression> n) {
+  parentExpressionPtrStack.push_back(&(n->expression1));
   n->expression1->accept(shared_from_this());
-  n->expression2->accept(shared_from_this());
+  parentExpressionPtrStack.pop_back();
   
-  if (n->expression1 == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression1 = convertToStaticLibraryCallExpressionNode();
-  }
-  else if (n->expression2 == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression2 = convertToStaticLibraryCallExpressionNode();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression1)
-  {
-    n->expression1 = converToCIntegerLiteralWithoutNegate();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression2)
-  {
-    n->expression2 = converToCIntegerLiteralWithoutNegate();
-  }
+  parentExpressionPtrStack.push_back(&(n->expression2));
+  n->expression2->accept(shared_from_this());
+  parentExpressionPtrStack.pop_back();
 };
 
 void AstModifier::dispatch(std::shared_ptr<LogicalAndExpression> n) {
+  parentExpressionPtrStack.push_back(&(n->expression1));
   n->expression1->accept(shared_from_this());
-  n->expression2->accept(shared_from_this());
+  parentExpressionPtrStack.pop_back();
   
-  if (n->expression1 == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression1 = convertToStaticLibraryCallExpressionNode();
-  }
-  else if (n->expression2 == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression2 = convertToStaticLibraryCallExpressionNode();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression1)
-  {
-    n->expression1 = converToCIntegerLiteralWithoutNegate();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression2)
-  {
-    n->expression2 = converToCIntegerLiteralWithoutNegate();
-  }
+  parentExpressionPtrStack.push_back(&(n->expression2));
+  n->expression2->accept(shared_from_this());
+  parentExpressionPtrStack.pop_back();
 };
 
 void AstModifier::dispatch(std::shared_ptr<EqualityExpression> n) {
+  parentExpressionPtrStack.push_back(&(n->expression1));
   n->expression1->accept(shared_from_this());
-  n->expression2->accept(shared_from_this());
+  parentExpressionPtrStack.pop_back();
   
-  if (n->expression1 == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression1 = convertToStaticLibraryCallExpressionNode();
-  }
-  else if (n->expression2 == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression2 = convertToStaticLibraryCallExpressionNode();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression1)
-  {
-    n->expression1 = converToCIntegerLiteralWithoutNegate();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression2)
-  {
-    n->expression2 = converToCIntegerLiteralWithoutNegate();
-  }
+  parentExpressionPtrStack.push_back(&(n->expression2));
+  n->expression2->accept(shared_from_this());
+  parentExpressionPtrStack.pop_back();
 };
 
 void AstModifier::dispatch(std::shared_ptr<RelationalExpression> n) {
+  parentExpressionPtrStack.push_back(&(n->expression1));
   n->expression1->accept(shared_from_this());
-  n->expression2->accept(shared_from_this());
+  parentExpressionPtrStack.pop_back();
   
-  if (n->expression1 == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression1 = convertToStaticLibraryCallExpressionNode();
-  }
-  else if (n->expression2 == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression2 = convertToStaticLibraryCallExpressionNode();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression1)
-  {
-    n->expression1 = converToCIntegerLiteralWithoutNegate();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression2)
-  {
-    n->expression2 = converToCIntegerLiteralWithoutNegate();
-  }
+  parentExpressionPtrStack.push_back(&(n->expression2));
+  n->expression2->accept(shared_from_this());
+  parentExpressionPtrStack.pop_back();
 };
 
 void AstModifier::dispatch(std::shared_ptr<AdditiveExpression> n) {
+  parentExpressionPtrStack.push_back(&(n->expression1));
   n->expression1->accept(shared_from_this());
-  n->expression2->accept(shared_from_this());
+  parentExpressionPtrStack.pop_back();
   
-  if (n->expression1 == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression1 = convertToStaticLibraryCallExpressionNode();
-  }
-  else if (n->expression2 == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression2 = convertToStaticLibraryCallExpressionNode();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression1)
-  {
-    n->expression1 = converToCIntegerLiteralWithoutNegate();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression2)
-  {
-    n->expression2 = converToCIntegerLiteralWithoutNegate();
-  }
+  parentExpressionPtrStack.push_back(&(n->expression2));
+  n->expression2->accept(shared_from_this());
+  parentExpressionPtrStack.pop_back();
 };
 
 void AstModifier::dispatch(std::shared_ptr<MultiplicativeExpression> n) {
+  parentExpressionPtrStack.push_back(&(n->expression1));
   n->expression1->accept(shared_from_this());
-  n->expression2->accept(shared_from_this());
+  parentExpressionPtrStack.pop_back();
   
-  if (n->expression1 == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression1 = convertToStaticLibraryCallExpressionNode();
-  }
-  else if (n->expression2 == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression2 = convertToStaticLibraryCallExpressionNode();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression1)
-  {
-    n->expression1 = converToCIntegerLiteralWithoutNegate();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression2)
-  {
-    n->expression2 = converToCIntegerLiteralWithoutNegate();
-  }
+  parentExpressionPtrStack.push_back(&(n->expression2));
+  n->expression2->accept(shared_from_this());
+  parentExpressionPtrStack.pop_back();
 };
 
 void AstModifier::dispatch(std::shared_ptr<CallExpression> n) {
   for(int i = 0; i < n->arguments.size(); i++) {
+    parentExpressionPtrStack.push_back(&(n->arguments[i]));
     n->arguments[i]->accept(shared_from_this());
-    
-    if (n->arguments[i] == unaryRightExpressionSystemOutPrintln)
-    {
-      n->arguments[i] = convertToStaticLibraryCallExpressionNode();
-    }
-    else if (unaryLeftExpressionOpMinus == n->arguments[i])
-    {
-      n->arguments[i] = converToCIntegerLiteralWithoutNegate();
-    }
+    parentExpressionPtrStack.pop_back();
   }
 };
 
 void AstModifier::dispatch(std::shared_ptr<UnaryLeftExpression> n) {
   n->op->accept(shared_from_this());
+  
+  parentExpressionPtrStack.push_back(&(n->expression));
   n->expression->accept(shared_from_this());
+  parentExpressionPtrStack.pop_back();
   
   if (n->expression == cIntegerLiteral && n->op == minusOp)
   {
-    unaryLeftExpressionOpMinus = n;
-  }
-  
-  if (n->expression == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression = convertToStaticLibraryCallExpressionNode();
-  }
-  
-  if (unaryLeftExpressionOpMinus == n->expression)
-  {
-    n->expression = converToCIntegerLiteralWithoutNegate();
+    // found Minus+CIntegerLiteral
+    auto parentPtr = parentExpressionPtrStack.back();
+    
+    if (parentPtr)
+    {
+      *parentPtr = converToCIntegerLiteralWithoutNegate(n);
+    }
   }
 };
 
 void AstModifier::dispatch(std::shared_ptr<UnaryRightExpression> n) {
+  parentExpressionPtrStack.push_back(&(n->expression));
   n->expression->accept(shared_from_this());
+  parentExpressionPtrStack.pop_back();
+  
   n->op->accept(shared_from_this());
   
   
@@ -458,32 +324,21 @@ void AstModifier::dispatch(std::shared_ptr<UnaryRightExpression> n) {
   }
   else if (n->op == methodInvocationPrintln && n->expression == exprSystemOut)
   {
-    // found subtree
-    unaryRightExpressionSystemOutPrintln = n;
-  }
-  else if (n->expression == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression = convertToStaticLibraryCallExpressionNode();
-  }
-  
-  if (unaryLeftExpressionOpMinus == n->expression)
-  {
-    n->expression = converToCIntegerLiteralWithoutNegate();
+    // found static library call expression
+    auto parentPtr = parentExpressionPtrStack.back();
+    
+    if (parentPtr)
+    {
+      *parentPtr = convertToStaticLibraryCallExpressionNode(n);
+    }
   }
 };
 
 
 void AstModifier::dispatch(std::shared_ptr<NewArray> n) {
+  parentExpressionPtrStack.push_back(&(n->expression));
   n->expression->accept(shared_from_this());
-  
-  if (n->expression == unaryRightExpressionSystemOutPrintln)
-  {
-    n->expression = convertToStaticLibraryCallExpressionNode();
-  }
-  if (unaryLeftExpressionOpMinus == n->expression)
-  {
-    n->expression = converToCIntegerLiteralWithoutNegate();
-  }
+  parentExpressionPtrStack.pop_back();
 };
 
 void AstModifier::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) { };

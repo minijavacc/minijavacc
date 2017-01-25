@@ -106,15 +106,11 @@ CLEAR='\033[0m'
 
 # Assume script resides inside src/lexer/tests directory and is always called from there
 
-BASEDIR='./src/lexer/tests'
-cd ../../..
-
-lexer=./run
-
+BASEDIR='tests/lexer'
+lexer='./run'
 
 
 success=true
-
 
 
     

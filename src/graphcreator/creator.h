@@ -17,11 +17,13 @@ namespace cmpl
     
     void run();
     
-    void dumpGraph();
-    void createBinary(std::string filename);
+    void dumpGraphs(std::string suffix = "");
+    void createBinary(std::string filename, bool generateDebugInformation = false);
   private:
     std::shared_ptr<Node> ast;
     Checker &checker;
+    
+    ir_mode *mode_P64;
   };
   
   class CreatorError : public std::runtime_error

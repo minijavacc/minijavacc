@@ -324,6 +324,12 @@ void TypeChecker::dispatch(std::shared_ptr<EqualityExpression> n) {
   bool expr1IsNull = (dynamic_cast<NullType*>(n->expression1->type->basicType.get()) != nullptr);
   bool expr2IsNull = (dynamic_cast<NullType*>(n->expression2->type->basicType.get()) != nullptr);
   
+  // check if both are null
+  if (expr2IsNull && expr2IsNull) {
+    n->type = Types::getBooleanNode();
+    return;
+  }
+  
   // check if one of both types is null
   if (expr1IsNull || expr2IsNull)
   {

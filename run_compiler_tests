@@ -1,0 +1,7 @@
+#!/bin/sh
+mkdir compiletest_run
+cd compiletest_run
+java -cp .:./../compilertester CompilerTester ../bin/minijavacc ../unittests "$@"
+cd ..
+rm -r compiletest_run
+

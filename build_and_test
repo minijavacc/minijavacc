@@ -9,15 +9,13 @@ if [ $ret -ne 0 ]; then
   exit 1
 fi
 
-cd ./src/lexer/tests/
-
-(./tests.sh)
+(${BASEDIR}/tests/lexer/tests.sh)
 ret=$?
 if [ $ret -ne 0 ]; then
   exit 1
 fi
 
-(MJ_RUN="${BASEDIR}/run" ${BASEDIR}/tests/mjt.py --produce_no_reports all)
+(MJ_RUN="${BASEDIR}/run" ${BASEDIR}/tests/mjtest/mjt.py --parallel --produce_no_reports all)
 ret=$?
 if [ $ret -ne 0 ]; then
   exit 1
