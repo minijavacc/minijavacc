@@ -26,14 +26,16 @@ namespace cmpl
 {
   static int lastUsedRegisterIdentifier = 1000;
   
-  enum RegisterSize {
-    RegisterSize64,
-    RegisterSize32
+  enum ValueSize {
+    ValueSize64,
+    ValueSize32
   };
   
-  enum RegisterType {
-    RegisterTypeVirtual,
-    RegisterTypePhysical
+  enum ValueType {
+    ValueTypeVirtual,
+    ValueTypePhysical, 
+    ValueTypeStackSlot,
+    ValueTypeImmediate
   };
   
   #define ID_AX 0
@@ -53,195 +55,220 @@ namespace cmpl
   #define ID_14 14
   #define ID_15 15
   
-  class Register {
+  class Value {
   public:
-    int identifier;
-    RegisterSize size;
-    RegisterType type;
+    ValueSize size;
+    ValueType type;
     
-    Register() {};
+    union {
+      int identifier; // for virtual and physical registers
+      int immediate;  // for immediate values
+      int offset;     // for stack slots
+    };
     
-    Register(RegisterSize s) : size(s), type(RegisterTypeVirtual) {
+    Value() {};
+    
+    // only size -> virtual Register
+    Value(ValueSize s) : size(s), type(ValueTypeVirtual) {
       identifier = lastUsedRegisterIdentifier++;
     };
     
-    Register(ir_mode *mode) : Register(registerSizeFromIRMode(mode)) {};
+    Value(ir_mode *mode) : Value(valueSizeFromIRMode(mode)) {};
+    
+    // size and immediate -> immediate Value
+    Value(ir_mode *mode, int immediate) : size(valueSizeFromIRMode(mode)), type(ValueTypeImmediate), immediate(immediate) {};
+    
+    // size and offset -> Stack Slot
+    Value(ValueSize s, int offset) : size(s), type(ValueTypeStackSlot), offset(offset) {};
     
     string getRegisterName() {
-      if (type == RegisterTypePhysical) {
-        if (size == RegisterSize32) {
-          switch (identifier) {
-            case 0:
-              return "%eax";
-            case 1:
-              return "%ebx";
-            case 2:
-              return "%ecx";
-            case 3:
-              return "%edx";
-            case 4:
-              return "%ebp";
-            case 5:
-              return "%rsp";
-            case 6:
-              return "%esi";
-            case 7:
-              return "%edi";
-            case 8:
-              return "%r8d";
-            case 9:
-              return "%r9d";
-            case 10:
-              return "%r10d";
-            case 11:
-              return "%r11d";
-            case 12:
-              return "%r12d";
-            case 13:
-              return "%r13d";
-            case 14:
-              return "%r14d";
-            case 15:
-              return "%r15d";
-            default:
-              assert(false);
-              return 0;
+      switch (type) {
+        case ValueTypePhysical: 
+          if (size == ValueSize32) {
+            switch (identifier) {
+              case 0:
+                return "%eax";
+              case 1:
+                return "%ebx";
+              case 2:
+                return "%ecx";
+              case 3:
+                return "%edx";
+              case 4:
+                return "%ebp";
+              case 5:
+                return "%rsp";
+              case 6:
+                return "%esi";
+              case 7:
+                return "%edi";
+              case 8:
+                return "%r8d";
+              case 9:
+                return "%r9d";
+              case 10:
+                return "%r10d";
+              case 11:
+                return "%r11d";
+              case 12:
+                return "%r12d";
+              case 13:
+                return "%r13d";
+              case 14:
+                return "%r14d";
+              case 15:
+                return "%r15d";
+              default:
+                assert(false);
+                return 0;
+            }
+          } else {
+            switch (identifier) {
+              case 0:
+                return "%rax";
+              case 1:
+                return "%rbx";
+              case 2:
+                return "%rcx";
+              case 3:
+                return "%rdx";
+              case 4:
+                return "%rbp";
+              case 5:
+                return "%rsp";
+              case 6:
+                return "%rsi";
+              case 7:
+                return "%rdi";
+              case 8:
+                return "%r8";
+              case 9:
+                return "%r9";
+              case 10:
+                return "%r10";
+              case 11:
+                return "%r11";
+              case 12:
+                return "%r12";
+              case 13:
+                return "%r13";
+              case 14:
+                return "%r14";
+              case 15:
+                return "%r15";
+              default:
+                assert(false);
+                return 0;
+            }
           }
-        } else {
-          switch (identifier) {
-            case 0:
-              return "%rax";
-            case 1:
-              return "%rbx";
-            case 2:
-              return "%rcx";
-            case 3:
-              return "%rdx";
-            case 4:
-              return "%rbp";
-            case 5:
-              return "%rsp";
-            case 6:
-              return "%rsi";
-            case 7:
-              return "%rdi";
-            case 8:
-              return "%r8";
-            case 9:
-              return "%r9";
-            case 10:
-              return "%r10";
-            case 11:
-              return "%r11";
-            case 12:
-              return "%r12";
-            case 13:
-              return "%r13";
-            case 14:
-              return "%r14";
-            case 15:
-              return "%r15";
-            default:
-              assert(false);
-              return 0;
-          }
-        }
-      } else {
-        return "v" + std::to_string(identifier);
+          break;
+          
+        case ValueTypeImmediate:
+          return "$" + std::to_string(immediate); // decimal
+          break;
+          
+        case ValueTypeVirtual:
+          return "v" + std::to_string(identifier);
+          break;
+          
+        default:
+        case ValueTypeStackSlot:
+          return std::to_string(offset) + "(%rbp)";
+          break;
       }
     };
     
-    static RegisterSize registerSizeFromIRMode(ir_mode *mode) {
-      if (mode_is_int(mode)) return RegisterSize32;
-      return RegisterSize64;
+    static ValueSize valueSizeFromIRMode(ir_mode *mode) {
+      if (mode_is_int(mode)) return ValueSize32;
+      return ValueSize64;
     }
     
     // TODO: make singleton
-    static shared_ptr<Register> _ax(RegisterSize s) {
-      auto r = make_shared<Register>();
+    static shared_ptr<Value> _ax(ValueSize s) {
+      auto r = make_shared<Value>();
       r->size = s;
-      r->type = RegisterTypePhysical;
+      r->type = ValueTypePhysical;
       r->identifier = ID_AX;
       return r;
     };
     
     // TODO: make singleton
-    static shared_ptr<Register> _bx(RegisterSize s) {
-      auto r = make_shared<Register>();
+    static shared_ptr<Value> _bx(ValueSize s) {
+      auto r = make_shared<Value>();
       r->size = s;
-      r->type = RegisterTypePhysical;
+      r->type = ValueTypePhysical;
       r->identifier = ID_BX;
       return r;
     };
     
     // TODO: make singleton
-    static shared_ptr<Register> _cx(RegisterSize s) {
-      auto r = make_shared<Register>();
+    static shared_ptr<Value> _cx(ValueSize s) {
+      auto r = make_shared<Value>();
       r->size = s;
-      r->type = RegisterTypePhysical;
+      r->type = ValueTypePhysical;
       r->identifier = ID_CX;
       return r;
     };
     
     // TODO: make singleton
-    static shared_ptr<Register> _dx(RegisterSize s) {
-      auto r = make_shared<Register>();
+    static shared_ptr<Value> _dx(ValueSize s) {
+      auto r = make_shared<Value>();
       r->size = s;
-      r->type = RegisterTypePhysical;
+      r->type = ValueTypePhysical;
       r->identifier = ID_DX;
       return r;
     };
     
     // TODO: make singleton
-    static shared_ptr<Register> _di(RegisterSize s) {
-      auto r = make_shared<Register>();
+    static shared_ptr<Value> _di(ValueSize s) {
+      auto r = make_shared<Value>();
       r->size = s;
-      r->type = RegisterTypePhysical;
+      r->type = ValueTypePhysical;
       r->identifier = ID_DI;
       return r;
     };
     
     // TODO: make singleton
-    static shared_ptr<Register> _si(RegisterSize s) {
-      auto r = make_shared<Register>();
+    static shared_ptr<Value> _si(ValueSize s) {
+      auto r = make_shared<Value>();
       r->size = s;
-      r->type = RegisterTypePhysical;
+      r->type = ValueTypePhysical;
       r->identifier = ID_SI;
       return r;
     };
     
     // TODO: make singleton
-    static shared_ptr<Register> r8_(RegisterSize s) {
-      auto r = make_shared<Register>();
+    static shared_ptr<Value> r8_(ValueSize s) {
+      auto r = make_shared<Value>();
       r->size = s;
-      r->type = RegisterTypePhysical;
+      r->type = ValueTypePhysical;
       r->identifier = ID_08;
       return r;
     };
     
     // TODO: make singleton
-    static shared_ptr<Register> r9_(RegisterSize s) {
-      auto r = make_shared<Register>();
+    static shared_ptr<Value> r9_(ValueSize s) {
+      auto r = make_shared<Value>();
       r->size = s;
-      r->type = RegisterTypePhysical;
+      r->type = ValueTypePhysical;
       r->identifier = ID_09;
       return r;
     };
     
     // TODO: make singleton
-    static shared_ptr<Register> r10_(RegisterSize s) {
-      auto r = make_shared<Register>();
+    static shared_ptr<Value> r10_(ValueSize s) {
+      auto r = make_shared<Value>();
       r->size = s;
-      r->type = RegisterTypePhysical;
+      r->type = ValueTypePhysical;
       r->identifier = ID_10;
       return r;
     };
     
     // TODO: make singleton
-    static shared_ptr<Register> r11_(RegisterSize s) {
-      auto r = make_shared<Register>();
+    static shared_ptr<Value> r11_(ValueSize s) {
+      auto r = make_shared<Value>();
       r->size = s;
-      r->type = RegisterTypePhysical;
+      r->type = ValueTypePhysical;
       r->identifier = ID_11;
       return r;
     };
@@ -249,28 +276,28 @@ namespace cmpl
     // ...
     
     // TODO: make singleton
-    static shared_ptr<Register> eax() {
-      auto r = make_shared<Register>();
-      r->size = RegisterSize32;
-      r->type = RegisterTypePhysical;
+    static shared_ptr<Value> eax() {
+      auto r = make_shared<Value>();
+      r->size = ValueSize32;
+      r->type = ValueTypePhysical;
       r->identifier = ID_AX;
       return r;
     };
-	
-	 // TODO: make singleton
-    static shared_ptr<Register> edx() {
-      auto r = make_shared<Register>();
-      r->size = RegisterSize32;
-      r->type = RegisterTypePhysical;
+  
+   // TODO: make singleton
+    static shared_ptr<Value> edx() {
+      auto r = make_shared<Value>();
+      r->size = ValueSize32;
+      r->type = ValueTypePhysical;
       r->identifier = ID_DX;
       return r;
     };
     
     // TODO: make singleton
-    static shared_ptr<Register> ebx() {
-      auto r = make_shared<Register>();
-      r->size = RegisterSize32;
-      r->type = RegisterTypePhysical;
+    static shared_ptr<Value> ebx() {
+      auto r = make_shared<Value>();
+      r->size = ValueSize32;
+      r->type = ValueTypePhysical;
       r->identifier = ID_BX;
       return r;
     };
@@ -278,19 +305,19 @@ namespace cmpl
     // ...
     
     // TODO: make singleton
-    static shared_ptr<Register> rbp() {
-      auto r = make_shared<Register>();
-      r->size = RegisterSize64;
-      r->type = RegisterTypePhysical;
+    static shared_ptr<Value> rbp() {
+      auto r = make_shared<Value>();
+      r->size = ValueSize64;
+      r->type = ValueTypePhysical;
       r->identifier = ID_BP;
       return r;
     };
     
     // TODO: make singleton
-    static shared_ptr<Register> rsp() {
-      auto r = make_shared<Register>();
-      r->size = RegisterSize64;
-      r->type = RegisterTypePhysical;
+    static shared_ptr<Value> rsp() {
+      auto r = make_shared<Value>();
+      r->size = ValueSize64;
+      r->type = ValueTypePhysical;
       r->identifier = ID_SP;
       return r;
     };
@@ -304,19 +331,15 @@ namespace cmpl
   // describes one instruction
   class Instruction
   {
-  private:
-    int line;
-    const char *fnc;
-    
   protected:
     string size64suffix = "q";
     string size32suffix = "l";
     
   public:
-    Instruction(const char *fnc, int line) {
-      this->fnc = fnc;
-      this->line = line;
-    }
+    int line;
+    const char *fnc;
+    
+    Instruction(const char *fnc, int line) : fnc(fnc), line(line) {}
     
     virtual std::string mnemonic() {
       return "X";
@@ -336,22 +359,22 @@ namespace cmpl
     using Instruction::Instruction;
     
   public:
-    shared_ptr<Register> dest;
-    shared_ptr<Register> src1;
-    shared_ptr<Register> src2;
+    shared_ptr<Value> dest;
+    shared_ptr<Value> src1;
+    shared_ptr<Value> src2;
     
     std::string generate() override {
       // TODO: removed the assert to allow output of virtual registers
       //assert(src2->identifier == dest->identifier);
       
       string suffix;
-      if (dest->size == RegisterSize64
-          && src1->size == RegisterSize64
-          && src2->size == RegisterSize64) {
+      if (dest->size == ValueSize64
+          && src1->size == ValueSize64
+          && src2->size == ValueSize64) {
         suffix = size64suffix;
-      } else if (dest->size == RegisterSize32
-                 && src1->size == RegisterSize32
-                 && src2->size == RegisterSize32) {
+      } else if (dest->size == ValueSize32
+                 && src1->size == ValueSize32
+                 && src2->size == ValueSize32) {
         suffix = size32suffix;
       } else {
         // TODO: throw IllegalRegisterConfigurationException
@@ -365,16 +388,16 @@ namespace cmpl
     using Instruction::Instruction;
     
   public:
-    shared_ptr<Register> src1;
-    shared_ptr<Register> src2;
+    shared_ptr<Value> src1;
+    shared_ptr<Value> src2;
     
     std::string generate() override {
       string suffix;
-      if (src1->size == RegisterSize64
-          && src2->size == RegisterSize64) {
+      if (src1->size == ValueSize64
+          && src2->size == ValueSize64) {
         suffix = size64suffix;
-      } else if (src1->size == RegisterSize32
-                 && src2->size == RegisterSize32) {
+      } else if (src1->size == ValueSize32
+                 && src2->size == ValueSize32) {
         suffix = size32suffix;
       } else {
         // TODO: throw IllegalRegisterConfigurationException
@@ -388,13 +411,13 @@ namespace cmpl
     using Instruction::Instruction;
     
   public:
-    shared_ptr<Register> src1;
+    shared_ptr<Value> src1;
     
     std::string generate() override {
       string suffix;
-      if (src1->size == RegisterSize64) {
+      if (src1->size == ValueSize64) {
         suffix = size64suffix;
-      } else if (src1->size == RegisterSize32) {
+      } else if (src1->size == ValueSize32) {
         suffix = size32suffix;
       }
       return mnemonic() + suffix + " " + src1->getRegisterName() + "\t\t\t# " + annotation();
@@ -405,13 +428,13 @@ namespace cmpl
     using Instruction::Instruction;
     
   public:
-    shared_ptr<Register> dest;
+    shared_ptr<Value> dest;
     
     std::string generate() override {
       string suffix;
-      if (dest->size == RegisterSize64) {
+      if (dest->size == ValueSize64) {
         suffix = size64suffix;
-      } else if (dest->size == RegisterSize32) {
+      } else if (dest->size == ValueSize32) {
         suffix = size32suffix;
       }
       return mnemonic() + suffix + " " + dest->getRegisterName() + "\t\t\t# " + annotation();
@@ -422,21 +445,21 @@ namespace cmpl
     using Instruction::Instruction;
     
   public:
-    shared_ptr<Register> src1;
-    shared_ptr<Register> dest;
+    shared_ptr<Value> src1;
+    shared_ptr<Value> dest;
     
     std::string generate() override {
       string suffix;
-      if (src1->size == RegisterSize64
-          && dest->size == RegisterSize64) {
+      if (src1->size == ValueSize64
+          && dest->size == ValueSize64) {
         suffix = size64suffix;
-      } else if (src1->size == RegisterSize32
-                 && dest->size == RegisterSize32) {
+      } else if (src1->size == ValueSize32
+                 && dest->size == ValueSize32) {
         suffix = size32suffix;
       } else {
         assert(false);
       }
-      return mnemonic() + suffix + " " + src1->getRegisterName() + ", " + dest->getRegisterName() + "\t\t\t# " + annotation();
+      return mnemonic() + suffix + " " + dest->getRegisterName() + "\t\t\t# " + annotation();
     }
   };
   
@@ -501,9 +524,31 @@ namespace cmpl
     }
   };
   
-  
-  class mov : public I1to1 {
-    using I1to1::I1to1;
+  class mov : public Instruction {
+    using Instruction::Instruction;
+    
+  public:
+    shared_ptr<Value> src1;
+    shared_ptr<Value> dest;
+    
+    // value from stack
+    mov(int offset, shared_ptr<Value> dest, const char *fnc, int line) : Instruction(fnc, line), src1(make_shared<Value>(dest->size, offset)), dest(dest) {}
+    // value to stack
+    mov(shared_ptr<Value> src1, int offset, const char *fnc, int line) : Instruction(fnc, line), src1(src1), dest(make_shared<Value>(src1->size, offset)) {}
+    
+    std::string generate() override {
+      string suffix;
+      if (src1->size == ValueSize64
+          && dest->size == ValueSize64) {
+        suffix = size64suffix;
+      } else if (src1->size == ValueSize32
+                 && dest->size == ValueSize32) {
+        suffix = size32suffix;
+      } else {
+        assert(false);
+      }
+      return mnemonic() + suffix + " " + src1->getRegisterName() + ", " + dest->getRegisterName() + "\t\t\t# " + annotation();
+    }
     
     std::string mnemonic() override {
       return "mov";
@@ -582,12 +627,12 @@ namespace cmpl
   
   
   // Special case, may be restructured later
-  class retq : public Instruction {
+  class ret : public Instruction {
     using Instruction::Instruction;
     
   public:
     std::string generate() override {
-      return string("retq") + "\t\t\t# " + annotation();
+      return string("ret") + "\t\t\t# " + annotation();
     }
   };
   
@@ -615,72 +660,12 @@ namespace cmpl
   };
   
   
-  // Special case, may be restructured later
-  class mov_from_stack : public Instruction {
-    using Instruction::Instruction;
-    
-  public:
-    long offset = 0; // In bytes
-    shared_ptr<Register> dest;
-    
-    std::string generate() override {
-      string suffix;
-      if (dest->size == RegisterSize64) {
-        suffix = size64suffix;
-      } else if (dest->size == RegisterSize32) {
-        suffix = size32suffix;
-      }
-      return "mov" + suffix + " " + std::to_string(offset) + "(%ebp), " + dest->getRegisterName() + "\t\t\t# " + annotation();
-    }
-  };
-  
-  
-  // Special case, may be restructured later
-  class mov_to_stack : public Instruction {
-    using Instruction::Instruction;
-    
-  public:
-    long offset = 0; // In bytes
-    shared_ptr<Register> src;
-    
-    std::string generate() override {
-      string suffix;
-      if (src->size == RegisterSize64) {
-        suffix = size64suffix;
-      } else if (src->size == RegisterSize32) {
-        suffix = size32suffix;
-      }
-      return "mov" + suffix + " " + src->getRegisterName() + ", "+ std::to_string((signed)offset) + "(%ebp)" + "\t\t\t# " + annotation();
-    }
-  };
-  
-  
-  // Special case, may be restructured later
-  class mov_from_imm : public Instruction {
-    using Instruction::Instruction;
-    
-  public:
-    long imm_value;
-    shared_ptr<Register> dest;
-    
-    std::string generate() override {
-      string suffix;
-      if (dest->size == RegisterSize64) {
-        suffix = size64suffix;
-      } else if (dest->size == RegisterSize32) {
-        suffix = size32suffix;
-      }
-      return "mov" + suffix + " $" + std::to_string(imm_value) + ", " + dest->getRegisterName() + "\t\t\t# " + annotation();
-    }
-  };
-  
-  
   class call : public Instruction {
     using Instruction::Instruction;
     
   public:
     Label label;
-    shared_ptr<Register> dest; // only for register allocator (will not be printed in assembler)
+    shared_ptr<Value> dest; // only for register allocator (will not be printed in assembler)
     
     std::string generate() override {
       return "call " + label + "\t\t\t# " + annotation();;

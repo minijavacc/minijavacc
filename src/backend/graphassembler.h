@@ -66,33 +66,27 @@ namespace cmpl
     
     map<Label, shared_ptr<LabeledBlock>> blocks;
     vector<Label> labels; // topological order 
-    map<long, shared_ptr<Register>> registers;
-    map<long, shared_ptr<Register>> helperRegisters;
+    map<long, shared_ptr<Value>> registers;
     map<long, Label> nodeNrToLabel;
-    map<shared_ptr<Register>, long> registerToStackOffset;
     long topOfStack = 0;
     long nextFreeLabel = 0;
     string labelPrefix;
+    shared_ptr<Value> regArgsToValue[6];
     
-    shared_ptr<Register> getRegister(ir_node *node);
-    void setRegister(ir_node *node, shared_ptr<Register> r);
-    shared_ptr<Register> getHelperRegister(ir_node *node);
+    shared_ptr<Value> getValue(ir_node *node);
+    void setValue(ir_node *node, shared_ptr<Value> r);
     Label getLabel(ir_node *node);
-    long getStackOffsetForRegister(shared_ptr<Register> r);
-		
-		shared_ptr<LabeledBlock> getLabeledBlockForIrNode(ir_node *node);
+    void allocValue(shared_ptr<Value> &r);
     
-    shared_ptr<Instruction> getMovFromStackOrPhysicalRegister(shared_ptr<Register> from, shared_ptr<Register> to);
-    shared_ptr<Instruction> getMovToStackOrPhysicalRegister(shared_ptr<Register> from, shared_ptr<Register> to);
+    shared_ptr<LabeledBlock> getLabeledBlockForIrNode(ir_node *node);
 
+    void deliverValue(shared_ptr<Value> &src, shared_ptr<Value> &dest, vector<shared_ptr<Instruction>> &instructions_);
     void allocI2to1(shared_ptr<Instruction> instr, I2to1 *i, vector<shared_ptr<Instruction>> &instructions_);
     void allocI2to0(shared_ptr<Instruction> instr, I2to0 *i, vector<shared_ptr<Instruction>> &instructions_);
     void allocI1to1(shared_ptr<Instruction> instr, I1to1 *i, vector<shared_ptr<Instruction>> &instructions_);
     void allocI1to0(shared_ptr<Instruction> instr, I1to0 *i, vector<shared_ptr<Instruction>> &instructions_);
     void allocI0to1(shared_ptr<Instruction> instr, I0to1 *i, vector<shared_ptr<Instruction>> &instructions_);
-    void allocMoveFromStack(shared_ptr<Instruction> instr, mov_from_stack *i, vector<shared_ptr<Instruction>> &instructions_);
-    void allocMoveToStack(shared_ptr<Instruction> instr, mov_to_stack *i, vector<shared_ptr<Instruction>> &instructions_);
-    void allocMoveFromImm(shared_ptr<Instruction> instr, mov_from_imm *i, vector<shared_ptr<Instruction>> &instructions_);
+    void allocMove(shared_ptr<Instruction> instr, mov *i, vector<shared_ptr<Instruction>> &instructions_);
     void allocCall(shared_ptr<Instruction> instr, call *i, vector<shared_ptr<Instruction>> &instructions_);
   };
   
