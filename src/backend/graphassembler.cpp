@@ -730,14 +730,14 @@ void GraphAssembler::allocI0to1(shared_ptr<Instruction> instr, I0to1 *i, vector<
 void GraphAssembler::allocDiv(shared_ptr<Instruction> instr, div *i, vector<shared_ptr<Instruction>> &instructions_)
 { 
 	//result in:
-  Register::eax();
+  //Register::eax();
   instructions_.push_back(instr);
 }
 
 void GraphAssembler::allocMod(shared_ptr<Instruction> instr, mod *i, vector<shared_ptr<Instruction>> &instructions_)
 { 
 	//result in:
-  Register::edx();
+ // Register::edx();
   instructions_.push_back(instr);
 }
 
