@@ -477,11 +477,6 @@ void GraphAssembler::buildDiv(ir_node *node) {
   inst->src2 = rreg;
 
   getLabeledBlockForIrNode(node)->instructions.push_back(inst);
-  // result of div is in %eax
-//  auto inst2 = make_shared<mov>(__func__, __LINE__);
- // inst2->src1 = Register::eax();
- // inst2->dest = oreg;
- // getLabeledBlockForIrNode(node)->instructions.push_back(inst2);
 }
 
 void GraphAssembler::buildMod(ir_node *node) {
@@ -496,11 +491,6 @@ void GraphAssembler::buildMod(ir_node *node) {
   inst->src2 = rreg;
 
   getLabeledBlockForIrNode(node)->instructions.push_back(inst);
-  //result of mod is in %edx
-//  auto inst2 = make_shared<mov>(__func__, __LINE__);
-//  inst2->src1 = Register::edx();
- // inst2->dest = oreg;
-//  getLabeledBlockForIrNode(node)->instructions.push_back(inst2);
 }
 
 void GraphAssembler::buildMinus(ir_node *node) {
@@ -737,6 +727,20 @@ void GraphAssembler::allocI0to1(shared_ptr<Instruction> instr, I0to1 *i, vector<
   instructions_.push_back(instr);
 }
 
+void GraphAssembler::allocDiv(shared_ptr<Instruction> instr, div *i, vector<shared_ptr<Instruction>> &instructions_)
+{ 
+	//result in:
+  Register::eax();
+  instructions_.push_back(instr);
+}
+
+void GraphAssembler::allocMod(shared_ptr<Instruction> instr, mod *i, vector<shared_ptr<Instruction>> &instructions_)
+{ 
+	//result in:
+  Register::edx();
+  instructions_.push_back(instr);
+}
+
 void GraphAssembler::allocCall(shared_ptr<Instruction> instr, call *i, vector<shared_ptr<Instruction>> &instructions_)
 { 
   // if function returns void, i->dest is NULL
@@ -949,9 +953,15 @@ void GraphAssembler::irgRegisterAllocation()
       if (auto i = dynamic_cast<I2to1*>(instruction.get())) {
         allocI2to1(instruction, i, instructions_);
         
+      } else if (auto i = dynamic_cast<div*>(instruction.get())) {
+		allocDiv(instruction, i, instructions_);
+		
+      } else if (auto i = dynamic_cast<mod*>(instruction.get())) {
+		allocMod(instruction, i, instructions_);
+		
       } else if (auto i = dynamic_cast<I2to0*>(instruction.get())) {
-        allocI2to0(instruction, i, instructions_);
-        
+		allocI2to0(instruction, i, instructions_);
+		
       } else if (auto i = dynamic_cast<I1to1*>(instruction.get())) {
         allocI1to1(instruction, i, instructions_);
         
