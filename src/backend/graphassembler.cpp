@@ -591,7 +591,7 @@ void GraphAssembler::deliverValue(shared_ptr<Value> &src, shared_ptr<Value> &des
         case ValueTypeVirtual:
         {
           dest->type = src->type;
-          dest->immediate = src->immediate;
+          dest->offset = src->offset;
           break;
         }
         
@@ -630,7 +630,7 @@ void GraphAssembler::deliverValue(shared_ptr<Value> &src, shared_ptr<Value> &des
         case ValueTypeVirtual:
         {
           dest->type = src->type;
-          dest->immediate = src->immediate;
+          dest->offset = src->offset;
           break;
         }
         
