@@ -471,11 +471,11 @@ void GraphAssembler::buildDiv(ir_node *node) {
   
   auto lreg = registers[get_irn_node_nr(l)];
   auto rreg = registers[get_irn_node_nr(r)];
-  
+ 
   auto inst = make_shared<div>(__func__, __LINE__);
   inst->src1 = lreg;
   inst->src2 = rreg;
-
+  inst->result=getValue(node);
   getLabeledBlockForIrNode(node)->instructions.push_back(inst);
 }
 
@@ -489,7 +489,7 @@ void GraphAssembler::buildMod(ir_node *node) {
   auto inst = make_shared<mod>(__func__, __LINE__);
   inst->src1 = lreg;
   inst->src2 = rreg;
-
+  inst->result=getValue(node);
   getLabeledBlockForIrNode(node)->instructions.push_back(inst);
 }
 
@@ -729,16 +729,58 @@ void GraphAssembler::allocI0to1(shared_ptr<Instruction> instr, I0to1 *i, vector<
 
 void GraphAssembler::allocDiv(shared_ptr<Instruction> instr, div *i, vector<shared_ptr<Instruction>> &instructions_)
 { 
-	//result in:
-  //Register::eax();
+  auto quotient = Value::eax();
+  auto low = Value::eax();
+  auto high = Value::edx();
+  auto divisor = i->src1;
+  auto dividend = i->src2;
+  auto nullvalue = make_shared<Value>( 0,ValueSize32);
+  
+  // allocation copied from alloc2to0()
+    allocValue(i->src1);
+  allocValue(i->src2);
+  
+  // ony one operand can be a memory access
+  if (i->src1->type == ValueTypeStackSlot && 
+      i->src2->type == ValueTypeStackSlot)
+  {
+    auto r1 = Value::r10_(i->src1->size);
+    deliverValue(i->src1, r1, instructions_);
+    i->src1 = r1;
+  }
+  
+  // src2 must not be an immediate
+  if (i->src2->type == ValueTypeImmediate)
+  {
+    auto r1 = Value::r10_(i->src1->size);
+    deliverValue(i->src2, r1, instructions_);
+    i->src2 = r1;
+  }
+  
+  // src2 as memory and src1 as immediate is not allowed
+  if (i->src2->type == ValueTypeStackSlot && 
+      i->src1->type == ValueTypeImmediate)
+  {
+    auto r1 = Value::r10_(i->src1->size);
+    deliverValue(i->src2, r1, instructions_);
+    i->src2 = r1;
+  }
+  
+  //this throws an assertion in mov:generate :(
+  //allocValue(i->result);
+  
+  deliverValue(dividend, low, instructions_);
+  deliverValue(nullvalue, high, instructions_);
+  
   instructions_.push_back(instr);
+  deliverValue(quotient, i->result, instructions_);
 }
 
 void GraphAssembler::allocMod(shared_ptr<Instruction> instr, mod *i, vector<shared_ptr<Instruction>> &instructions_)
 { 
-	//result in:
- // Register::edx();
+  auto remainder = Value::edx();
   instructions_.push_back(instr);
+ // deliverValue(r, i->result, instructions_);
 }
 
 void GraphAssembler::allocCall(shared_ptr<Instruction> instr, call *i, vector<shared_ptr<Instruction>> &instructions_)
@@ -954,11 +996,9 @@ void GraphAssembler::irgRegisterAllocation()
         allocI2to1(instruction, i, instructions_);
         
       } else if (auto i = dynamic_cast<div*>(instruction.get())) {
-		allocDiv(instruction, i, instructions_);
-		
+		  allocDiv(instruction, i, instructions_);		
       } else if (auto i = dynamic_cast<mod*>(instruction.get())) {
-		allocMod(instruction, i, instructions_);
-		
+		  allocMod(instruction, i, instructions_);
       } else if (auto i = dynamic_cast<I2to0*>(instruction.get())) {
 		allocI2to0(instruction, i, instructions_);
 		

@@ -81,6 +81,11 @@ namespace cmpl
     // size and offset -> Stack Slot
     Value(ValueSize s, int offset) : size(s), type(ValueTypeStackSlot), offset(offset) {};
     
+	 // size and immediate -> Generated immediate
+    Value(int immediate, ValueSize s) : size(s), type(ValueTypeImmediate),  immediate(immediate)  {};
+    
+	
+	
     string getRegisterName() {
       switch (type) {
         case ValueTypePhysical: 
@@ -580,18 +585,23 @@ namespace cmpl
     }
   };
   
-  class div : public I2to0 {
-    using I2to0::I2to0;
-    
+  class div : public I1to0 {
+    using I1to0::I1to0;
+	public:
+    shared_ptr<Value> result;
+	shared_ptr<Value> src2;
+	
     // result in %eax
     std::string mnemonic() override {
       return "idiv";
     }
   };
   
-  class mod : public I2to0 {
-    using I2to0::I2to0;
-    
+  class mod : public I1to0 {
+    using I1to0::I1to0;
+	public:
+    shared_ptr<Value> result;
+	shared_ptr<Value> src2;
     // result in %edx
     std::string mnemonic() override {
       return "idiv";
