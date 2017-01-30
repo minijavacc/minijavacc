@@ -639,11 +639,9 @@ namespace cmpl
     virtual ir_type *getFirmType();
     virtual ir_entity *getFirmEntity();
     
-    //std::shared_ptr<Expression> expression;
-    
     StaticLibraryCallExpression() : Expression() { };
-//    virtual void accept (std::shared_ptr<Dispatcher> d);
-//    virtual void doExpr();
+    virtual void accept (std::shared_ptr<Dispatcher> d);
+    virtual void doExpr();
   };
   
   

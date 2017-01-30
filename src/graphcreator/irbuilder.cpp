@@ -1171,6 +1171,10 @@ void IRBuilder::dispatch(std::shared_ptr<ArrayAccess> n) { assert(false); };
 void IRBuilder::dispatch(std::shared_ptr<CRef> n) { assert(false); };
 void IRBuilder::dispatch(std::shared_ptr<NewArray> n) { assert(false); };
 void IRBuilder::dispatch(std::shared_ptr<CIntegerLiteral> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<SLCPrintlnExpression> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<SLCWriteExpression> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<SLCFlushExpression> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<SLCReadExpression> n) { assert(false); };
 
 
 

@@ -13,13 +13,6 @@
 #include "types.h"
 
 using namespace cmpl;
-  
-
-    
-
-
-
-
 
 void TypeBoolean::accept(std::shared_ptr<Dispatcher> d) {
   d->dispatch(shared_from_this());
