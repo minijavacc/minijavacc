@@ -731,7 +731,6 @@ void GraphAssembler::allocDiv(shared_ptr<Instruction> instr, div *i, vector<shar
 { 
   auto quotient = Value::eax();
   auto low = Value::eax();
-  auto high = Value::edx();
   auto divisor = i->src1;
   auto dividend = i->src2;
   auto nullvalue = make_shared<Value>( 0,ValueSize32);
@@ -770,8 +769,9 @@ void GraphAssembler::allocDiv(shared_ptr<Instruction> instr, div *i, vector<shar
   //allocValue(i->result);
   
   deliverValue(dividend, low, instructions_);
-  deliverValue(nullvalue, high, instructions_);
-  
+  //reset high (edx) 
+  auto cl = make_shared<cltd>(__func__, __LINE__);
+  instructions_.push_back(cl);   
   instructions_.push_back(instr);
   deliverValue(quotient, i->result, instructions_);
 }

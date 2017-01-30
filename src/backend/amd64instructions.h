@@ -668,6 +668,14 @@ namespace cmpl
       return "addq $" + std::to_string(bytes) + ", %rsp" + "\t\t\t# " + annotation();
     }
   };
+
+  class cltd : public Instruction {
+    using Instruction::Instruction;    
+  public:
+    std::string generate() override {
+      return "cltd";
+    }
+  };
   
   
   class call : public Instruction {
