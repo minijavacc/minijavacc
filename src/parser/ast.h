@@ -633,7 +633,7 @@ namespace cmpl
     void doExpr() override;
   };
 
-  class StaticLibraryCallExpression : public Expression, public std::enable_shared_from_this<StaticLibraryCallExpression>
+  class StaticLibraryCallExpression : public Expression
   {    
   public:
     virtual ir_type *getFirmType();
@@ -647,7 +647,7 @@ namespace cmpl
   };
   
   
-  class SLCPrintlnExpression : public StaticLibraryCallExpression
+  class SLCPrintlnExpression : public StaticLibraryCallExpression, public std::enable_shared_from_this<SLCPrintlnExpression>
   {
   public:
     ir_type *getFirmType() override;
@@ -661,7 +661,7 @@ namespace cmpl
     void doExpr() override;
   };
   
-  class SLCWriteExpression : public StaticLibraryCallExpression
+  class SLCWriteExpression : public StaticLibraryCallExpression, public std::enable_shared_from_this<SLCWriteExpression>
   {
   public:
     ir_type *getFirmType() override;
@@ -675,7 +675,7 @@ namespace cmpl
     void doExpr() override;
   };
   
-  class SLCFlushExpression : public StaticLibraryCallExpression
+  class SLCFlushExpression : public StaticLibraryCallExpression, public std::enable_shared_from_this<SLCFlushExpression>
   {
   public:
     ir_type *getFirmType() override;
@@ -686,7 +686,7 @@ namespace cmpl
     void doExpr() override;
   };
   
-  class SLCReadExpression : public StaticLibraryCallExpression
+  class SLCReadExpression : public StaticLibraryCallExpression, public std::enable_shared_from_this<SLCReadExpression>
   {
   public:
     ir_type *getFirmType() override;

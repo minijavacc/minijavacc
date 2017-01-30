@@ -1,7 +1,5 @@
 #pragma once
 
-class Types;
-
 #include "ast.h"
 #include <map>
 

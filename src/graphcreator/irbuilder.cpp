@@ -494,7 +494,6 @@ void SLCPrintlnExpression::doExpr()
   ir_node *call = new_Call(get_store(), addr, 1, args, n->getFirmType());
   ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
   ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
-  //ir_node *res = new_Proj(tres, Types::getVoidNode()->type->getFirmMode(), 0);
   
   set_store(mem);
   
@@ -520,7 +519,6 @@ void SLCWriteExpression::doExpr()
   ir_node *call = new_Call(get_store(), addr, 1, args, n->getFirmType());
   ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
   ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
-  //ir_node *res = new_Proj(tres, Types::getVoidNode()->type->getFirmMode(), 0);
   
   set_store(mem);
   
@@ -541,7 +539,6 @@ void SLCFlushExpression::doExpr()
   ir_node *call = new_Call(get_store(), addr, 0, NULL, n->getFirmType());
   ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
   ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
-  //ir_node *res = new_Proj(tres, Types::getVoidNode()->type->getFirmMode(), 0);
   
   set_store(mem);
   
@@ -562,7 +559,7 @@ void SLCReadExpression::doExpr()
   ir_node *call = new_Call(get_store(), addr, 0, NULL, n->getFirmType());
   ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
   ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
-  ir_node *res = new_Proj(tres, Types::getIntNode()->type->getFirmMode(), 0);
+  ir_node *res = new_Proj(tres, mode_Is, 0);
   
   set_store(mem);
   
@@ -1174,7 +1171,6 @@ void IRBuilder::dispatch(std::shared_ptr<ArrayAccess> n) { assert(false); };
 void IRBuilder::dispatch(std::shared_ptr<CRef> n) { assert(false); };
 void IRBuilder::dispatch(std::shared_ptr<NewArray> n) { assert(false); };
 void IRBuilder::dispatch(std::shared_ptr<CIntegerLiteral> n) { assert(false); };
-void IRBuilder::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) { assert(false); };
 
 
 

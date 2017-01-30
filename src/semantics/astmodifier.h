@@ -12,7 +12,10 @@ namespace cmpl {
   class AstModifier : public Dispatcher, public std::enable_shared_from_this<AstModifier> {
   private:
     void error(const std::string &err);
-    std::shared_ptr<Expression> convertToStaticLibraryCallExpressionNode(std::shared_ptr<UnaryRightExpression> n);
+    std::shared_ptr<Expression> convertToSLCPrintlnExpressionNode(std::shared_ptr<UnaryRightExpression> n);
+    std::shared_ptr<Expression> convertToSLCWriteExpressionNode(std::shared_ptr<UnaryRightExpression> n);
+    std::shared_ptr<Expression> convertToSLCFlushExpressionNode();
+    std::shared_ptr<Expression> convertToSLCReadExpressionNode();
     std::shared_ptr<Expression> converToCIntegerLiteralWithoutNegate(std::shared_ptr<UnaryLeftExpression> n);
     
     std::vector<std::shared_ptr<Expression>*> parentExpressionPtrStack;
@@ -22,12 +25,20 @@ namespace cmpl {
     std::shared_ptr<Method> currentMethod;
     std::shared_ptr<MainMethod> mainMethod;
     
-    // needed for System.out.println
+    // needed for System.out.{println, write, flush}
     std::shared_ptr<Expression> cRefSystem;
-    std::shared_ptr<Expression> exprSystemOut;
-    std::shared_ptr<UnaryOp> fieldAccessOut;
-    std::shared_ptr<UnaryOp> methodInvocationPrintln;
+    std::shared_ptr<Expression> exprSystemOut;          //System.out (combined)
+    std::shared_ptr<UnaryOp>    fieldAccessOut;         //.out
+    std::shared_ptr<UnaryOp>    methodInvocationPrintln;
     std::shared_ptr<Expression> printlnParamExpr;
+    std::shared_ptr<UnaryOp>    methodInvocationWrite;
+    std::shared_ptr<Expression> writeParamExpr;
+    std::shared_ptr<UnaryOp>    methodInvocationFlush;
+    
+    // needed for System.in.read
+    std::shared_ptr<Expression> exprSystemIn;           //System.in (combined)
+    std::shared_ptr<UnaryOp>    fieldAccessIn;          //.in
+    std::shared_ptr<UnaryOp>    methodInvocationRead;
     
     // needed for -CIntegerLiteral
     std::shared_ptr<Expression> cIntegerLiteral;
