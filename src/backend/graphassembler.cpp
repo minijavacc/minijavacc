@@ -10,12 +10,12 @@ using namespace cmpl;
 
 inline shared_ptr<LabeledBlock> GraphAssembler::getLabeledBlockForIrNode(ir_node *node)
 {
-  return blocks.at(nodeNrToLabel.at(get_irn_node_nr(get_nodes_block(node))));
+  return context->blocks.at(context->nodeNrToLabel.at(get_irn_node_nr(get_nodes_block(node))));
 }
 
 shared_ptr<Value> GraphAssembler::getValue(ir_node *node) {
-  if (registers.count(get_irn_node_nr(node)) > 0) {
-    return registers.at(get_irn_node_nr(node));
+  if (context->registers.count(get_irn_node_nr(node)) > 0) {
+    return context->registers.at(get_irn_node_nr(node));
   }
   
   auto r = make_shared<Value>(get_irn_mode(node));
@@ -24,38 +24,27 @@ shared_ptr<Value> GraphAssembler::getValue(ir_node *node) {
 }
 
 void GraphAssembler::setValue(ir_node *node, shared_ptr<Value> r) {
-  registers.emplace(get_irn_node_nr(node), r);
-}
-
-void GraphAssembler::allocValue(shared_ptr<Value> &r) {
-  if (r->type == ValueTypeVirtual)
-  {
-    // decrement global topOfStack to get new offset
-    topOfStack -= 8;
-    
-    r->type = ValueTypeStackSlot;
-    r->offset = topOfStack;
-  }
+  context->registers.emplace(get_irn_node_nr(node), r);
 }
 
 Label GraphAssembler::getLabel(ir_node *node) {
-  if (nodeNrToLabel.count(get_irn_node_nr(node)) > 0) {
-    return nodeNrToLabel.at(get_irn_node_nr(node));
+  if (context->nodeNrToLabel.count(get_irn_node_nr(node)) > 0) {
+    return context->nodeNrToLabel.at(get_irn_node_nr(node));
   }
   
   // if is the first label, take the function name
-  if (nodeNrToLabel.empty())
+  if (context->nodeNrToLabel.empty())
   {
     Label l = get_entity_ld_name(get_irg_entity(irg));
-    nodeNrToLabel.emplace(get_irn_node_nr(node), l);
+    context->nodeNrToLabel.emplace(get_irn_node_nr(node), l);
     return l;
   }
   else
   {
-    string p = labelPrefix;
-    Label l = p + to_string(nextFreeLabel);
-    nodeNrToLabel.emplace(get_irn_node_nr(node), l);
-    nextFreeLabel = nextFreeLabel + 1;
+    string p = context->labelPrefix;
+    Label l = p + to_string(context->nextFreeLabel);
+    context->nodeNrToLabel.emplace(get_irn_node_nr(node), l);
+    context->nextFreeLabel = context->nextFreeLabel + 1;
     return l;
   }
 }
@@ -72,17 +61,17 @@ void GraphAssembler::insertProlog() {
   int x = 1; // for iterator
   
   auto m = make_shared<StaticInstruction>("movq %rsp, %rbp", __func__, __LINE__);
-  Label fl = labels.front();
-  auto bl = blocks.at(fl);
+  Label fl = context->labels.front();
+  auto bl = context->blocks.at(fl);
   auto it = bl->instructions.begin();
   bl->instructions.insert(it, p);
   it = bl->instructions.begin();
   bl->instructions.insert(it + x++, m);
   
-  if (topOfStack < 0)
+  if (context->topOfStack < 0)
   {
     auto s = make_shared<subq_rsp>(__func__, __LINE__);
-    s->bytes = (unsigned) topOfStack;
+    s->bytes = (unsigned) context->topOfStack;
     it = bl->instructions.begin();
     bl->instructions.insert(it + x++, s);
   }
@@ -90,14 +79,14 @@ void GraphAssembler::insertProlog() {
   // get all arguments (that are used) from the registers and save them to the stack
   for (int i = 0; i < 6; i++)
   {
-    if (regArgsToValue[i] == nullptr)
+    if (context->regArgsToValue[i] == nullptr)
     {
       return;
     }
     
     // move parameter to virtual register
     auto inst = make_shared<mov>(__func__, __LINE__);
-    inst->dest = regArgsToValue[i];
+    inst->dest = context->regArgsToValue[i];
     auto size = inst->dest->size;
     
     switch (i)
@@ -148,8 +137,8 @@ void GraphAssembler::insertProlog() {
 void GraphAssembler::collectPhi(ir_node *node) {
   // Step 1: Collect all phi nodes of every block
   ir_node *bl = get_nodes_block(node);
-  Label l = nodeNrToLabel.at(get_irn_node_nr(bl));
-  shared_ptr<LabeledBlock> lb = blocks.at(l);
+  Label l = context->nodeNrToLabel.at(get_irn_node_nr(bl));
+  shared_ptr<LabeledBlock> lb = context->blocks.at(l);
   lb->phis.push_back(node);
   
   // Important: destination register has to be known right after this point in time
@@ -166,8 +155,8 @@ void GraphAssembler::buildBlock(ir_node *node) {
   Label l = getLabel(node);
   auto lb = make_shared<LabeledBlock>();
   lb->label = l;
-  blocks.emplace(l, lb);
-  labels.push_back(l);
+  context->blocks.emplace(l, lb);
+  context->labels.push_back(l);
 }
 
 void GraphAssembler::buildConst(ir_node *node) {
@@ -214,8 +203,8 @@ void GraphAssembler::buildCond(ir_node *node) {
   ir_node *l = get_Cmp_left(s);
   ir_node *r = get_Cmp_right(s);
   
-  auto lreg = registers[get_irn_node_nr(l)];
-  auto rreg = registers[get_irn_node_nr(r)];
+  auto lreg = context->registers[get_irn_node_nr(l)];
+  auto rreg = context->registers[get_irn_node_nr(r)];
   
   auto comp = make_shared<cmp>(__func__, __LINE__);
   comp->src1 = lreg;
@@ -265,7 +254,7 @@ void GraphAssembler::buildProj(ir_node *node) {
     // and generate mov instructions in insertProlog
     if (i < 6)
     {
-      regArgsToValue[i] = getValue(node);			
+      context->regArgsToValue[i] = getValue(node);			
     }
     // if argument > 5
     else
@@ -278,9 +267,9 @@ void GraphAssembler::buildProj(ir_node *node) {
   {
     // else: if predecessor maps to a register, map to the same one
     // hacky, but should work
-    if (registers.count(get_irn_node_nr(pred)) > 0)
+    if (context->registers.count(get_irn_node_nr(pred)) > 0)
     {
-      setValue(node, registers[get_irn_node_nr(pred)]);
+      setValue(node, context->registers[get_irn_node_nr(pred)]);
     }
   }
 }
@@ -289,8 +278,8 @@ void GraphAssembler::buildAdd(ir_node *node) {
   ir_node *l = get_Add_left(node);
   ir_node *r = get_Add_right(node);
   
-  auto lreg = registers[get_irn_node_nr(l)];
-  auto rreg = registers[get_irn_node_nr(r)];
+  auto lreg = context->registers[get_irn_node_nr(l)];
+  auto rreg = context->registers[get_irn_node_nr(r)];
   auto oreg = getValue(node);
   
   auto inst = make_shared<add>(__func__, __LINE__);
@@ -304,7 +293,7 @@ void GraphAssembler::buildAdd(ir_node *node) {
 void GraphAssembler::buildReturn(ir_node *node) {
   if (get_Return_n_ress(node) > 0) {
     ir_node *pred = get_Return_res(node, 0);
-    auto r = registers[get_irn_node_nr(pred)];
+    auto r = context->registers[get_irn_node_nr(pred)];
     auto inst = make_shared<mov>(__func__, __LINE__);
     inst->src1 = r;
     inst->dest = Value::_ax(inst->src1->size);
@@ -333,8 +322,8 @@ void GraphAssembler::buildCall(ir_node *node) {
   {
     ir_node *a = get_Call_param(node, i);
     
-    assert(registers.count(get_irn_node_nr(a)) > 0);
-    shared_ptr<Value> reg = registers[get_irn_node_nr(a)];
+    assert(context->registers.count(get_irn_node_nr(a)) > 0);
+    shared_ptr<Value> reg = context->registers[get_irn_node_nr(a)];
     
     // move parameter to physical register
     auto inst = make_shared<mov>(__func__, __LINE__);
@@ -386,8 +375,8 @@ void GraphAssembler::buildCall(ir_node *node) {
     {
       ir_node *a = get_Call_param(node, i);
       
-      assert(registers.count(get_irn_node_nr(a)) > 0);
-      shared_ptr<Value> reg = registers[get_irn_node_nr(a)];
+      assert(context->registers.count(get_irn_node_nr(a)) > 0);
+      shared_ptr<Value> reg = context->registers[get_irn_node_nr(a)];
       
       // create mov instruction to move value to stack
       auto m = make_shared<mov>(reg, (i - 6) * 8, __func__, __LINE__);
@@ -439,8 +428,8 @@ void GraphAssembler::buildSub(ir_node *node) {
   ir_node *l = get_Sub_left(node);
   ir_node *r = get_Sub_right(node);
   
-  auto lreg = registers[get_irn_node_nr(l)];
-  auto rreg = registers[get_irn_node_nr(r)];
+  auto lreg = context->registers[get_irn_node_nr(l)];
+  auto rreg = context->registers[get_irn_node_nr(r)];
   auto oreg = getValue(node);
   
   auto inst = make_shared<sub>(__func__, __LINE__);
@@ -454,8 +443,8 @@ void GraphAssembler::buildMul(ir_node *node) {
   ir_node *l = get_Mul_left(node);
   ir_node *r = get_Mul_right(node);
   
-  auto lreg = registers[get_irn_node_nr(l)];
-  auto rreg = registers[get_irn_node_nr(r)];
+  auto lreg = context->registers[get_irn_node_nr(l)];
+  auto rreg = context->registers[get_irn_node_nr(r)];
   auto oreg = getValue(node);
   
   auto inst = make_shared<imul>(__func__, __LINE__);
@@ -469,8 +458,8 @@ void GraphAssembler::buildDiv(ir_node *node) {
   ir_node *l = get_Div_left(node);
   ir_node *r = get_Div_right(node);
   
-  auto lreg = registers[get_irn_node_nr(l)];
-  auto rreg = registers[get_irn_node_nr(r)];
+  auto lreg = context->registers[get_irn_node_nr(l)];
+  auto rreg = context->registers[get_irn_node_nr(r)];
  
   auto inst = make_shared<div>(__func__, __LINE__);
   inst->src1 = lreg;
@@ -483,8 +472,8 @@ void GraphAssembler::buildMod(ir_node *node) {
   ir_node *l = get_Mod_left(node);
   ir_node *r = get_Mod_right(node);
   
-  auto lreg = registers[get_irn_node_nr(l)];
-  auto rreg = registers[get_irn_node_nr(r)];
+  auto lreg = context->registers[get_irn_node_nr(l)];
+  auto rreg = context->registers[get_irn_node_nr(r)];
 
   auto inst = make_shared<mod>(__func__, __LINE__);
   inst->src1 = lreg;
@@ -496,321 +485,13 @@ void GraphAssembler::buildMod(ir_node *node) {
 void GraphAssembler::buildMinus(ir_node *node) {
   ir_node *m = get_Minus_op(node);
 
-  auto mreg = registers[get_irn_node_nr(m)];
+  auto mreg = context->registers[get_irn_node_nr(m)];
   auto oreg = getValue(node);
   
   auto inst = make_shared<neg>(__func__, __LINE__);
   inst->src1 = mreg;
   inst->dest = oreg;
   getLabeledBlockForIrNode(node)->instructions.push_back(inst);
-}
-
-
-
-
-
-#pragma mark - Physical register allocation
-
-void GraphAssembler::deliverValue(shared_ptr<Value> &src, shared_ptr<Value> &dest, vector<shared_ptr<Instruction>> &instructions)
-{
-  switch (src->type)
-  {
-    case ValueTypeVirtual:
-      switch (dest->type)
-      {
-        case ValueTypePhysical:
-        {
-          src->type = dest->type;
-          src->identifier = dest->identifier;
-          break;
-        }
-          
-        case ValueTypeStackSlot:
-        {
-          src->type = dest->type;
-          src->offset = dest->offset;
-          break;
-        }
-          
-        case ValueTypeVirtual:
-        {
-          allocValue(dest);
-          src->type = dest->type;
-          src->offset = dest->offset;
-          break;
-        }
-        
-        default:
-          assert(false);
-      }
-      break;
-    
-    case ValueTypeImmediate:
-      switch (dest->type)
-      {
-        case ValueTypePhysical:
-        case ValueTypeStackSlot:
-        {
-          auto m = make_shared<mov>(__func__, __LINE__);
-          m->src1 = src;
-          m->dest = dest;
-          instructions.push_back(m);
-          break;
-        }
-          
-        case ValueTypeVirtual:
-        {
-          dest->type = src->type;
-          dest->immediate = src->immediate;
-          break;
-        }
-        
-        default:
-          assert(false);
-      }
-      break;
-    
-    case ValueTypePhysical:
-      switch (dest->type)
-      {
-        case ValueTypePhysical:
-        {
-          if (src->identifier == dest->identifier)
-            return;
-          // no break
-        }
-        case ValueTypeStackSlot:
-        {
-          auto m = make_shared<mov>(__func__, __LINE__);
-          m->src1 = src;
-          m->dest = dest;
-          instructions.push_back(m);
-          break;
-        }
-          
-        case ValueTypeVirtual:
-        {
-          dest->type = src->type;
-          dest->offset = src->offset;
-          break;
-        }
-        
-        default:
-          assert(false);
-      }
-      break;
-    
-    case ValueTypeStackSlot:
-      switch (dest->type)
-      {
-        case ValueTypePhysical:
-        {
-          auto m = make_shared<mov>(__func__, __LINE__);
-          m->src1 = src;
-          m->dest = dest;
-          instructions.push_back(m);
-          break;
-        }
-        
-        case ValueTypeStackSlot:
-        {
-          if (src->offset == dest->offset)
-            return;
-          auto m1 = make_shared<mov>(__func__, __LINE__);
-          m1->src1 = src;
-          m1->dest = Value::r10_(m1->src1->size);
-          instructions.push_back(m1);
-          auto m2 = make_shared<mov>(__func__, __LINE__);
-          m2->src1 = Value::r10_(m1->src1->size);
-          m2->dest = dest;
-          instructions.push_back(m2);
-          break;
-        }
-          
-        case ValueTypeVirtual:
-        {
-          dest->type = src->type;
-          dest->offset = src->offset;
-          break;
-        }
-        
-        default:
-          assert(false);
-      }
-      break;
-    
-    default:
-      assert(false);
-  }
-}
-
-
-void GraphAssembler::allocI2to1(shared_ptr<Instruction> instr, I2to1 *i, vector<shared_ptr<Instruction>> &instructions_)
-{
-  // the first operand (src1 and dest) must not be a memory location
-  // because we never map two different values on the same stack frame
-  
-  auto r = Value::r10_(i->src1->size);
-  
-  deliverValue(i->src1, r, instructions_);
-  instructions_.push_back(instr);
-  deliverValue(r, i->dest, instructions_);
-  
-  allocValue(i->src2);
-  
-  i->src1 = r;
-  i->dest = r;
-}
-
-void GraphAssembler::allocI2to0(shared_ptr<Instruction> instr, I2to0 *i, vector<shared_ptr<Instruction>> &instructions_)
-{
-  allocValue(i->src1);
-  allocValue(i->src2);
-  
-  // ony one operand can be a memory access
-  if (i->src1->type == ValueTypeStackSlot && 
-      i->src2->type == ValueTypeStackSlot)
-  {
-    auto r1 = Value::r10_(i->src1->size);
-    deliverValue(i->src1, r1, instructions_);
-    i->src1 = r1;
-  }
-  
-  // src2 must not be an immediate
-  if (i->src2->type == ValueTypeImmediate)
-  {
-    auto r1 = Value::r10_(i->src1->size);
-    deliverValue(i->src2, r1, instructions_);
-    i->src2 = r1;
-  }
-  
-  // src2 as memory and src1 as immediate is not allowed
-  if (i->src2->type == ValueTypeStackSlot && 
-      i->src1->type == ValueTypeImmediate)
-  {
-    auto r1 = Value::r10_(i->src1->size);
-    deliverValue(i->src2, r1, instructions_);
-    i->src2 = r1;
-  }
-  
-  instructions_.push_back(instr);
-}
-
-void GraphAssembler::allocI1to1(shared_ptr<Instruction> instr, I1to1 *i, vector<shared_ptr<Instruction>> &instructions_)
-{
-  allocValue(i->src1);
-  allocValue(i->dest);
-  
-  // ony one operand can be a memory access
-  if (i->src1->type == ValueTypeStackSlot && 
-      i->dest->type == ValueTypeStackSlot)
-  {
-    auto r1 = Value::r10_(i->src1->size);
-    deliverValue(i->src1, r1, instructions_);
-    i->src1 = r1;
-  }
-  
-  instructions_.push_back(instr);
-}
-
-void GraphAssembler::allocI1to0(shared_ptr<Instruction> instr, I1to0 *i, vector<shared_ptr<Instruction>> &instructions_)
-{ 
-  allocValue(i->src1);
-  
-  instructions_.push_back(instr);
-}
-
-void GraphAssembler::allocI0to1(shared_ptr<Instruction> instr, I0to1 *i, vector<shared_ptr<Instruction>> &instructions_)
-{ 
-  allocValue(i->dest);
-  
-  instructions_.push_back(instr);
-}
-
-void GraphAssembler::allocDiv(shared_ptr<Instruction> instr, div *i, vector<shared_ptr<Instruction>> &instructions_)
-{ 
-  auto quotient = Value::eax();
-  auto low = Value::eax();
-  auto divisor = i->src1;
-  auto dividend = i->src2;
-  auto nullvalue = make_shared<Value>( 0,ValueSize32);
-  
-  // allocation copied from alloc2to0()
-    allocValue(i->src1);
-  allocValue(i->src2);
-  
-  // ony one operand can be a memory access
-  if (i->src1->type == ValueTypeStackSlot && 
-      i->src2->type == ValueTypeStackSlot)
-  {
-    auto r1 = Value::r10_(i->src1->size);
-    deliverValue(i->src1, r1, instructions_);
-    i->src1 = r1;
-  }
-  
-  // src2 must not be an immediate
-  if (i->src2->type == ValueTypeImmediate)
-  {
-    auto r1 = Value::r10_(i->src1->size);
-    deliverValue(i->src2, r1, instructions_);
-    i->src2 = r1;
-  }
-  
-  // src2 as memory and src1 as immediate is not allowed
-  if (i->src2->type == ValueTypeStackSlot && 
-      i->src1->type == ValueTypeImmediate)
-  {
-    auto r1 = Value::r10_(i->src1->size);
-    deliverValue(i->src2, r1, instructions_);
-    i->src2 = r1;
-  }
-  
-  //this throws an assertion in mov:generate :(
-  //allocValue(i->result);
-  
-  deliverValue(dividend, low, instructions_);
-  //reset high (edx) 
-  auto cl = make_shared<cltd>(__func__, __LINE__);
-  instructions_.push_back(cl);   
-  instructions_.push_back(instr);
-  deliverValue(quotient, i->result, instructions_);
-}
-
-void GraphAssembler::allocMod(shared_ptr<Instruction> instr, mod *i, vector<shared_ptr<Instruction>> &instructions_)
-{ 
-  auto remainder = Value::edx();
-  instructions_.push_back(instr);
- // deliverValue(r, i->result, instructions_);
-}
-
-void GraphAssembler::allocCall(shared_ptr<Instruction> instr, call *i, vector<shared_ptr<Instruction>> &instructions_)
-{ 
-  // if function returns void, i->dest is NULL
-  
-  instructions_.push_back(instr);
-  
-  if (i->dest != nullptr)
-  {
-    // move result to stack
-    auto ax = Value::_ax(i->dest->size);
-    deliverValue(ax, i->dest, instructions_);
-  }
-}
-
-void GraphAssembler::allocMove(shared_ptr<Instruction> instr, mov *i, vector<shared_ptr<Instruction>> &instructions_)
-{
-  allocValue(i->src1);
-  allocValue(i->dest);
-  
-  if (i->src1->type == ValueTypeStackSlot && 
-      i->dest->type == ValueTypeStackSlot)
-  {
-    auto r1 = Value::r10_(i->src1->size);
-    deliverValue(i->src1, r1, instructions_);
-    i->src1 = r1;
-  }
-  
-  instructions_.push_back(instr);
 }
 
 
@@ -878,12 +559,13 @@ void irgNodeWalker(ir_node *node, void *env)
 string GraphAssembler::run()
 {  
   // Store number of arguments
+
   string assemblerOutput;
-  blocks = map<Label, shared_ptr<LabeledBlock>>();
-  labels = vector<Label>();
+  context->blocks = map<Label, shared_ptr<LabeledBlock>>();
+  context->labels = vector<Label>();
   ir_entity *ent = get_irg_entity(irg);
   ir_type *ty = get_entity_type(ent);
-  nargs = get_method_n_params(ty);
+  context->nargs = get_method_n_params(ty);
 
   
   lower_highlevel_graph(irg);
@@ -892,7 +574,9 @@ string GraphAssembler::run()
   edges_activate(irg);
   
   irgSerialize();
-  irgRegisterAllocation();
+  
+  
+  registerAllocator->registerAllocation(context);
   assemblerOutput = irgCodeGeneration();
   
   // deactivate edges
@@ -905,7 +589,7 @@ string GraphAssembler::run()
 
 void GraphAssembler::irgSerialize()
 {
-  labelPrefix = AMD64LabelPrefix + std::to_string(get_irg_graph_nr(irg)) + "_";
+  context->labelPrefix = AMD64LabelPrefix + std::to_string(get_irg_graph_nr(irg)) + "_";
   
   // Walk graph
   irg_walk_topological(irg, irgNodeWalker, static_cast<void*>(this));
@@ -914,7 +598,7 @@ void GraphAssembler::irgSerialize()
   phiInsertion();
   
   // Finalise (append exit instructions to instruction list)
-  for (auto pair : blocks) {
+  for (auto pair : context->blocks) {
     auto bl = pair.second;
     bl->finalize();
   }
@@ -927,8 +611,8 @@ void GraphAssembler::irgSerialize()
 
 void GraphAssembler::phiInsertion()
 {
-  for (auto const& l : labels) {
-    auto lb = blocks.at(l);
+  for (auto const& l : context->labels) {
+    auto lb = context->blocks.at(l);
     
     // Step 2: Load all phis into temporary helper registers
     for (auto const& phi : lb->phis) {
@@ -942,8 +626,8 @@ void GraphAssembler::phiInsertion()
         ir_node *j = get_Block_cfgpred(bl, i);
         ir_node *jbl = get_nodes_block(j);
         
-        Label l = nodeNrToLabel.at(get_irn_node_nr(jbl));
-        shared_ptr<LabeledBlock> lb = blocks.at(l);
+        Label l = context->nodeNrToLabel.at(get_irn_node_nr(jbl));
+        shared_ptr<LabeledBlock> lb = context->blocks.at(l);
         
         auto m = make_shared<mov>(__func__, __LINE__); TODO:
         m->src1 = inReg;
@@ -980,58 +664,6 @@ void GraphAssembler::phiInsertion()
   }
 }
 
-
-
-void GraphAssembler::irgRegisterAllocation()
-{
-  // work with instructions-vector
-  // primitive: just use 2 registers
-  for (auto const& label : labels) {
-    auto lb = blocks.at(label);
-    auto instructions = lb->instructions;
-    auto instructions_ = vector<shared_ptr<Instruction>>();
-    
-    for (auto const& instruction : instructions) {
-      if (auto i = dynamic_cast<I2to1*>(instruction.get())) {
-        allocI2to1(instruction, i, instructions_);
-        
-      } else if (auto i = dynamic_cast<div*>(instruction.get())) {
-		  allocDiv(instruction, i, instructions_);		
-      } else if (auto i = dynamic_cast<mod*>(instruction.get())) {
-		  allocMod(instruction, i, instructions_);
-      } else if (auto i = dynamic_cast<I2to0*>(instruction.get())) {
-		allocI2to0(instruction, i, instructions_);
-		
-      } else if (auto i = dynamic_cast<I1to1*>(instruction.get())) {
-        allocI1to1(instruction, i, instructions_);
-        
-      } else if (auto i = dynamic_cast<I1to0*>(instruction.get())) {
-        allocI1to0(instruction, i, instructions_);
-        
-      } else if (auto i = dynamic_cast<I0to1*>(instruction.get())) {
-        allocI0to1(instruction, i, instructions_);
-        
-      } else if (auto i = dynamic_cast<call*>(instruction.get())) {
-        allocCall(instruction, i, instructions_);
-        
-      } else if (auto i = dynamic_cast<mov*>(instruction.get())) {
-        allocMove(instruction, i, instructions_);
-        
-      } else {
-        instructions_.push_back(instruction);
-        
-      }
-    }
-    
-    lb->instructions = std::move(instructions_);
-  }
-  
-  // enhanced: from https://en.wikipedia.org/wiki/X86_calling_conventions#x86-64_calling_conventions
-  // System V AMD64: 6 times int/pointer {RDI, RSI, RDX, RCX, R8, R9} ["certain" floating point {XMM0–7} probably irrelevant for us] Caller Stack aligned on 16 bytes
-  // after the allocation only 6 registers must be used
-  // save size of needed stack frame somewhere
-}
-
 string GraphAssembler::irgCodeGeneration()
 {
   // call generate() for every instruction, set labels, create one long string
@@ -1042,10 +674,10 @@ string GraphAssembler::irgCodeGeneration()
   assembler += ".p2align 4,,15\n";
   assembler += ".type " + ldname + ", @function\n";
   
-  for (auto const& label : labels) {
+  for (auto const& label : context->labels) {
     assembler += label + ":\n";
     
-    auto instructions = blocks.at(label)->instructions;
+    auto instructions = context->blocks.at(label)->instructions;
     
     for (auto const& instruction : instructions) {
       assembler += "\t" + instruction->generate() + "\n";
