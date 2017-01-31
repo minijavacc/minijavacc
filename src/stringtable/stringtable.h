@@ -37,6 +37,7 @@ namespace cmpl
       static const StringIdentifier invalidIdentifier = 0;
       
     private:
+      // TODO insert strings "System", "in", "out", etc. to cut expensive lookupIdentifier calls
       StringTable() { };
       static std::map<std::string, StringTableContainer> map;
 ;
