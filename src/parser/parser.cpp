@@ -174,11 +174,15 @@ std::shared_ptr<ClassMember> Parser::parseClassMember(std::shared_ptr<ClassDecla
     if(StringTable::lookupIdentifier(stringID) != "String") {
       error("Main method needs String as parameter type!");
     }
-    assureNextIsOSKTokenWithType(T_O_LBRACK);
-    assureNextIsOSKTokenWithType(T_O_RBRACK);
-    parameterID = getIdentifierFromNext();
-    assureNextIsOSKTokenWithType(T_O_RPAREN);
-    nextToken();
+    assureNextIsOSKTokenWithType(T_O_LBRACK); // [
+    assureNextIsOSKTokenWithType(T_O_RBRACK); // ]
+    parameterID = getIdentifierFromNext();    // args
+    assureNextIsOSKTokenWithType(T_O_RPAREN); // )
+    //optional throws
+    if(isNextTokenOSKTokenOfType(T_K_THROWS)) {
+      getIdentifierFromNext(); // assure next is identifier, but ignore value
+      nextToken();
+    }
     block = parseBlock();
     return std::make_shared<MainMethod>(ID, parameterID, block, clsDecl);
   } else {
@@ -202,14 +206,18 @@ std::shared_ptr<ClassMember> Parser::parseClassMember(std::shared_ptr<ClassDecla
         parameters.push_back(std::move(parseParameter()));
         continuous = true;
       }
-      nextToken();
+      //optional throws
+      if(isNextTokenOSKTokenOfType(T_K_THROWS)) {
+        getIdentifierFromNext(); // assure next is identifier, but ignore value
+        nextToken();
+      }
       block = parseBlock();
       return std::make_shared<Method>(type, ID, parameters, block, clsDecl);
     } else {
       error("Neither Field nor Method definition");
     }
   }
-    return nullptr;
+  return nullptr;
 }
 
 std::shared_ptr<Type> Parser::parseType()
