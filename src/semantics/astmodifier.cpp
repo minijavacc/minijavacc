@@ -161,9 +161,6 @@ void AstModifier::dispatch(std::shared_ptr<CRef> n) {
         cRefSystem = n;
       }
     }
-  } else {
-    //should not happen. Probably fatal.
-    assert (false);
   }
 };
 
