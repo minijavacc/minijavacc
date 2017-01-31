@@ -632,18 +632,16 @@ namespace cmpl
     void accept(std::shared_ptr<Dispatcher> d) override;
     void doExpr() override;
   };
-
-  class StaticLibraryCallExpression : public Expression
-  {    
-  public:
-    virtual ir_type *getFirmType();
-    virtual ir_entity *getFirmEntity();
-    
-    StaticLibraryCallExpression() : Expression() { };
-    virtual void accept (std::shared_ptr<Dispatcher> d);
-    virtual void doExpr();
-  };
   
+  class StaticLibraryCallExpression : public Expression
+  {
+  public:
+    virtual ir_type *getFirmType() = 0;
+    virtual ir_entity *getFirmEntity() = 0;
+    
+    virtual void accept (std::shared_ptr<Dispatcher> d) = 0;
+    virtual void doExpr() = 0;
+  };
   
   class SLCPrintlnExpression : public StaticLibraryCallExpression, public std::enable_shared_from_this<SLCPrintlnExpression>
   {
@@ -654,7 +652,7 @@ namespace cmpl
     std::shared_ptr<Expression> expression;
     
     SLCPrintlnExpression(std::shared_ptr<Expression> &expression)
-      : StaticLibraryCallExpression(), expression(std::move(expression)) { };
+      : expression(std::move(expression)) { };
     void accept (std::shared_ptr<Dispatcher> d) override;
     void doExpr() override;
   };
@@ -668,7 +666,7 @@ namespace cmpl
     std::shared_ptr<Expression> expression;
     
     SLCWriteExpression(std::shared_ptr<Expression> &expression)
-      : StaticLibraryCallExpression(), expression(std::move(expression)) { };
+      : expression(std::move(expression)) { };
     void accept (std::shared_ptr<Dispatcher> d) override;
     void doExpr() override;
   };
@@ -679,7 +677,7 @@ namespace cmpl
     ir_type *getFirmType() override;
     ir_entity *getFirmEntity() override;
     
-    SLCFlushExpression() : StaticLibraryCallExpression() { };
+    SLCFlushExpression() { };
     void accept (std::shared_ptr<Dispatcher> d) override;
     void doExpr() override;
   };
@@ -690,7 +688,7 @@ namespace cmpl
     ir_type *getFirmType() override;
     ir_entity *getFirmEntity() override;
     
-    SLCReadExpression() : StaticLibraryCallExpression() { };
+    SLCReadExpression() { };
     void accept (std::shared_ptr<Dispatcher> d) override;
     void doExpr() override;
   };
