@@ -434,8 +434,11 @@ ir_type *SLCWriteExpression::getFirmType() {
   return assureVoidTakesInt();
 }
 
-static ir_type *void_type = new_type_method(0, 0, false, cc_cdecl_set, mtp_no_property);
+static ir_type *void_type = NULL;
 ir_type *SLCFlushExpression::getFirmType() {
+  if(!void_type) {
+    void_type = new_type_method(0, 0, false, cc_cdecl_set, mtp_no_property);
+  }
   return void_type;
 }
 
