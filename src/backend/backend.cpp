@@ -51,7 +51,7 @@ void Backend::runExternalLinker()
 
 void println(int32_t a) {
 /* The ISO C standard requires a long int to have at least 32 bits. */
-  if (fprintf(stdout , "%ld\n", (long) x) < 0) {
+  if (fprintf(stdout , "%ld\n", (long) a) < 0) {
     fprintf(stderr , "error:␣println:␣%s\n", strerror(errno));
     abort();
   }
