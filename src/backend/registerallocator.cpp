@@ -243,40 +243,10 @@ void RegisterAllocator::allocDiv(shared_ptr<Instruction> instr, div *i, vector<s
   auto low = Value::eax();
   auto divisor = i->src1;
   auto dividend = i->src2;
-  auto nullvalue = make_shared<Value>( 0,ValueSize32);
   
-  // allocation copied from alloc2to0()
-    allocValue(i->src1);
+  allocValue(i->src1);
   allocValue(i->src2);
-  
-  // ony one operand can be a memory access
-  if (i->src1->type == ValueTypeStackSlot && 
-      i->src2->type == ValueTypeStackSlot)
-  {
-    auto r1 = Value::r10_(i->src1->size);
-    deliverValue(i->src1, r1, instructions_);
-    i->src1 = r1;
-  }
-  
-  // src2 must not be an immediate
-  if (i->src2->type == ValueTypeImmediate)
-  {
-    auto r1 = Value::r10_(i->src1->size);
-    deliverValue(i->src2, r1, instructions_);
-    i->src2 = r1;
-  }
-  
-  // src2 as memory and src1 as immediate is not allowed
-  if (i->src2->type == ValueTypeStackSlot && 
-      i->src1->type == ValueTypeImmediate)
-  {
-    auto r1 = Value::r10_(i->src1->size);
-    deliverValue(i->src2, r1, instructions_);
-    i->src2 = r1;
-  }
-  
-  //this throws an assertion in mov:generate :(
-  //allocValue(i->result);
+  allocValue(i->result);
   
   deliverValue(dividend, low, instructions_);
   //reset high (edx) 
@@ -289,8 +259,20 @@ void RegisterAllocator::allocDiv(shared_ptr<Instruction> instr, div *i, vector<s
 void RegisterAllocator::allocMod(shared_ptr<Instruction> instr, mod *i, vector<shared_ptr<Instruction>> &instructions_)
 { 
   auto remainder = Value::edx();
+  auto low = Value::eax();
+  auto divisor = i->src1;
+  auto dividend = i->src2;
+  
+  allocValue(i->src1);
+  allocValue(i->src2);
+  allocValue(i->result);
+  
+  deliverValue(dividend, low, instructions_);
+  //reset high (edx) 
+  auto cl = make_shared<cltd>(__func__, __LINE__);
+  instructions_.push_back(cl);   
   instructions_.push_back(instr);
- // deliverValue(r, i->result, instructions_);
+  deliverValue(remainder, i->result, instructions_);
 }
 
 void RegisterAllocator::allocCall(shared_ptr<Instruction> instr, call *i, vector<shared_ptr<Instruction>> &instructions_)
