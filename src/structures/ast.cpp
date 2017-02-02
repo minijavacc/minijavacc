@@ -1,6 +1,6 @@
-#include "../stringtable/stringtable.h"
+#include "stringtable.h"
 #include "ast.h"
-#include "amd64instructions.h"
+#include "../backend/amd64instructions.h"
 
 #include <memory>
 #include <string>

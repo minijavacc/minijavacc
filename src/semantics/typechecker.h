@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "../parser/ast.h"
+#include "../structures/ast.h"
 #include "checker.h"
 #include <cassert>
 

@@ -1,4 +1,4 @@
-#include "compiler.h"
+#include "../compiler/compiler.h"
 #include "inputparser.h"
 
 #include <iostream>

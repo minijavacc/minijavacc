@@ -1,9 +1,9 @@
 #include "staticdeclarationscollector.h"
 
-#include "../stringtable/stringtable.h"
+#include "../structures/stringtable.h"
 
 #include <iostream>
-#include "types.h"
+#include "../structures/types.h"
 
 using namespace cmpl;
 

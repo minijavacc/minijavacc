@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ast.h"
+#include "../structures/ast.h"
 
 namespace cmpl {
   

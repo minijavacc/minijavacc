@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "../parser/ast.h"
-#include "symboltable.h"
+#include "../structures/ast.h"
+#include "../structures/symboltable.h"
 #include "checker.h"
 
 using namespace std;

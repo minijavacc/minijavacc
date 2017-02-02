@@ -1,5 +1,5 @@
 #include "voidtypechecker.h"
-#include "types.h"
+#include "../structures/types.h"
 
 using namespace cmpl;
 

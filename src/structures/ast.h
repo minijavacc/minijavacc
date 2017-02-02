@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../stringtable/stringtable.h"
+#include "stringtable.h"
 
 #include <memory>
 #include <string>

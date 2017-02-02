@@ -15,7 +15,7 @@
 #include "voidtypechecker.h"
 #include "astmodifier.h"
 
-#include "../parser/ast.h"
+#include "../structures/ast.h"
 #include "../parser/prettyprinter.h"
 
 #include <iostream>

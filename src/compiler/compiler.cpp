@@ -1,13 +1,13 @@
 #include "compiler.h"
-#include "lexer.h"
-#include "parser.h"
-#include "stringtable.h"
-#include "token.h"
-#include "checker.h"
-#include "prettyprinter.h"
-#include "creator.h"
-#include "backend.h"
-#include "optimizer.h"
+#include "../lexer/lexer.h"
+#include "../parser/parser.h"
+#include "../structures/stringtable.h"
+#include "../structures/token.h"
+#include "../semantics/checker.h"
+#include "../parser/prettyprinter.h"
+#include "../graphcreator/creator.h"
+#include "../backend/backend.h"
+#include "../optimizer/optimizer.h"
 
 #include <iostream>
 #include <istream>

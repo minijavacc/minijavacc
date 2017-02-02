@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ast.h"
+#include "../structures/ast.h"
+#include "../backend/amd64instructions.h"
 #include "creator.h"
-#include "amd64instructions.h"
 
 #include <libfirm/firm.h>
 
