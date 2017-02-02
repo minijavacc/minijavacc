@@ -321,12 +321,11 @@ void RegisterAllocator::registerAllocation(AssemblerContext* assemblerContext)
         allocI2to1(instruction, i, instructions_);
         
       } else if (auto i = dynamic_cast<div*>(instruction.get())) {
-		  allocDiv(instruction, i, instructions_);		
+        allocDiv(instruction, i, instructions_);		
       } else if (auto i = dynamic_cast<mod*>(instruction.get())) {
-		  allocMod(instruction, i, instructions_);
+        allocMod(instruction, i, instructions_);
       } else if (auto i = dynamic_cast<I2to0*>(instruction.get())) {
-		allocI2to0(instruction, i, instructions_);
-		
+        allocI2to0(instruction, i, instructions_);
       } else if (auto i = dynamic_cast<I1to1*>(instruction.get())) {
         allocI1to1(instruction, i, instructions_);
         
@@ -341,10 +340,8 @@ void RegisterAllocator::registerAllocation(AssemblerContext* assemblerContext)
         
       } else if (auto i = dynamic_cast<mov*>(instruction.get())) {
         allocMove(instruction, i, instructions_);
-        
       } else {
         instructions_.push_back(instruction);
-        
       }
     }
     
