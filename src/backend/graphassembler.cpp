@@ -81,7 +81,7 @@ void GraphAssembler::insertProlog() {
   {
     if (regArgsToValue[i] == nullptr)
     {
-      return;
+      continue;
     }
     
     // move parameter to virtual register
