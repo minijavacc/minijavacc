@@ -460,11 +460,20 @@ void GraphAssembler::buildDiv(ir_node *node) {
   
   auto lreg = registers[get_irn_node_nr(l)];
   auto rreg = registers[get_irn_node_nr(r)];
- 
+  auto oreg = getValue(node);
+  
+  // Special case: ir_mode of mod is Tuple which results in wrong sized value from getValue()
+  // Fix by settings size manually
+  if (mode_is_int(get_Div_resmode(node))) {
+    oreg->size = ValueSize32;
+  } else {
+    oreg->size = ValueSize64;
+  }
+  
   auto inst = make_shared<div>(__func__, __LINE__);
   inst->src1 = lreg;
   inst->src2 = rreg;
-  inst->result=getValue(node);
+  inst->dest = oreg;
   getLabeledBlockForIrNode(node)->instructions.push_back(inst);
 }
 
@@ -474,11 +483,20 @@ void GraphAssembler::buildMod(ir_node *node) {
   
   auto lreg = registers[get_irn_node_nr(l)];
   auto rreg = registers[get_irn_node_nr(r)];
+  auto oreg = getValue(node);
+  
+  // Special case: ir_mode of mod is Tuple which results in wrong sized value from getValue()
+  // Fix by settings size manually
+  if (mode_is_int(get_Mod_resmode(node))) {
+    oreg->size = ValueSize32;
+  } else {
+    oreg->size = ValueSize64;
+  }
 
   auto inst = make_shared<mod>(__func__, __LINE__);
   inst->src1 = lreg;
   inst->src2 = rreg;
-  inst->result=getValue(node);
+  inst->dest = oreg;
   getLabeledBlockForIrNode(node)->instructions.push_back(inst);
 }
 

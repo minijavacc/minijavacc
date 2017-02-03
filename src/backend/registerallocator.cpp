@@ -255,40 +255,58 @@ void RegisterAllocator::alloc_toA(shared_ptr<Instruction> instr, _toA *i, vector
 
 void RegisterAllocator::allocDiv(shared_ptr<Instruction> instr, div *i, vector<shared_ptr<Instruction>> &instructions_)
 { 
-  auto quotient = Value::eax();
+  auto c = Value::eax();
   auto low = Value::eax();
-  auto divisor = i->src1;
-  auto dividend = i->src2;
+  auto a = i->src1;
+  auto b = i->src2;
   
   allocValue(i->src1);
   allocValue(i->src2);
-  allocValue(i->result);
+  allocValue(i->dest);
   
-  deliverValue(dividend, low, instructions_);
-  //reset high (edx) 
+  deliverValue(a, low, instructions_);
+  
+  // Argument to idiv has to be register or memory location
+  if (i->src2->type == ValueTypeImmediate) {
+    auto r1 = Value::r10_(i->src2->size);
+    deliverValue(i->src2, r1, instructions_);
+    i->src2 = r1;
+  }
+  
   auto cl = make_shared<cltd>(__func__, __LINE__);
-  instructions_.push_back(cl);   
+  instructions_.push_back(cl);
+  
   instructions_.push_back(instr);
-  deliverValue(quotient, i->result, instructions_);
+  
+  deliverValue(c, i->dest, instructions_);
 }
 
 void RegisterAllocator::allocMod(shared_ptr<Instruction> instr, mod *i, vector<shared_ptr<Instruction>> &instructions_)
 { 
-  auto remainder = Value::edx();
+  auto c = Value::edx();
   auto low = Value::eax();
-  auto divisor = i->src1;
-  auto dividend = i->src2;
+  auto a = i->src1;
+  auto b = i->src2;
   
   allocValue(i->src1);
   allocValue(i->src2);
-  allocValue(i->result);
+  allocValue(i->dest);
   
-  deliverValue(dividend, low, instructions_);
-  //reset high (edx) 
+  deliverValue(a, low, instructions_);
+  
+  // Argument to idiv has to be register or memory location
+  if (i->src2->type == ValueTypeImmediate) {
+    auto r1 = Value::r10_(i->src2->size);
+    deliverValue(i->src2, r1, instructions_);
+    i->src2 = r1;
+  }
+
   auto cl = make_shared<cltd>(__func__, __LINE__);
-  instructions_.push_back(cl);   
+  instructions_.push_back(cl);
+
   instructions_.push_back(instr);
-  deliverValue(remainder, i->result, instructions_);
+  
+  deliverValue(c, i->dest, instructions_);
 }
 
 void RegisterAllocator::allocCall(shared_ptr<Instruction> instr, call *i, vector<shared_ptr<Instruction>> &instructions_)
