@@ -672,7 +672,10 @@ string GraphAssembler::irgCodeGeneration()
   auto ldname = std::string(get_entity_ld_name(get_irg_entity(irg)));
   
   assembler += ".p2align 4,,15\n";
+#ifdef __APPLE__
+#elif __linux__
   assembler += ".type " + ldname + ", @function\n";
+#endif
   
   for (auto const& label : context->labels) {
     assembler += label + ":\n";
@@ -684,7 +687,10 @@ string GraphAssembler::irgCodeGeneration()
     }
   }
   
+#ifdef __APPLE__
+#elif __linux__
   assembler += ".size " + ldname + ", .-" + ldname + "\n\n";
+#endif
   
   return move(assembler);
 }
