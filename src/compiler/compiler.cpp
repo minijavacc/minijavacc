@@ -8,6 +8,7 @@
 #include "../graphcreator/creator.h"
 #include "../backend/backend.h"
 #include "../optimizer/optimizer.h"
+#include "../tests/delivervalue-tests.h"
 
 #include <iostream>
 #include <istream>
@@ -315,4 +316,11 @@ std::string Compiler::sourcePreview(std::ifstream &file, unsigned int line, unsi
   }
   */
   return std::to_string(line) + ":" + std::to_string(column) + ": " + src;
+}
+
+int Compiler::unittest(std::ifstream &file, std::string filename) {
+  auto dvt = new DeliverValueTests();
+  dvt->run();
+  
+  return 0;
 }

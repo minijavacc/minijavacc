@@ -37,7 +37,8 @@ namespace cmpl
         {"--check",        Option(Compiler::semcheck)},
         {"--graph",        Option(Compiler::creategraph)},
         {"--compile-firm", Option(Compiler::compilefirm)},
-        {"--compile",      Option(Compiler::compile)}
+        {"--compile",      Option(Compiler::compile)},
+        {"--unittest",     Option(Compiler::unittest)}
       };
       
       std::vector<Option> givenOptions;
