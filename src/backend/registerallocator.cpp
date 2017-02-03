@@ -155,7 +155,7 @@ void RegisterAllocator::deliverValue(shared_ptr<Value> &src, shared_ptr<Value> &
 }
 
 
-void RegisterAllocator::allocI2to1(shared_ptr<Instruction> instr, I2to1 *i, vector<shared_ptr<Instruction>> &instructions_)
+void RegisterAllocator::allocABtoB(shared_ptr<Instruction> instr, ABtoB *i, vector<shared_ptr<Instruction>> &instructions_)
 {
   // the first operand (src1 and dest) must not be a memory location
   // because we never map two different values on the same stack frame
@@ -172,12 +172,12 @@ void RegisterAllocator::allocI2to1(shared_ptr<Instruction> instr, I2to1 *i, vect
   i->dest = r;
 }
 
-void RegisterAllocator::allocI2to0(shared_ptr<Instruction> instr, I2to0 *i, vector<shared_ptr<Instruction>> &instructions_)
+void RegisterAllocator::allocABto_(shared_ptr<Instruction> instr, ABto_ *i, vector<shared_ptr<Instruction>> &instructions_)
 {
   allocValue(i->src1);
   allocValue(i->src2);
   
-  // ony one operand can be a memory access
+  // only one operand can be a memory access
   if (i->src1->type == ValueTypeStackSlot && 
       i->src2->type == ValueTypeStackSlot)
   {
@@ -206,7 +206,23 @@ void RegisterAllocator::allocI2to0(shared_ptr<Instruction> instr, I2to0 *i, vect
   instructions_.push_back(instr);
 }
 
-void RegisterAllocator::allocI1to1(shared_ptr<Instruction> instr, I1to1 *i, vector<shared_ptr<Instruction>> &instructions_)
+void RegisterAllocator::allocAtoA(shared_ptr<Instruction> instr, AtoA *i, vector<shared_ptr<Instruction>> &instructions_)
+{
+  allocValue(i->src1);
+  allocValue(i->dest);
+  
+  auto r1 = Value::r10_(i->src1->size);
+  deliverValue(i->src1, r1, instructions_);
+  i->src1 = r1;
+  auto d = i->dest;
+  i->dest = r1;
+  
+  instructions_.push_back(instr);
+  
+  deliverValue(r1, d, instructions_);
+}
+
+void RegisterAllocator::allocAtoB(shared_ptr<Instruction> instr, AtoB *i, vector<shared_ptr<Instruction>> &instructions_)
 {
   allocValue(i->src1);
   allocValue(i->dest);
@@ -223,14 +239,14 @@ void RegisterAllocator::allocI1to1(shared_ptr<Instruction> instr, I1to1 *i, vect
   instructions_.push_back(instr);
 }
 
-void RegisterAllocator::allocI1to0(shared_ptr<Instruction> instr, I1to0 *i, vector<shared_ptr<Instruction>> &instructions_)
+void RegisterAllocator::allocAto_(shared_ptr<Instruction> instr, Ato_ *i, vector<shared_ptr<Instruction>> &instructions_)
 { 
   allocValue(i->src1);
   
   instructions_.push_back(instr);
 }
 
-void RegisterAllocator::allocI0to1(shared_ptr<Instruction> instr, I0to1 *i, vector<shared_ptr<Instruction>> &instructions_)
+void RegisterAllocator::alloc_toA(shared_ptr<Instruction> instr, _toA *i, vector<shared_ptr<Instruction>> &instructions_)
 { 
   allocValue(i->dest);
   
@@ -316,27 +332,24 @@ void RegisterAllocator::run()
     auto instructions_ = vector<shared_ptr<Instruction>>();
     
     for (auto const& instruction : instructions) {
-      if (auto i = dynamic_cast<I2to1*>(instruction.get())) {
-        allocI2to1(instruction, i, instructions_);
-        
+      if (auto i = dynamic_cast<ABtoB*>(instruction.get())) {
+        allocABtoB(instruction, i, instructions_);
       } else if (auto i = dynamic_cast<div*>(instruction.get())) {
         allocDiv(instruction, i, instructions_);		
       } else if (auto i = dynamic_cast<mod*>(instruction.get())) {
         allocMod(instruction, i, instructions_);
-      } else if (auto i = dynamic_cast<I2to0*>(instruction.get())) {
-        allocI2to0(instruction, i, instructions_);
-      } else if (auto i = dynamic_cast<I1to1*>(instruction.get())) {
-        allocI1to1(instruction, i, instructions_);
-        
-      } else if (auto i = dynamic_cast<I1to0*>(instruction.get())) {
-        allocI1to0(instruction, i, instructions_);
-        
-      } else if (auto i = dynamic_cast<I0to1*>(instruction.get())) {
-        allocI0to1(instruction, i, instructions_);
-        
+      } else if (auto i = dynamic_cast<ABto_*>(instruction.get())) {
+        allocABto_(instruction, i, instructions_);
+      } else if (auto i = dynamic_cast<AtoA*>(instruction.get())) {
+        allocAtoA(instruction, i, instructions_);
+      } else if (auto i = dynamic_cast<AtoB*>(instruction.get())) {
+        allocAtoB(instruction, i, instructions_);
+      } else if (auto i = dynamic_cast<Ato_*>(instruction.get())) {
+        allocAto_(instruction, i, instructions_);
+      } else if (auto i = dynamic_cast<_toA*>(instruction.get())) {
+        alloc_toA(instruction, i, instructions_);
       } else if (auto i = dynamic_cast<call*>(instruction.get())) {
         allocCall(instruction, i, instructions_);
-        
       } else if (auto i = dynamic_cast<mov*>(instruction.get())) {
         allocMove(instruction, i, instructions_);
       } else {

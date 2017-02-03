@@ -86,7 +86,7 @@ namespace cmpl
     
 	
 	
-    string getRegisterName() {
+    string toString() {
       switch (type) {
         case ValueTypePhysical: 
           if (size == ValueSize32) {
@@ -360,7 +360,7 @@ namespace cmpl
     };
   };
   
-  class I2to1 : public Instruction {
+  class ABtoB : public Instruction {
     using Instruction::Instruction;
     
   public:
@@ -385,11 +385,11 @@ namespace cmpl
         // TODO: throw IllegalRegisterConfigurationException
         assert(false);
       }
-      return mnemonic() + suffix + " " + src1->getRegisterName() + ", " + src2->getRegisterName() + "\t\t\t# " + annotation();
+      return mnemonic() + suffix + " " + src1->toString() + ", " + src2->toString() + "\t\t\t# " + annotation();
     }
   };
     
-  class I2to0 : public Instruction {
+  class ABto_ : public Instruction {
     using Instruction::Instruction;
     
   public:
@@ -408,11 +408,11 @@ namespace cmpl
         // TODO: throw IllegalRegisterConfigurationException
         assert(false);
       }
-      return mnemonic() + suffix + " " + src1->getRegisterName() + ", " + src2->getRegisterName() + "\t\t\t# " + annotation();
+      return mnemonic() + suffix + " " + src1->toString() + ", " + src2->toString() + "\t\t\t# " + annotation();
     }
   };
   
-  class I1to0 : public Instruction {
+  class Ato_ : public Instruction {
     using Instruction::Instruction;
     
   public:
@@ -425,11 +425,11 @@ namespace cmpl
       } else if (src1->size == ValueSize32) {
         suffix = size32suffix;
       }
-      return mnemonic() + suffix + " " + src1->getRegisterName() + "\t\t\t# " + annotation();
+      return mnemonic() + suffix + " " + src1->toString() + "\t\t\t# " + annotation();
     }
   };
   
-  class I0to1 : public Instruction {
+  class _toA : public Instruction {
     using Instruction::Instruction;
     
   public:
@@ -442,11 +442,11 @@ namespace cmpl
       } else if (dest->size == ValueSize32) {
         suffix = size32suffix;
       }
-      return mnemonic() + suffix + " " + dest->getRegisterName() + "\t\t\t# " + annotation();
+      return mnemonic() + suffix + " " + dest->toString() + "\t\t\t# " + annotation();
     }
   };
   
-  class I1to1 : public Instruction {
+  class AtoA : public Instruction {
     using Instruction::Instruction;
     
   public:
@@ -464,12 +464,34 @@ namespace cmpl
       } else {
         assert(false);
       }
-      return mnemonic() + suffix + " " + dest->getRegisterName() + "\t\t\t# " + annotation();
+      return mnemonic() + suffix + " " + dest->toString() + "\t\t\t# " + annotation();
     }
   };
   
-  class cmp : public I2to0 {
-    using I2to0::I2to0;
+  class AtoB : public Instruction {
+    using Instruction::Instruction;
+    
+  public:
+    shared_ptr<Value> src1;
+    shared_ptr<Value> dest;
+    
+    std::string generate() override {
+      string suffix;
+      if (src1->size == ValueSize64
+          && dest->size == ValueSize64) {
+        suffix = size64suffix;
+      } else if (src1->size == ValueSize32
+                 && dest->size == ValueSize32) {
+        suffix = size32suffix;
+      } else {
+        assert(false);
+      }
+      return mnemonic() + suffix + " " + dest->toString() + "\t\t\t# " + annotation();
+    }
+  };
+  
+  class cmp : public ABto_ {
+    using ABto_::ABto_;
     
     std::string mnemonic() override {
       return "cmp";
@@ -552,7 +574,7 @@ namespace cmpl
       } else {
         assert(false);
       }
-      return mnemonic() + suffix + " " + src1->getRegisterName() + ", " + dest->getRegisterName() + "\t\t\t# " + annotation();
+      return mnemonic() + suffix + " " + src1->toString() + ", " + dest->toString() + "\t\t\t# " + annotation();
     }
     
     std::string mnemonic() override {
@@ -561,63 +583,74 @@ namespace cmpl
   };
   
   
-  class add : public I2to1 {
-    using I2to1::I2to1;
+  class add : public ABtoB {
+    using ABtoB::ABtoB;
     
     std::string mnemonic() override {
       return "add";
     }
   };
   
-  class neg : public I1to1 {
-    using I1to1::I1to1;
+  class neg : public AtoA {
+    using AtoA::AtoA;
     
     std::string mnemonic() override {
       return "neg";
     }
   };
   
-  class sub : public I2to1 {
-    using I2to1::I2to1;
+  class sub : public ABtoB {
+    using ABtoB::ABtoB;
     
     std::string mnemonic() override {
       return "sub";
     }
   };
   
-  class div : public I1to0 {
-    using I1to0::I1to0;
+  class div : public Instruction {
+    using Instruction::Instruction;
 	public:
-    shared_ptr<Value> result;
-	shared_ptr<Value> src2;
+    shared_ptr<Value> dest;
+    shared_ptr<Value> src1;
+    shared_ptr<Value> src2;
 	
     // result in %eax
     std::string mnemonic() override {
       return "idiv";
     }
+    
+    std::string generate() override {
+      return mnemonic() + " " + src2->toString();
+    }
   };
   
-  class mod : public I1to0 {
-    using I1to0::I1to0;
+  class mod : public Instruction {
+    using Instruction::Instruction;
 	public:
-    shared_ptr<Value> result;
-	shared_ptr<Value> src2;
+    shared_ptr<Value> dest;
+    shared_ptr<Value> src1;
+    shared_ptr<Value> src2;
+    
     // result in %edx
     std::string mnemonic() override {
       return "idiv";
     }
+    
+    std::string generate() override {
+      return mnemonic() + " " + src2->toString();
+    }
   };
   
-  class imul : public I2to1 {
-    using I2to1::I2to1;
+  class imul : public ABtoB {
+    using ABtoB::ABtoB;
     
     std::string mnemonic() override {
       return "imul";
     }
   };
   
-  class pop : public I0to1 {
-    using I0to1::I0to1;
+  class pop : public _toA {
+    using _toA::_toA;
     
   public:
     std::string mnemonic() override {
@@ -626,8 +659,8 @@ namespace cmpl
   };
 
   
-  class push : public I1to0 {
-    using I1to0::I1to0;
+  class push : public Ato_ {
+    using Ato_::Ato_;
     
   public:
     std::string mnemonic() override {
