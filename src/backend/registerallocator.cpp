@@ -160,15 +160,15 @@ void RegisterAllocator::allocI2to1(shared_ptr<Instruction> instr, I2to1 *i, vect
   // the first operand (src1 and dest) must not be a memory location
   // because we never map two different values on the same stack frame
   
-  auto r = Value::r10_(i->src1->size);
+  auto r = Value::r10_(i->src2->size);
   
-  deliverValue(i->src1, r, instructions_);
+  deliverValue(i->src2, r, instructions_);
   instructions_.push_back(instr);
   deliverValue(r, i->dest, instructions_);
   
-  allocValue(i->src2);
+  allocValue(i->src1);
   
-  i->src1 = r;
+  i->src2 = r;
   i->dest = r;
 }
 
