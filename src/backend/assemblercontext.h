@@ -2,7 +2,6 @@
 
 #include "amd64instructions.h"
 
-
 #include <libfirm/firm.h>
 #include <vector>
 #include <stdexcept>
@@ -32,23 +31,5 @@ namespace cmpl
       }
     }
   };
-
-  class AssemblerContext
-  {
-  public:
-
-    ir_graph* irg;
-    size_t nargs;
-   
-    map<Label, shared_ptr<LabeledBlock>> blocks;
-    vector<Label> labels; // topological order 
-    map<long, shared_ptr<Value>> registers;
-    map<long, Label> nodeNrToLabel;
-    long topOfStack = 0;
-    long nextFreeLabel = 0;
-    string labelPrefix;
-    shared_ptr<Value> regArgsToValue[6];
- };
-  
 
 }

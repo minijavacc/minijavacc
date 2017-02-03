@@ -18,11 +18,16 @@ namespace cmpl
   class RegisterAllocator
   {
 	public:
-
-    void registerAllocation(AssemblerContext* assemblerContext);
+    RegisterAllocator(shared_ptr<map<Label, shared_ptr<LabeledBlock>>> blocks, shared_ptr<vector<Label>> labels) : blocks(blocks), labels(labels) {};
+    
+    void run();
+    
+    
+    // Only interface to graphassembler
+    shared_ptr<map<Label, shared_ptr<LabeledBlock>>> blocks;
+    shared_ptr<vector<Label>> labels; // topological order
+    long topOfStack;
    
-  private:
-	AssemblerContext* context;  
     void allocValue(shared_ptr<Value> &r);
     void deliverValue(shared_ptr<Value> &src, shared_ptr<Value> &dest, vector<shared_ptr<Instruction>> &instructions_);
     void allocI2to1(shared_ptr<Instruction> instr, I2to1 *i, vector<shared_ptr<Instruction>> &instructions_);

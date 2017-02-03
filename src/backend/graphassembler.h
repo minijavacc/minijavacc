@@ -44,14 +44,24 @@ namespace cmpl
     void buildCall(ir_node *node);
     
   private:
-    AssemblerContext* context=new AssemblerContext();   
-	RegisterAllocator* registerAllocator=new RegisterAllocator();   
+    shared_ptr<map<Label, shared_ptr<LabeledBlock>>> blocks;
+    shared_ptr<vector<Label>> labels; // topological order
+    
+    map<long, shared_ptr<Value>> registers;
+    map<long, Label> nodeNrToLabel;
+    long topOfStack = 0;
+    long nextFreeLabel = 0;
+    string labelPrefix;
+    shared_ptr<Value> regArgsToValue[6];
+    size_t nargs;
+    
+    RegisterAllocator* registerAllocator;
     shared_ptr<Value> getValue(ir_node *node);
     void setValue(ir_node *node, shared_ptr<Value> r);
     Label getLabel(ir_node *node);
     
     shared_ptr<LabeledBlock> getLabeledBlockForIrNode(ir_node *node);
- };
+  };
   
   class GraphAssemblerError : public std::runtime_error
   {

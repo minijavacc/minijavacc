@@ -10,12 +10,12 @@ using namespace cmpl;
 
 inline shared_ptr<LabeledBlock> GraphAssembler::getLabeledBlockForIrNode(ir_node *node)
 {
-  return context->blocks.at(context->nodeNrToLabel.at(get_irn_node_nr(get_nodes_block(node))));
+  return blocks->at(nodeNrToLabel.at(get_irn_node_nr(get_nodes_block(node))));
 }
 
 shared_ptr<Value> GraphAssembler::getValue(ir_node *node) {
-  if (context->registers.count(get_irn_node_nr(node)) > 0) {
-    return context->registers.at(get_irn_node_nr(node));
+  if (registers.count(get_irn_node_nr(node)) > 0) {
+    return registers.at(get_irn_node_nr(node));
   }
   
   auto r = make_shared<Value>(get_irn_mode(node));
@@ -24,27 +24,27 @@ shared_ptr<Value> GraphAssembler::getValue(ir_node *node) {
 }
 
 void GraphAssembler::setValue(ir_node *node, shared_ptr<Value> r) {
-  context->registers.emplace(get_irn_node_nr(node), r);
+  registers.emplace(get_irn_node_nr(node), r);
 }
 
 Label GraphAssembler::getLabel(ir_node *node) {
-  if (context->nodeNrToLabel.count(get_irn_node_nr(node)) > 0) {
-    return context->nodeNrToLabel.at(get_irn_node_nr(node));
+  if (nodeNrToLabel.count(get_irn_node_nr(node)) > 0) {
+    return nodeNrToLabel.at(get_irn_node_nr(node));
   }
   
   // if is the first label, take the function name
-  if (context->nodeNrToLabel.empty())
+  if (nodeNrToLabel.empty())
   {
     Label l = get_entity_ld_name(get_irg_entity(irg));
-    context->nodeNrToLabel.emplace(get_irn_node_nr(node), l);
+    nodeNrToLabel.emplace(get_irn_node_nr(node), l);
     return l;
   }
   else
   {
-    string p = context->labelPrefix;
-    Label l = p + to_string(context->nextFreeLabel);
-    context->nodeNrToLabel.emplace(get_irn_node_nr(node), l);
-    context->nextFreeLabel = context->nextFreeLabel + 1;
+    string p = labelPrefix;
+    Label l = p + to_string(nextFreeLabel);
+    nodeNrToLabel.emplace(get_irn_node_nr(node), l);
+    nextFreeLabel = nextFreeLabel + 1;
     return l;
   }
 }
@@ -61,17 +61,17 @@ void GraphAssembler::insertProlog() {
   int x = 1; // for iterator
   
   auto m = make_shared<StaticInstruction>("movq %rsp, %rbp", __func__, __LINE__);
-  Label fl = context->labels.front();
-  auto bl = context->blocks.at(fl);
+  Label fl = labels->front();
+  auto bl = blocks->at(fl);
   auto it = bl->instructions.begin();
   bl->instructions.insert(it, p);
   it = bl->instructions.begin();
   bl->instructions.insert(it + x++, m);
   
-  if (context->topOfStack < 0)
+  if (topOfStack < 0)
   {
     auto s = make_shared<subq_rsp>(__func__, __LINE__);
-    s->bytes = (unsigned) context->topOfStack;
+    s->bytes = (unsigned) topOfStack;
     it = bl->instructions.begin();
     bl->instructions.insert(it + x++, s);
   }
@@ -79,14 +79,14 @@ void GraphAssembler::insertProlog() {
   // get all arguments (that are used) from the registers and save them to the stack
   for (int i = 0; i < 6; i++)
   {
-    if (context->regArgsToValue[i] == nullptr)
+    if (regArgsToValue[i] == nullptr)
     {
       return;
     }
     
     // move parameter to virtual register
     auto inst = make_shared<mov>(__func__, __LINE__);
-    inst->dest = context->regArgsToValue[i];
+    inst->dest = regArgsToValue[i];
     auto size = inst->dest->size;
     
     switch (i)
@@ -137,8 +137,8 @@ void GraphAssembler::insertProlog() {
 void GraphAssembler::collectPhi(ir_node *node) {
   // Step 1: Collect all phi nodes of every block
   ir_node *bl = get_nodes_block(node);
-  Label l = context->nodeNrToLabel.at(get_irn_node_nr(bl));
-  shared_ptr<LabeledBlock> lb = context->blocks.at(l);
+  Label l = nodeNrToLabel.at(get_irn_node_nr(bl));
+  shared_ptr<LabeledBlock> lb = blocks->at(l);
   lb->phis.push_back(node);
   
   // Important: destination register has to be known right after this point in time
@@ -155,8 +155,8 @@ void GraphAssembler::buildBlock(ir_node *node) {
   Label l = getLabel(node);
   auto lb = make_shared<LabeledBlock>();
   lb->label = l;
-  context->blocks.emplace(l, lb);
-  context->labels.push_back(l);
+  blocks->emplace(l, lb);
+  labels->push_back(l);
 }
 
 void GraphAssembler::buildConst(ir_node *node) {
@@ -203,8 +203,8 @@ void GraphAssembler::buildCond(ir_node *node) {
   ir_node *l = get_Cmp_left(s);
   ir_node *r = get_Cmp_right(s);
   
-  auto lreg = context->registers[get_irn_node_nr(l)];
-  auto rreg = context->registers[get_irn_node_nr(r)];
+  auto lreg = registers[get_irn_node_nr(l)];
+  auto rreg = registers[get_irn_node_nr(r)];
   
   auto comp = make_shared<cmp>(__func__, __LINE__);
   comp->src1 = lreg;
@@ -254,7 +254,7 @@ void GraphAssembler::buildProj(ir_node *node) {
     // and generate mov instructions in insertProlog
     if (i < 6)
     {
-      context->regArgsToValue[i] = getValue(node);			
+      regArgsToValue[i] = getValue(node);			
     }
     // if argument > 5
     else
@@ -267,9 +267,9 @@ void GraphAssembler::buildProj(ir_node *node) {
   {
     // else: if predecessor maps to a register, map to the same one
     // hacky, but should work
-    if (context->registers.count(get_irn_node_nr(pred)) > 0)
+    if (registers.count(get_irn_node_nr(pred)) > 0)
     {
-      setValue(node, context->registers[get_irn_node_nr(pred)]);
+      setValue(node, registers[get_irn_node_nr(pred)]);
     }
   }
 }
@@ -278,8 +278,8 @@ void GraphAssembler::buildAdd(ir_node *node) {
   ir_node *l = get_Add_left(node);
   ir_node *r = get_Add_right(node);
   
-  auto lreg = context->registers[get_irn_node_nr(l)];
-  auto rreg = context->registers[get_irn_node_nr(r)];
+  auto lreg = registers[get_irn_node_nr(l)];
+  auto rreg = registers[get_irn_node_nr(r)];
   auto oreg = getValue(node);
   
   auto inst = make_shared<add>(__func__, __LINE__);
@@ -293,7 +293,7 @@ void GraphAssembler::buildAdd(ir_node *node) {
 void GraphAssembler::buildReturn(ir_node *node) {
   if (get_Return_n_ress(node) > 0) {
     ir_node *pred = get_Return_res(node, 0);
-    auto r = context->registers[get_irn_node_nr(pred)];
+    auto r = registers[get_irn_node_nr(pred)];
     auto inst = make_shared<mov>(__func__, __LINE__);
     inst->src1 = r;
     inst->dest = Value::_ax(inst->src1->size);
@@ -322,8 +322,8 @@ void GraphAssembler::buildCall(ir_node *node) {
   {
     ir_node *a = get_Call_param(node, i);
     
-    assert(context->registers.count(get_irn_node_nr(a)) > 0);
-    shared_ptr<Value> reg = context->registers[get_irn_node_nr(a)];
+    assert(registers.count(get_irn_node_nr(a)) > 0);
+    shared_ptr<Value> reg = registers[get_irn_node_nr(a)];
     
     // move parameter to physical register
     auto inst = make_shared<mov>(__func__, __LINE__);
@@ -375,8 +375,8 @@ void GraphAssembler::buildCall(ir_node *node) {
     {
       ir_node *a = get_Call_param(node, i);
       
-      assert(context->registers.count(get_irn_node_nr(a)) > 0);
-      shared_ptr<Value> reg = context->registers[get_irn_node_nr(a)];
+      assert(registers.count(get_irn_node_nr(a)) > 0);
+      shared_ptr<Value> reg = registers[get_irn_node_nr(a)];
       
       // create mov instruction to move value to stack
       auto m = make_shared<mov>(reg, (i - 6) * 8, __func__, __LINE__);
@@ -428,8 +428,8 @@ void GraphAssembler::buildSub(ir_node *node) {
   ir_node *l = get_Sub_left(node);
   ir_node *r = get_Sub_right(node);
   
-  auto lreg = context->registers[get_irn_node_nr(l)];
-  auto rreg = context->registers[get_irn_node_nr(r)];
+  auto lreg = registers[get_irn_node_nr(l)];
+  auto rreg = registers[get_irn_node_nr(r)];
   auto oreg = getValue(node);
   
   auto inst = make_shared<sub>(__func__, __LINE__);
@@ -443,8 +443,8 @@ void GraphAssembler::buildMul(ir_node *node) {
   ir_node *l = get_Mul_left(node);
   ir_node *r = get_Mul_right(node);
   
-  auto lreg = context->registers[get_irn_node_nr(l)];
-  auto rreg = context->registers[get_irn_node_nr(r)];
+  auto lreg = registers[get_irn_node_nr(l)];
+  auto rreg = registers[get_irn_node_nr(r)];
   auto oreg = getValue(node);
   
   auto inst = make_shared<imul>(__func__, __LINE__);
@@ -458,8 +458,8 @@ void GraphAssembler::buildDiv(ir_node *node) {
   ir_node *l = get_Div_left(node);
   ir_node *r = get_Div_right(node);
   
-  auto lreg = context->registers[get_irn_node_nr(l)];
-  auto rreg = context->registers[get_irn_node_nr(r)];
+  auto lreg = registers[get_irn_node_nr(l)];
+  auto rreg = registers[get_irn_node_nr(r)];
  
   auto inst = make_shared<div>(__func__, __LINE__);
   inst->src1 = lreg;
@@ -472,8 +472,8 @@ void GraphAssembler::buildMod(ir_node *node) {
   ir_node *l = get_Mod_left(node);
   ir_node *r = get_Mod_right(node);
   
-  auto lreg = context->registers[get_irn_node_nr(l)];
-  auto rreg = context->registers[get_irn_node_nr(r)];
+  auto lreg = registers[get_irn_node_nr(l)];
+  auto rreg = registers[get_irn_node_nr(r)];
 
   auto inst = make_shared<mod>(__func__, __LINE__);
   inst->src1 = lreg;
@@ -485,7 +485,7 @@ void GraphAssembler::buildMod(ir_node *node) {
 void GraphAssembler::buildMinus(ir_node *node) {
   ir_node *m = get_Minus_op(node);
 
-  auto mreg = context->registers[get_irn_node_nr(m)];
+  auto mreg = registers[get_irn_node_nr(m)];
   auto oreg = getValue(node);
   
   auto inst = make_shared<neg>(__func__, __LINE__);
@@ -557,26 +557,31 @@ void irgNodeWalker(ir_node *node, void *env)
 #pragma mark - Methods
 
 string GraphAssembler::run()
-{  
+{
+  // Init main data structures
+  blocks = make_shared<map<Label, shared_ptr<LabeledBlock>>>();
+  labels = make_shared<vector<Label>>();
+  
   // Store number of arguments
-
   string assemblerOutput;
-  context->blocks = map<Label, shared_ptr<LabeledBlock>>();
-  context->labels = vector<Label>();
   ir_entity *ent = get_irg_entity(irg);
   ir_type *ty = get_entity_type(ent);
-  context->nargs = get_method_n_params(ty);
+  nargs = get_method_n_params(ty);
 
-  
+  // lower sels
   lower_highlevel_graph(irg);
   
   // activate all edges in graph
   edges_activate(irg);
   
+  // collect nodes to list of virutal instructions list
   irgSerialize();
   
+  // Register allocation
+  registerAllocator = new RegisterAllocator(blocks, labels);
+  registerAllocator->run();
   
-  registerAllocator->registerAllocation(context);
+  // Code generation
   assemblerOutput = irgCodeGeneration();
   
   // deactivate edges
@@ -589,7 +594,7 @@ string GraphAssembler::run()
 
 void GraphAssembler::irgSerialize()
 {
-  context->labelPrefix = AMD64LabelPrefix + std::to_string(get_irg_graph_nr(irg)) + "_";
+  labelPrefix = AMD64LabelPrefix + std::to_string(get_irg_graph_nr(irg)) + "_";
   
   // Walk graph
   irg_walk_topological(irg, irgNodeWalker, static_cast<void*>(this));
@@ -598,7 +603,7 @@ void GraphAssembler::irgSerialize()
   phiInsertion();
   
   // Finalise (append exit instructions to instruction list)
-  for (auto pair : context->blocks) {
+  for (auto pair : *blocks) {
     auto bl = pair.second;
     bl->finalize();
   }
@@ -611,8 +616,8 @@ void GraphAssembler::irgSerialize()
 
 void GraphAssembler::phiInsertion()
 {
-  for (auto const& l : context->labels) {
-    auto lb = context->blocks.at(l);
+  for (auto const& l : *labels) {
+    auto lb = blocks->at(l);
     
     // Step 2: Load all phis into temporary helper registers
     for (auto const& phi : lb->phis) {
@@ -626,8 +631,8 @@ void GraphAssembler::phiInsertion()
         ir_node *j = get_Block_cfgpred(bl, i);
         ir_node *jbl = get_nodes_block(j);
         
-        Label l = context->nodeNrToLabel.at(get_irn_node_nr(jbl));
-        shared_ptr<LabeledBlock> lb = context->blocks.at(l);
+        Label l = nodeNrToLabel.at(get_irn_node_nr(jbl));
+        shared_ptr<LabeledBlock> lb = blocks->at(l);
         
         auto m = make_shared<mov>(__func__, __LINE__); TODO:
         m->src1 = inReg;
@@ -651,7 +656,7 @@ void GraphAssembler::phiInsertion()
         ir_node *jbl = get_nodes_block(j);
         
         Label l = nodeNrToLabel.at(get_irn_node_nr(jbl));
-        shared_ptr<LabeledBlock> lb = blocks.at(l);
+        shared_ptr<LabeledBlock> lb = blocks->at(l);
         
         auto m = make_shared<mov_old>(__func__, __LINE__);
         m->src1 = helper;
@@ -663,6 +668,7 @@ void GraphAssembler::phiInsertion()
     */
   }
 }
+
 
 string GraphAssembler::irgCodeGeneration()
 {
@@ -677,10 +683,10 @@ string GraphAssembler::irgCodeGeneration()
   assembler += ".type " + ldname + ", @function\n";
 #endif
   
-  for (auto const& label : context->labels) {
+  for (auto const& label : *labels) {
     assembler += label + ":\n";
     
-    auto instructions = context->blocks.at(label)->instructions;
+    auto instructions = blocks->at(label)->instructions;
     
     for (auto const& instruction : instructions) {
       assembler += "\t" + instruction->generate() + "\n";

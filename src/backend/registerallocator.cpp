@@ -12,10 +12,10 @@ void RegisterAllocator::allocValue(shared_ptr<Value> &r) {
   if (r->type == ValueTypeVirtual)
   {
     // decrement global topOfStack to get new offset
-    context->topOfStack -= 8;
+    topOfStack -= 8;
     
     r->type = ValueTypeStackSlot;
-    r->offset = context->topOfStack;
+    r->offset = topOfStack;
   }
 }
 
@@ -306,13 +306,12 @@ void RegisterAllocator::allocMove(shared_ptr<Instruction> instr, mov *i, vector<
 }
 
 
-void RegisterAllocator::registerAllocation(AssemblerContext* assemblerContext)
+void RegisterAllocator::run()
 {
- context=assemblerContext;
   // work with instructions-vector
   // primitive: just use 2 registers
-  for (auto const& label : context->labels) {
-    auto lb = context->blocks.at(label);
+  for (auto const& label : *labels) {
+    auto lb = blocks->at(label);
     auto instructions = lb->instructions;
     auto instructions_ = vector<shared_ptr<Instruction>>();
     
