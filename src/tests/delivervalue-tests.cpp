@@ -15,27 +15,27 @@ using namespace cmpl;
 void DeliverValueTests::init() {
   auto blocks = make_shared<map<Label, shared_ptr<LabeledBlock>>>();
   auto labels = make_shared<vector<Label>>();
-  registerAllocator = new RegisterAllocator(blocks, labels);
+  registerAllocator = new RegisterAllocator(blocks, labels, 0);
   
   instructions.clear();
   
-  valVirtual32 = make_shared<Value>(ValueSize32);
-  valVirtual64 = make_shared<Value>(ValueSize64);
-  
-  valImm32 = make_shared<Value>();
-  valImm32->size = ValueSize32;
-  valImm32->type = ValueTypeImmediate;
-  valImm32->immediate = 23;
-  
-  valImm64 = make_shared<Value>();
-  valImm64->size = ValueSize64;
-  valImm64->type = ValueTypeImmediate;
-  valImm64->immediate = 42;
-  
-  valStackSlot32 = make_shared<Value>(ValueSize32, 99);
-  valStackSlot64 = make_shared<Value>(ValueSize64, 1337);
-  valGenImm32 = make_shared<Value>(7, ValueSize32);
-  valGenImm64 = make_shared<Value>(11, ValueSize64);
+//  valVirtual32 = make_shared<Value>(ValueSize32);
+//  valVirtual64 = make_shared<Value>(ValueSize64);
+//  
+//  valImm32 = make_shared<Value>();
+//  valImm32->size = ValueSize32;
+//  valImm32->type = ValueTypeImmediate;
+//  valImm32->immediate = 23;
+//  
+//  valImm64 = make_shared<Value>();
+//  valImm64->size = ValueSize64;
+//  valImm64->type = ValueTypeImmediate;
+//  valImm64->immediate = 42;
+//  
+//  valStackSlot32 = make_shared<Value>(ValueSize32, 99);
+//  valStackSlot64 = make_shared<Value>(ValueSize64, 1337);
+//  valGenImm32 = make_shared<Value>(7, ValueSize32);
+//  valGenImm64 = make_shared<Value>(11, ValueSize64);
 }
 
 void DeliverValueTests::run() {

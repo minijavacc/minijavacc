@@ -14,6 +14,8 @@ namespace cmpl
 {
   using namespace std;
   
+  class Virtual;
+  
   class LabeledBlock {
   public:
     Label label;
@@ -21,15 +23,18 @@ namespace cmpl
     vector<ir_node *> phis;
     vector<shared_ptr<Instruction>> exitInstructions;
     
-    LabeledBlock() {
-      instructions = vector<shared_ptr<Instruction>>();
-    }
+    void finalize();
+  };
+  
+  class StackFrameAllocation {
+  private:
+    int topOfStack = 0;
     
-    void finalize() {
-      for (auto inst : exitInstructions) {
-        instructions.push_back(inst);
-      }
-    }
+  public:
+    map<shared_ptr<Value>, int> allocations;
+    
+    int getTopOfStack();
+    int allocate(shared_ptr<Value> v);
   };
 
 }

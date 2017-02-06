@@ -1,4 +1,7 @@
 #include "registerallocator.h"
+#include "amd64instructions.h"
+#include "values.h"
+#include "assemblercontext.h"
 #include <stdio.h>
 #include <vector>
 #include <libfirm/firm.h>
@@ -6,153 +9,96 @@
 
 using namespace cmpl;
 
-#pragma mark - Misc
-
-void RegisterAllocator::allocValue(shared_ptr<Value> &r) {
-  if (r->type == ValueTypeVirtual)
-  {
-    // decrement global topOfStack to get new offset
-    topOfStack -= 8;
-    
-    r->type = ValueTypeStackSlot;
-    r->offset = topOfStack;
-  }
-}
-
 #pragma mark - Physical register allocation
 
-void RegisterAllocator::deliverValue(shared_ptr<Value> &src, shared_ptr<Value> &dest, vector<shared_ptr<Instruction>> &instructions)
-{
-  switch (src->type)
-  {
-    case ValueTypeVirtual:
-      switch (dest->type)
-      {
-        case ValueTypePhysical:
-        {
-          src->type = dest->type;
-          src->identifier = dest->identifier;
-          break;
-        }
-          
-        case ValueTypeStackSlot:
-        {
-          src->type = dest->type;
-          src->offset = dest->offset;
-          break;
-        }
-          
-        case ValueTypeVirtual:
-        {
-          allocValue(dest);
-          src->type = dest->type;
-          src->offset = dest->offset;
-          break;
-        }
-        
-        default:
-          assert(false);
-      }
-      break;
-    
-    case ValueTypeImmediate:
-      switch (dest->type)
-      {
-        case ValueTypePhysical:
-        case ValueTypeStackSlot:
-        {
-          auto m = make_shared<mov>(__func__, __LINE__);
-          m->src1 = src;
-          m->dest = dest;
-          instructions.push_back(m);
-          break;
-        }
-          
-        case ValueTypeVirtual:
-        {
-          dest->type = src->type;
-          dest->immediate = src->immediate;
-          break;
-        }
-        
-        default:
-          assert(false);
-      }
-      break;
-    
-    case ValueTypePhysical:
-      switch (dest->type)
-      {
-        case ValueTypePhysical:
-        {
-          if (src->identifier == dest->identifier)
-            return;
-          // no break
-        }
-        case ValueTypeStackSlot:
-        {
-          auto m = make_shared<mov>(__func__, __LINE__);
-          m->src1 = src;
-          m->dest = dest;
-          instructions.push_back(m);
-          break;
-        }
-          
-        case ValueTypeVirtual:
-        {
-          dest->type = src->type;
-          dest->offset = src->offset;
-          break;
-        }
-        
-        default:
-          assert(false);
-      }
-      break;
-    
-    case ValueTypeStackSlot:
-      switch (dest->type)
-      {
-        case ValueTypePhysical:
-        {
-          auto m = make_shared<mov>(__func__, __LINE__);
-          m->src1 = src;
-          m->dest = dest;
-          instructions.push_back(m);
-          break;
-        }
-        
-        case ValueTypeStackSlot:
-        {
-          if (src->offset == dest->offset)
-            return;
-          auto m1 = make_shared<mov>(__func__, __LINE__);
-          m1->src1 = src;
-          m1->dest = Value::r10_(m1->src1->size);
-          instructions.push_back(m1);
-          auto m2 = make_shared<mov>(__func__, __LINE__);
-          m2->src1 = Value::r10_(m1->src1->size);
-          m2->dest = dest;
-          instructions.push_back(m2);
-          break;
-        }
-          
-        case ValueTypeVirtual:
-        {
-          dest->type = src->type;
-          dest->offset = src->offset;
-          break;
-        }
-        
-        default:
-          assert(false);
-      }
-      break;
-    
-    default:
-      assert(false);
-  }
-}
+//void RegisterAllocator::deliverValue(shared_ptr<Value> &src, shared_ptr<Value> &dest, vector<shared_ptr<Instruction>> &instructions)
+//{
+//  if (auto const& src_p = dynamic_cast<Virtual*>(src.get()))
+//  {
+//    if (auto const& dest_p = dynamic_cast<Physical*>(dest.get())) {
+//      src.reset(dest_p);
+//    }
+//    
+//    if (auto const& dest_p = dynamic_cast<Memory*>(dest.get())) {
+//      src.reset(dest_p);
+//    }
+//    
+//    if (auto const& dest_p = dynamic_cast<Virtual*>(dest.get())) {
+//      allocValue(dest);
+//      src.reset(dest_p);
+//    }
+//  }
+//  
+//  if (auto const& src_p = dynamic_cast<Immediate*>(src.get()))
+//  {
+//    if (auto const& dest_p = dynamic_cast<Physical*>(dest.get())) {
+//      auto m = make_shared<mov>(__func__, __LINE__);
+//      m->src1 = src;
+//      m->dest = dest;
+//      instructions.push_back(m);
+//    }
+//    
+//    if (auto const& dest_p = dynamic_cast<Memory*>(dest.get())) {
+//      auto m = make_shared<mov>(__func__, __LINE__);
+//      m->src1 = src;
+//      m->dest = dest;
+//      instructions.push_back(m);
+//    }
+//    
+//    if (auto const& dest_p = dynamic_cast<Virtual*>(dest.get())) {
+//      dest.reset(src_p);
+//    }
+//  }
+//  
+//  if (auto const& src_p = dynamic_cast<Physical*>(src.get()))
+//  {
+//    if (auto const& dest_p = dynamic_cast<Physical*>(dest.get())) {
+//      // check if same register => avoid mov
+//      auto m = make_shared<mov>(__func__, __LINE__);
+//      m->src1 = src;
+//      m->dest = dest;
+//      instructions.push_back(m);
+//    }
+//    
+//    if (auto const& dest_p = dynamic_cast<Memory*>(dest.get())) {
+//      auto m = make_shared<mov>(__func__, __LINE__);
+//      m->src1 = src;
+//      m->dest = dest;
+//      instructions.push_back(m);
+//    }
+//    
+//    if (auto const& dest_p = dynamic_cast<Virtual*>(dest.get())) {
+//      dest.reset(src_p);
+//    }
+//  }
+//  
+//  if (auto const& src_p = dynamic_cast<Memory*>(src.get()))
+//  {
+//    if (auto const& dest_p = dynamic_cast<Physical*>(dest.get())) {
+//      auto m = make_shared<mov>(__func__, __LINE__);
+//      m->src1 = src;
+//      m->dest = dest;
+//      instructions.push_back(m);
+//    }
+//    
+//    if (auto const& dest_p = dynamic_cast<Memory*>(dest.get())) {
+//      // check if same => avoid mov
+//      auto m1 = make_shared<mov>(__func__, __LINE__);
+//      auto r10 = make_shared<Physical>(ID_10, m1->src1->getSize());
+//      m1->src1 = src;
+//      m1->dest = r10;
+//      instructions.push_back(m1);
+//      auto m2 = make_shared<mov>(__func__, __LINE__);
+//      m2->src1 = r10;
+//      m2->dest = dest;
+//      instructions.push_back(m2);
+//    }
+//    
+//    if (auto const& dest_p = dynamic_cast<Virtual*>(dest.get())) {
+//      dest.reset(src_p);
+//    }
+//  }
+//}
 
 
 void RegisterAllocator::allocABtoB(shared_ptr<Instruction> instr, ABtoB *i, vector<shared_ptr<Instruction>> &instructions_)
@@ -160,46 +106,51 @@ void RegisterAllocator::allocABtoB(shared_ptr<Instruction> instr, ABtoB *i, vect
   // the first operand (src1 and dest) must not be a memory location
   // because we never map two different values on the same stack frame
   
-  auto r = Value::r10_(i->src2->size);
+  auto src1 = i->src1->getLowered(stackFrameAllocation);
+  auto src2 = i->src2->getLowered(stackFrameAllocation);
+  auto dest = i->dest->getLowered(stackFrameAllocation);
   
-  deliverValue(i->src2, r, instructions_);
+  shared_ptr<Physical> r = make_shared<Physical>(ID_10, src2->getSize());
+  
+  auto from_src_to_r = src2->movToPhysical(r);
+  auto from_r_to_dest = dest->movFromPhysical(r);
+  instructions_.push_back(from_src_to_r);
   instructions_.push_back(instr);
-  deliverValue(r, i->dest, instructions_);
+  instructions_.push_back(from_r_to_dest);
   
-  allocValue(i->src1);
-  
+  i->src1 = src1;
   i->src2 = r;
   i->dest = r;
 }
 
 void RegisterAllocator::allocABto_(shared_ptr<Instruction> instr, ABto_ *i, vector<shared_ptr<Instruction>> &instructions_)
 {
-  allocValue(i->src1);
-  allocValue(i->src2);
+  auto src1 = i->src1->getLowered(stackFrameAllocation);
+  auto src2 = i->src2->getLowered(stackFrameAllocation);
+  
+  shared_ptr<Physical> r1 = make_shared<Physical>(ID_10, src1->getSize());
   
   // only one operand can be a memory access
-  if (i->src1->type == ValueTypeStackSlot && 
-      i->src2->type == ValueTypeStackSlot)
-  {
-    auto r1 = Value::r10_(i->src1->size);
-    deliverValue(i->src1, r1, instructions_);
+  if (dynamic_cast<Memory*>(src1.get()) && dynamic_cast<Memory*>(src2.get())) {
+    auto from_src_to_r = src1->movToPhysical(r1);
+    instructions_.push_back(from_src_to_r);
     i->src1 = r1;
+    i->src2 = src2;
   }
   
   // src2 must not be an immediate
-  if (i->src2->type == ValueTypeImmediate)
-  {
-    auto r1 = Value::r10_(i->src1->size);
-    deliverValue(i->src2, r1, instructions_);
+  if (dynamic_cast<Immediate*>(src2.get())) {
+    auto from_src_to_r = src2->movToPhysical(r1);
+    instructions_.push_back(from_src_to_r);
+    i->src1 = src1;
     i->src2 = r1;
   }
   
   // src2 as memory and src1 as immediate is not allowed
-  if (i->src2->type == ValueTypeStackSlot && 
-      i->src1->type == ValueTypeImmediate)
-  {
-    auto r1 = Value::r10_(i->src1->size);
-    deliverValue(i->src2, r1, instructions_);
+  if (dynamic_cast<Immediate*>(src1.get()) && dynamic_cast<Memory*>(src2.get())) {
+    auto from_src_to_r = src2->movToPhysical(r1);
+    instructions_.push_back(from_src_to_r);
+    i->src1 = src1;
     i->src2 = r1;
   }
   
@@ -208,31 +159,36 @@ void RegisterAllocator::allocABto_(shared_ptr<Instruction> instr, ABto_ *i, vect
 
 void RegisterAllocator::allocAtoA(shared_ptr<Instruction> instr, AtoA *i, vector<shared_ptr<Instruction>> &instructions_)
 {
-  allocValue(i->src1);
-  allocValue(i->dest);
+  auto src1 = i->src1->getLowered(stackFrameAllocation);
+  auto dest = i->dest->getLowered(stackFrameAllocation);
   
-  auto r1 = Value::r10_(i->src1->size);
-  deliverValue(i->src1, r1, instructions_);
+  shared_ptr<Physical> r1 = make_shared<Physical>(ID_10, src1->getSize());
+  
+  auto from_src_to_r = src1->movToPhysical(r1);
+  instructions_.push_back(from_src_to_r);
+  
   i->src1 = r1;
-  auto d = i->dest;
   i->dest = r1;
   
   instructions_.push_back(instr);
   
-  deliverValue(r1, d, instructions_);
+  auto from_r_to_d = dest->movFromPhysical(r1);
+  instructions_.push_back(from_r_to_d);
 }
 
 void RegisterAllocator::allocAtoB(shared_ptr<Instruction> instr, AtoB *i, vector<shared_ptr<Instruction>> &instructions_)
 {
-  allocValue(i->src1);
-  allocValue(i->dest);
+  auto src1 = i->src1->getLowered(stackFrameAllocation);
+  auto dest = i->dest->getLowered(stackFrameAllocation);
+  
+  i->src1 = src1;
+  i->dest = dest;
   
   // ony one operand can be a memory access
-  if (i->src1->type == ValueTypeStackSlot && 
-      i->dest->type == ValueTypeStackSlot)
-  {
-    auto r1 = Value::r10_(i->src1->size);
-    deliverValue(i->src1, r1, instructions_);
+  if (dynamic_cast<Memory*>(src1.get()) && dynamic_cast<Memory*>(dest.get())) {
+    shared_ptr<Physical> r1 = make_shared<Physical>(ID_10, src1->getSize());
+    auto from_src_to_r = src1->movToPhysical(r1);
+    instructions_.push_back(from_src_to_r);
     i->src1 = r1;
   }
   
@@ -241,35 +197,41 @@ void RegisterAllocator::allocAtoB(shared_ptr<Instruction> instr, AtoB *i, vector
 
 void RegisterAllocator::allocAto_(shared_ptr<Instruction> instr, Ato_ *i, vector<shared_ptr<Instruction>> &instructions_)
 { 
-  allocValue(i->src1);
+  auto src1 = i->src1->getLowered(stackFrameAllocation);
+  i->src1 = src1;
   
   instructions_.push_back(instr);
 }
 
 void RegisterAllocator::alloc_toA(shared_ptr<Instruction> instr, _toA *i, vector<shared_ptr<Instruction>> &instructions_)
 { 
-  allocValue(i->dest);
+  auto dest = i->dest->getLowered(stackFrameAllocation);
+  i->dest = dest;
   
   instructions_.push_back(instr);
 }
 
 void RegisterAllocator::allocDiv(shared_ptr<Instruction> instr, div *i, vector<shared_ptr<Instruction>> &instructions_)
 { 
-  auto c = Value::eax();
-  auto low = Value::eax();
-  auto a = i->src1;
-  auto b = i->src2;
+  shared_ptr<Physical> c = make_shared<Physical>(ID_AX, ValueSize32);
+  shared_ptr<Physical> low = make_shared<Physical>(ID_AX, ValueSize32);
   
-  allocValue(i->src1);
-  allocValue(i->src2);
-  allocValue(i->dest);
+  auto src1 = i->src1->getLowered(stackFrameAllocation);
+  auto src2 = i->src2->getLowered(stackFrameAllocation);
+  auto dest = i->dest->getLowered(stackFrameAllocation);
   
-  deliverValue(a, low, instructions_);
+  i->src1 = src1;
+  i->src2 = src2;
+  i->dest = dest;
+  
+  auto from_src1_to_low = src1->movToPhysical(low);
+  instructions_.push_back(from_src1_to_low);
   
   // Argument to idiv has to be register or memory location
-  if (i->src2->type == ValueTypeImmediate) {
-    auto r1 = Value::r10_(i->src2->size);
-    deliverValue(i->src2, r1, instructions_);
+  if (dynamic_cast<Immediate*>(src2.get())) {
+    shared_ptr<Physical> r1 = make_shared<Physical>(ID_10, src2->getSize());
+    auto from_src2_to_r = src2->movToPhysical(r1);
+    instructions_.push_back(from_src2_to_r);
     i->src2 = r1;
   }
   
@@ -278,26 +240,31 @@ void RegisterAllocator::allocDiv(shared_ptr<Instruction> instr, div *i, vector<s
   
   instructions_.push_back(instr);
   
-  deliverValue(c, i->dest, instructions_);
+  auto from_c_to_dest = dest->movFromPhysical(c);
+  instructions_.push_back(from_c_to_dest);
 }
 
 void RegisterAllocator::allocMod(shared_ptr<Instruction> instr, mod *i, vector<shared_ptr<Instruction>> &instructions_)
 { 
-  auto c = Value::edx();
-  auto low = Value::eax();
-  auto a = i->src1;
-  auto b = i->src2;
+  shared_ptr<Physical> c = make_shared<Physical>(ID_DX, ValueSize32);
+  shared_ptr<Physical> low = make_shared<Physical>(ID_AX, ValueSize32);
   
-  allocValue(i->src1);
-  allocValue(i->src2);
-  allocValue(i->dest);
+  auto src1 = i->src1->getLowered(stackFrameAllocation);
+  auto src2 = i->src2->getLowered(stackFrameAllocation);
+  auto dest = i->dest->getLowered(stackFrameAllocation);
   
-  deliverValue(a, low, instructions_);
+  i->src1 = src1;
+  i->src2 = src2;
+  i->dest = dest;
+  
+  auto from_src1_to_low = src1->movToPhysical(low);
+  instructions_.push_back(from_src1_to_low);
   
   // Argument to idiv has to be register or memory location
-  if (i->src2->type == ValueTypeImmediate) {
-    auto r1 = Value::r10_(i->src2->size);
-    deliverValue(i->src2, r1, instructions_);
+  if (dynamic_cast<Immediate*>(src2.get())) {
+    shared_ptr<Physical> r1 = make_shared<Physical>(ID_10, src2->getSize());
+    auto from_src2_to_r = src2->movToPhysical(r1);
+    instructions_.push_back(from_src2_to_r);
     i->src2 = r1;
   }
 
@@ -306,7 +273,8 @@ void RegisterAllocator::allocMod(shared_ptr<Instruction> instr, mod *i, vector<s
 
   instructions_.push_back(instr);
   
-  deliverValue(c, i->dest, instructions_);
+  auto from_c_to_dest = dest->movFromPhysical(c);
+  instructions_.push_back(from_c_to_dest);
 }
 
 void RegisterAllocator::allocCall(shared_ptr<Instruction> instr, call *i, vector<shared_ptr<Instruction>> &instructions_)
@@ -318,21 +286,26 @@ void RegisterAllocator::allocCall(shared_ptr<Instruction> instr, call *i, vector
   if (i->dest != nullptr)
   {
     // move result to stack
-    auto ax = Value::_ax(i->dest->size);
-    deliverValue(ax, i->dest, instructions_);
+    auto dest = i->dest->getLowered(stackFrameAllocation);
+    i->dest = dest;
+    shared_ptr<Physical> ax = make_shared<Physical>(ID_AX, dest->getSize());
+    auto from_ax_to_dest = dest->movFromPhysical(ax);
+    instructions_.push_back(from_ax_to_dest);
   }
 }
 
 void RegisterAllocator::allocMove(shared_ptr<Instruction> instr, mov *i, vector<shared_ptr<Instruction>> &instructions_)
 {
-  allocValue(i->src1);
-  allocValue(i->dest);
+  auto src1 = i->src1->getLowered(stackFrameAllocation);
+  auto dest = i->dest->getLowered(stackFrameAllocation);
   
-  if (i->src1->type == ValueTypeStackSlot && 
-      i->dest->type == ValueTypeStackSlot)
-  {
-    auto r1 = Value::r10_(i->src1->size);
-    deliverValue(i->src1, r1, instructions_);
+  i->src1 = src1;
+  i->dest = dest;
+  
+  if (dynamic_cast<Memory*>(src1.get()) && dynamic_cast<Memory*>(dest.get())) {
+    shared_ptr<Physical> r1 = make_shared<Physical>(ID_10, src1->getSize());
+    auto from_src_to_r = src1->movToPhysical(r1);
+    instructions_.push_back(from_src_to_r);
     i->src1 = r1;
   }
   

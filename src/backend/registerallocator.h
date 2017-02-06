@@ -18,7 +18,7 @@ namespace cmpl
   class RegisterAllocator
   {
 	public:
-    RegisterAllocator(shared_ptr<map<Label, shared_ptr<LabeledBlock>>> blocks, shared_ptr<vector<Label>> labels) : blocks(blocks), labels(labels) {};
+    RegisterAllocator(shared_ptr<map<Label, shared_ptr<LabeledBlock>>> blocks, shared_ptr<vector<Label>> labels, shared_ptr<StackFrameAllocation> sfa) : blocks(blocks), labels(labels), stackFrameAllocation(sfa) {};
     
     void run();
     
@@ -26,10 +26,9 @@ namespace cmpl
     // Only interface to graphassembler
     shared_ptr<map<Label, shared_ptr<LabeledBlock>>> blocks;
     shared_ptr<vector<Label>> labels; // topological order
-    long topOfStack;
+    shared_ptr<StackFrameAllocation> stackFrameAllocation;
    
-    void allocValue(shared_ptr<Value> &r);
-    void deliverValue(shared_ptr<Value> &src, shared_ptr<Value> &dest, vector<shared_ptr<Instruction>> &instructions_);
+//    void deliverValue(shared_ptr<Value> &src, shared_ptr<Value> &dest, vector<shared_ptr<Instruction>> &instructions_);
     void allocABtoB(shared_ptr<Instruction> instr, ABtoB *i, vector<shared_ptr<Instruction>> &instructions_);
     void allocABto_(shared_ptr<Instruction> instr, ABto_ *i, vector<shared_ptr<Instruction>> &instructions_);
     void allocAtoA(shared_ptr<Instruction> instr, AtoA *i, vector<shared_ptr<Instruction>> &instructions_);

@@ -42,14 +42,16 @@ namespace cmpl
     void buildMod(ir_node *node);
     void buildReturn(ir_node *node);
     void buildCall(ir_node *node);
+    void buildLoad(ir_node *node);
+    void buildStore(ir_node *node);
     
   private:
     shared_ptr<map<Label, shared_ptr<LabeledBlock>>> blocks;
     shared_ptr<vector<Label>> labels; // topological order
     
-    map<long, shared_ptr<Value>> registers;
+    map<long, shared_ptr<Value>> values;
     map<long, Label> nodeNrToLabel;
-    long topOfStack = 0;
+    shared_ptr<StackFrameAllocation> stackFrameAllocation = make_shared<StackFrameAllocation>();
     long nextFreeLabel = 0;
     string labelPrefix;
     shared_ptr<Value> regArgsToValue[6];

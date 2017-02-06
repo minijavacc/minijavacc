@@ -26,5 +26,7 @@ void Optimizer::run()
     cp.run();
     
     irg_finalize_cons(irg);
+    
+    lower_highlevel_graph(irg);
   }
 }
