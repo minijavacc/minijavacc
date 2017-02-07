@@ -57,6 +57,7 @@ namespace cmpl
     virtual string toString();
     virtual ValueSize getSize();
     virtual void setSize(ValueSize s);
+    static ValueSize valueSizeFromIRNode(ir_node *node);
     static ValueSize valueSizeFromIRMode(ir_mode *mode);
     virtual shared_ptr<Value> getLowered(shared_ptr<StackFrameAllocation> allocation);
     virtual shared_ptr<mov> movToPhysical(shared_ptr<Physical> p) { assert(false); };
@@ -110,7 +111,7 @@ namespace cmpl
     
   public:
     Virtual(ValueSize s);
-    Virtual(ir_mode *mode);
+    Virtual(ir_node *node);
     string toString() override;
     shared_ptr<Value> getLowered(shared_ptr<StackFrameAllocation> allocation) override;
   };

@@ -32,14 +32,34 @@ void Value::setSize(ValueSize s) {
   size = s;
 }
 
-ValueSize Value::valueSizeFromIRMode(ir_mode *mode) {
-  if (get_mode_size_bytes(mode) == 4) return ValueSize32;
-  if (get_mode_size_bytes(mode) == 8) return ValueSize64;
+ValueSize Value::valueSizeFromIRNode(ir_node *node) {
+  ir_mode *mode = get_irn_mode(node);
+  
+  if (is_Load(node)) {
+    mode = get_Load_mode(node);
+  }
+  
+  if (is_Call(node)) {
+    auto t = get_Call_type(node);
+    mode = get_type_mode(t);
+  }
+  
+  if (is_Mod(node)) {
+    mode = get_Mod_resmode(node);
+  }
+  
+  if (is_Div(node)) {
+    mode = get_Div_resmode(node);
+  }
+  
+  return valueSizeFromIRMode(mode);
+}
 
+ValueSize Value::valueSizeFromIRMode(ir_mode *mode) {
   if (mode_is_reference(mode)) return ValueSize64;
   if (mode_is_int(mode)) return ValueSize32;
   
-  return ValueSizeUndefined; // Tuple
+  return ValueSizeUndefined; // abort?
 }
 
 shared_ptr<Value> Value::getLowered(shared_ptr<StackFrameAllocation> allocation) {
@@ -213,7 +233,7 @@ Virtual::Virtual(ValueSize s) {
   identifier = lastUsedRegisterIdentifier++;
 }
 
-Virtual::Virtual(ir_mode *mode) : Virtual(valueSizeFromIRMode(mode)) {};
+Virtual::Virtual(ir_node *node) : Virtual(valueSizeFromIRNode(node)) {};
 
 string Virtual::toString() {
   return "v" + std::to_string(identifier);

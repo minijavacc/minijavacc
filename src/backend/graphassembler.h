@@ -28,6 +28,7 @@ namespace cmpl
     
     // methods should be private, but must be called from irgNodeWalker()
     void insertProlog();
+    void insertParameterMovs();
     void collectPhi(ir_node *node);
     void buildBlock(ir_node *node);
     void buildConst(ir_node *node);

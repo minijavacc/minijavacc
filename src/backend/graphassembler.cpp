@@ -19,7 +19,7 @@ shared_ptr<Value> GraphAssembler::getValue(ir_node *node) {
     return values.at(get_irn_node_nr(node));
   }
   
-  auto r = make_shared<Virtual>(get_irn_mode(node));
+  auto r = make_shared<Virtual>(node);
   setValue(node, r);
   return r;
 }
@@ -53,14 +53,14 @@ Label GraphAssembler::getLabel(ir_node *node) {
 
 
 
-#pragma mark - Function prolog/epilog
+#pragma mark - Function prolog
 
-void GraphAssembler::insertProlog() {
+void GraphAssembler::insertParameterMovs() {
   Label fl = labels->front();
   auto bl = blocks->at(fl);
   auto it = bl->instructions.begin();
   int x = 0; // for iterator
-
+  
   // get all arguments (that are used) from the registers and save them to the stack
   for (int i = 0; i < 6; i++)
   {
@@ -79,7 +79,7 @@ void GraphAssembler::insertProlog() {
       case 0:
         inst->src1 = make_shared<Physical>(ID_DI, size);
         break;
-      
+        
       case 1:
         inst->src1 = make_shared<Physical>(ID_SI, size);;
         break;
@@ -87,19 +87,19 @@ void GraphAssembler::insertProlog() {
       case 2:
         inst->src1 = make_shared<Physical>(ID_DX, size);;
         break;
-      
+        
       case 3:
         inst->src1 = make_shared<Physical>(ID_CX, size);;
         break;
-      
+        
       case 4:
         inst->src1 = make_shared<Physical>(ID_08, size);;
         break;
-      
+        
       case 5:
         inst->src1 = make_shared<Physical>(ID_09, size);;
         break;
-      
+        
       default:
         assert(false);
     }
@@ -107,28 +107,30 @@ void GraphAssembler::insertProlog() {
     it = bl->instructions.begin();
     bl->instructions.insert(it + x++, inst);
   }
+}
+
+void GraphAssembler::insertProlog() {
+  Label fl = labels->front();
+  auto bl = blocks->at(fl);
   
   auto p = make_shared<push>(__func__, __LINE__);
   p->src1 = make_shared<Physical>(ID_BP, ValueSize64);
-  
-  x = 1;
+
   
   auto m = make_shared<StaticInstruction>("movq %rsp, %rbp", __func__, __LINE__);
+  auto it = bl->instructions.begin();
   bl->instructions.insert(it, p);
   it = bl->instructions.begin();
-  bl->instructions.insert(it + x++, m);
+  bl->instructions.insert(it + 1, m);
   
   if (stackFrameAllocation->getTopOfStack() < 0)
   {
     auto s = make_shared<subq_rsp>(__func__, __LINE__);
     s->bytes = -stackFrameAllocation->getTopOfStack();
     it = bl->instructions.begin();
-    bl->instructions.insert(it + x++, s);
+    bl->instructions.insert(it + 2, s);
   }
 }
-
-// Epilog is implicit in buildReturn()
-// move to single location to avoid code duplication?
 
 
 
@@ -246,12 +248,17 @@ void GraphAssembler::buildProj(ir_node *node) {
   ir_node *pred = get_Proj_pred(node);
   ir_node *ppred;
   
+  // ignore mem proj
+  if (get_irn_mode(node) == mode_M) {
+    return;
+  }
+  
   // check if Proj gets an argument
   if (is_Proj(pred) && (ppred = get_Proj_pred(pred)) && is_Start(ppred)) {
     
     // get arg index
     unsigned int i = get_Proj_num(node);
-    auto size = Value::valueSizeFromIRMode(get_irn_mode(node));
+    auto size = Value::valueSizeFromIRNode(node);
     
     // if one of the first 6 arguments, add shared_ptr to regArgsToValue 
     // and generate mov instructions in insertProlog
@@ -273,11 +280,7 @@ void GraphAssembler::buildProj(ir_node *node) {
     // hacky, but should work
     if (values.count(get_irn_node_nr(pred)) > 0)
     {
-      // Set size explicitely
-      // At tuple predecessor, size was ValueSizeUndefined
       auto v = values[get_irn_node_nr(pred)];
-      ValueSize s = Value::valueSizeFromIRMode(get_irn_mode(node));
-      v->setSize(s);
       setValue(node, v);
     }
   }
@@ -536,13 +539,10 @@ void GraphAssembler::buildLoad(ir_node *node) {
   auto src_lowered = src->getLowered(stackFrameAllocation);
   auto dest = getValue(node);
   
-  auto r = make_shared<Physical>(ID_10, src->getSize());
+  auto r = make_shared<Physical>(ID_09, src_lowered->getSize()); // Use r09, since r10 is used for register allocator
   auto src_mov = src_lowered->movToPhysical(r);
   
-  auto src_ = make_shared<Memory>(r, 0, src->getSize());
-  
-  // Set size explicitly
-  src_->setSize(ValueSize32);
+  auto src_ = make_shared<Memory>(r, 0, dest->getSize());
   
   auto inst = make_shared<mov>(__func__, __LINE__);
   inst->src1 = src_;
@@ -557,16 +557,18 @@ void GraphAssembler::buildStore(ir_node *node) {
   ir_node *value = get_Store_value(node);
   
   auto src = values[get_irn_node_nr(value)];
+  auto size = src->getSize();
   auto dest = values[get_irn_node_nr(memloc)];
   auto dest_lowered = dest->getLowered(stackFrameAllocation);
   
-  auto r = make_shared<Physical>(ID_10, dest_lowered->getSize());
+  // Set size explicitely
+  // dest is a pointer (64 bit) but could be pointing to an int (32 bit)
+//  dest_lowered->setSize(size);
+  
+  auto r = make_shared<Physical>(ID_09, ValueSize64); // Use r09, since r10 is used for register allocator
   auto dest_mov = dest_lowered->movToPhysical(r);
   
-  auto dest_ = make_shared<Memory>(r, 0, dest_lowered->getSize());
-  
-  // Set size explicitly
-  dest_->setSize(ValueSize32);
+  auto dest_ = make_shared<Memory>(r, 0, size);
   
   auto inst = make_shared<mov>(__func__, __LINE__);
   inst->src1 = src;
@@ -669,6 +671,9 @@ string GraphAssembler::run()
   registerAllocator = new RegisterAllocator(blocks, labels, stackFrameAllocation);
   registerAllocator->run();
   delete registerAllocator;
+  
+  // Insert parameter movs
+  insertParameterMovs();
   
   // Insert prolog
   insertProlog();
