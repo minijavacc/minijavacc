@@ -140,6 +140,11 @@ void GraphAssembler::insertProlog() {
 #pragma mark - Instruction builders
 
 void GraphAssembler::collectPhi(ir_node *node) {
+  // ignore mem phi
+  if (get_irn_mode(node) == mode_M) {
+    return;
+  }
+  
   // Step 1: Collect all phi nodes of every block
   ir_node *bl = get_nodes_block(node);
   Label l = nodeNrToLabel.at(get_irn_node_nr(bl));
