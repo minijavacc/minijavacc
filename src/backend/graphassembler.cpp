@@ -269,7 +269,11 @@ void GraphAssembler::buildProj(ir_node *node) {
     // and generate mov instructions in insertProlog
     if (i < 6)
     {
-      regArgsToValue[i] = getValue(node);			
+      if (!regArgsToValue[i]) {
+        regArgsToValue[i] = getValue(node);
+      } else {
+        setValue(node, regArgsToValue[i]);
+      }
     }
     // if argument > 5
     else
