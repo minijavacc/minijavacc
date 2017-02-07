@@ -217,20 +217,17 @@ void GraphAssembler::buildCond(ir_node *node) {
   auto rreg = values[get_irn_node_nr(r)];
   
   auto comp = make_shared<cmp>(__func__, __LINE__);
-  comp->src1 = lreg;
-  comp->src2 = rreg;
-//  getCurrentBlock()->instructions.push_back(cmp);
+  comp->src1 = rreg; // weird, but correct
+  comp->src2 = lreg; // weird, but correct
   getLabeledBlockForIrNode(node)->exitInstructions.push_back(comp);
   
   auto br = make_shared<Branch>(__func__, __LINE__);
   br->relation = get_Cmp_relation(s);
   br->label = trueLabel;
-//  getCurrentBlock()->instructions.push_back(br);
   getLabeledBlockForIrNode(node)->exitInstructions.push_back(br);
   
   auto j = make_shared<jmp>(__func__, __LINE__);
   j->label = falseLabel;
-//  getCurrentBlock()->instructions.push_back(j);
   getLabeledBlockForIrNode(node)->exitInstructions.push_back(j);
 }
 

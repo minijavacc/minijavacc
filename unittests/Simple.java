@@ -4,15 +4,19 @@ class Simple {
     s.attr = new Attr();
     s.attr.anInt = 5;
     
-    s.foo();
+    s.foo(1);
     
     System.out.println(s.attr.anInt);
   }
   
   public Attr attr;
   
-  public void foo() {
-    this.attr.anInt = 23;
+  public void foo(int x) {
+    if (x < 50) {
+      this.attr.anInt = 23;
+    } else {
+      this.attr.anInt = 42;
+    }
   }
 
 }
