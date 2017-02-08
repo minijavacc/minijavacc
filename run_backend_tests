@@ -1,0 +1,3 @@
+#!/bin/sh
+./tests/mjtest/mjt.py --parallel --produce_no_reports compile bin/minijavacc
+
