@@ -32,10 +32,12 @@ int getConstantValue(ir_node* node){
 		if(tarval_is_long(tarval)){
 			return get_tarval_long(tarval);
 		}
+	return -1;
 }
 
 ir_node* createTarvalNode(int value){
-	 return new_Const(new_tarval_from_long(value, mode_Is));}  
+	 return new_Const(new_tarval_from_long(value, mode_Is));
+}  
 
 
 bool isSameVariable(ir_node* a, ir_node* b){
