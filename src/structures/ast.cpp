@@ -493,7 +493,7 @@ ir_entity *SLCFlushExpression::getFirmEntity() {
   return print_entity_flush;
 }
 ir_entity *SLCReadExpression::getFirmEntity() {
-  if(print_entity_read) {
+  if(!print_entity_read) {
     print_entity_read  = new_global_entity(get_glob_type(), new_id_from_str((std::string(AMD64LdNamePrefix) + std::string("read")).c_str()),
                                             getFirmType(), ir_visibility_external, IR_LINKAGE_DEFAULT);
   }

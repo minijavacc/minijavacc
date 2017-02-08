@@ -145,7 +145,6 @@ void println(int32_t a) {
     fprintf(stderr , "error:␣println:␣%s\n", strerror(errno));
     abort();
   }
-  //printf("%d\n", a);
 }
 
 void write(const int32_t b) {
@@ -165,41 +164,16 @@ void flush() {
   }
 }
 
-int32_t read() {
-  const int c = fgetc(stdin);
-  if ((c < 0) && ferror(stdin)) {
-    fprintf(stderr , "error:␣read:␣%s\n", strerror(errno));
-    abort();
-  }
-  return (int32_t) c;
+int32_t read()
+{
+  int32_t x;
+  scanf("%d", &x);
+  return x;
 }
 
 void exit(const int32_t status) {
   exit((int) status);
 }
-
-/*
-void write(int a)
-{
-  printf("%c", a);
-}
-
-void flush()
-{
-  printf("\n");
-}
-
-int read()
-{
-  int x;
-  scanf("%d", &x);
-  return x;
-}
-
-void exit(int status)
-{
-  exit(status);
-}*/
   )";
   
   std::ofstream runtimeFile("_runtime.c");

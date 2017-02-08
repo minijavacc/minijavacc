@@ -533,7 +533,7 @@ void SLCReadExpression::doExpr()
   set_store(mem);
   
   // TODO: returntype is int... what do do?
-  n->firm_node = call;
+  n->firm_node = res;
 }
 
 void NewArray::doExpr()
