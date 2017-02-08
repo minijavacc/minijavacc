@@ -9,6 +9,18 @@
 using namespace cmpl;
 
 
+#pragma mark Helper Functions
+
+ir_node *createTrueNode() {
+  return new_Const(new_tarval_from_long(1, mode_Is));
+}
+
+ir_node *createFalseNode() {
+  return new_Const(new_tarval_from_long(0, mode_Is));
+}
+
+
+
 
 #pragma mark Expression::assign
 
@@ -98,7 +110,7 @@ void AssignmentExpression::doCond(ir_node *trueBlock, ir_node *falseBlock) {
   
   shared_from_this()->expression1->assign(shared_from_this()->expression2->firm_node);
   
-  ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *const1 = createTrueNode();
   ir_node *cmp = new_Cmp(shared_from_this()->expression2->firm_node, const1, ir_relation_greater_equal);
   ir_node *cond = new_Cond(cmp);
   ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
@@ -120,14 +132,14 @@ void LogicalOrExpression::doExpr() {
   mature_immBlock(currentBlock);
   
   set_cur_block(trueBlock);
-  ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *const1 = createTrueNode();
   ir_node *jmpTrue = new_Jmp();
   
   add_immBlock_pred(nextBlock, jmpTrue);
   mature_immBlock(get_cur_block());
   
   set_cur_block(falseBlock);
-  ir_node *const0 = new_Const(new_tarval_from_long(0, mode_Bu));
+  ir_node *const0 = createFalseNode();
   ir_node *jmpFalse = new_Jmp();
   
   add_immBlock_pred(nextBlock, jmpFalse);
@@ -136,7 +148,7 @@ void LogicalOrExpression::doExpr() {
   set_cur_block(nextBlock);
   
   ir_node *results[2] = { const1, const0 };
-  ir_node *phi = new_Phi(2, results, mode_Bu);
+  ir_node *phi = new_Phi(2, results, mode_Is);
   shared_from_this()->firm_node = phi;
   
   mature_immBlock(nextBlock);
@@ -165,14 +177,14 @@ void LogicalAndExpression::doExpr() {
   mature_immBlock(currentBlock);
   
   set_cur_block(trueBlock);
-  ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *const1 = createTrueNode();
   ir_node *jmpTrue = new_Jmp();
   
   add_immBlock_pred(nextBlock, jmpTrue);
   mature_immBlock(get_cur_block());
   
   set_cur_block(falseBlock);
-  ir_node *const0 = new_Const(new_tarval_from_long(0, mode_Bu));
+  ir_node *const0 = createFalseNode();
   ir_node *jmpFalse = new_Jmp();
   
   add_immBlock_pred(nextBlock, jmpFalse);
@@ -181,7 +193,7 @@ void LogicalAndExpression::doExpr() {
   set_cur_block(nextBlock);
   
   ir_node *results[2] = { const1, const0 };
-  ir_node *phi = new_Phi(2, results, mode_Bu);
+  ir_node *phi = new_Phi(2, results, mode_Is);
   shared_from_this()->firm_node = phi;
   
   mature_immBlock(nextBlock);
@@ -210,14 +222,14 @@ void EqualityExpression::doExpr() {
   mature_immBlock(currentBlock);
   
   set_cur_block(trueBlock);
-  ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *const1 = createTrueNode();
   ir_node *jmpTrue = new_Jmp();
   
   add_immBlock_pred(nextBlock, jmpTrue);
   mature_immBlock(get_cur_block());
   
   set_cur_block(falseBlock);
-  ir_node *const0 = new_Const(new_tarval_from_long(0, mode_Bu));
+  ir_node *const0 = createFalseNode();
   ir_node *jmpFalse = new_Jmp();
   
   add_immBlock_pred(nextBlock, jmpFalse);
@@ -226,7 +238,7 @@ void EqualityExpression::doExpr() {
   set_cur_block(nextBlock);
   
   ir_node *results[2] = { const1, const0 };
-  ir_node *phi = new_Phi(2, results, mode_Bu);
+  ir_node *phi = new_Phi(2, results, mode_Is);
   shared_from_this()->firm_node = phi;
   
   mature_immBlock(nextBlock);
@@ -267,14 +279,14 @@ void RelationalExpression::doExpr() {
   mature_immBlock(currentBlock);
   
   set_cur_block(trueBlock);
-  ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *const1 = createTrueNode();
   ir_node *jmpTrue = new_Jmp();
   
   add_immBlock_pred(nextBlock, jmpTrue);
   mature_immBlock(get_cur_block());
   
   set_cur_block(falseBlock);
-  ir_node *const0 = new_Const(new_tarval_from_long(0, mode_Bu));
+  ir_node *const0 = createFalseNode();
   ir_node *jmpFalse = new_Jmp();
   
   add_immBlock_pred(nextBlock, jmpFalse);
@@ -283,7 +295,7 @@ void RelationalExpression::doExpr() {
   set_cur_block(nextBlock);
   
   ir_node *results[2] = { const1, const0 };
-  ir_node *phi = new_Phi(2, results, mode_Bu);
+  ir_node *phi = new_Phi(2, results, mode_Is);
   shared_from_this()->firm_node = phi;
 }
 
@@ -387,14 +399,14 @@ void UnaryLeftExpression::doExpr() {
     mature_immBlock(currentBlock);
     
     set_cur_block(trueBlock);
-    ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+    ir_node *const1 = createTrueNode();
     ir_node *jmpTrue = new_Jmp();
     
     add_immBlock_pred(nextBlock, jmpTrue);
     mature_immBlock(get_cur_block());
     
     set_cur_block(falseBlock);
-    ir_node *const0 = new_Const(new_tarval_from_long(0, mode_Bu));
+    ir_node *const0 = createFalseNode();
     ir_node *jmpFalse = new_Jmp();
     
     add_immBlock_pred(nextBlock, jmpFalse);
@@ -404,7 +416,7 @@ void UnaryLeftExpression::doExpr() {
     mature_immBlock(nextBlock);
     
     ir_node *results[2] = { const1, const0 };
-    ir_node *phi = new_Phi(2, results, mode_Bu);
+    ir_node *phi = new_Phi(2, results, mode_Is);
     shared_from_this()->firm_node = phi;
     return;
   }
@@ -575,7 +587,7 @@ void CallExpression::doCond(ir_node *trueBlock, ir_node *falseBlock)
   ir_node *res = n->firm_node;
   
   // Check res for trueness
-  ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *const1 = createTrueNode();
   ir_node *cmp = new_Cmp(res, const1, ir_relation_greater_equal);
   ir_node *cond = new_Cond(cmp);
   ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
@@ -628,7 +640,7 @@ void UnaryRightExpression::doCond(ir_node *trueBlock, ir_node *falseBlock)
   assert(n->firm_node);
   
   // Check res for trueness
-  ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *const1 = createTrueNode();
   ir_node *cmp = new_Cmp(n->firm_node, const1, ir_relation_greater_equal);
   ir_node *cond = new_Cond(cmp);
   ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
@@ -760,7 +772,7 @@ void CRef::doCond(ir_node *trueBlock, ir_node *falseBlock) {
   }
   
   // Check res for trueness
-  ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *const1 = createTrueNode();
   ir_node *cmp = new_Cmp(res, const1, ir_relation_greater_equal);
   ir_node *cond = new_Cond(cmp);
   ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
@@ -776,8 +788,7 @@ void CIntegerLiteral::doExpr() {
 }
 
 void CTrue::doExpr() {
-  ir_tarval *tv = new_tarval_from_long(1, mode_Bu);
-  shared_from_this()->firm_node = new_Const(tv);
+  shared_from_this()->firm_node = createTrueNode();
 }
 
 void CTrue::doCond(ir_node *trueBlock, ir_node *falseBlock) {
@@ -787,7 +798,7 @@ void CTrue::doCond(ir_node *trueBlock, ir_node *falseBlock) {
 //  free(falseBlock);
   
   // Check this->value for trueness
-  ir_node *c = new_Const(new_tarval_from_long(0, mode_Bu));
+  ir_node *c = createFalseNode();
   ir_node *cmp = new_Cmp(c, c, ir_relation_equal);
   ir_node *cond = new_Cond(cmp);
   ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
@@ -798,8 +809,7 @@ void CTrue::doCond(ir_node *trueBlock, ir_node *falseBlock) {
 }
 
 void CFalse::doExpr() {
-  ir_tarval *tv = new_tarval_from_long(0, mode_Bu);
-  shared_from_this()->firm_node = new_Const(tv);
+  shared_from_this()->firm_node = createFalseNode();
 }
 
 void CFalse::doCond(ir_node *trueBlock, ir_node *falseBlock) {
@@ -809,7 +819,7 @@ void CFalse::doCond(ir_node *trueBlock, ir_node *falseBlock) {
 //  free(trueBlock);
   
   // Check this->value for trueness
-  ir_node *c = new_Const(new_tarval_from_long(0, mode_Bu));
+  ir_node *c = createFalseNode();
   ir_node *cmp = new_Cmp(c, c, ir_relation_less_greater);
   ir_node *cond = new_Cond(cmp);
   ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
@@ -854,9 +864,6 @@ ir_node *IRBuilder::callCallocNode(ir_node *num, ir_type *result_type) {
   
   return call;
 }
-
-
-
 
 
 #pragma mark - IRBuilder

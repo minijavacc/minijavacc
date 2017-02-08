@@ -394,7 +394,7 @@ ir_type * FakeType::getFirmType() {
 ir_type * TypeBoolean::getFirmType() {
   if(!firm_type)
   {
-    firm_type = new_type_primitive(mode_Bu);
+    firm_type = new_type_primitive(mode_Is);
   }
   
   return firm_type;
