@@ -48,6 +48,11 @@ ValueSize Value::valueSizeFromIRNode(ir_node *node) {
     mode = get_Mod_resmode(node);
   }
   
+  /**
+   * @brief 
+   * @param node
+   * @return 
+   */
   if (is_Div(node)) {
     mode = get_Div_resmode(node);
   }
@@ -57,9 +62,16 @@ ValueSize Value::valueSizeFromIRNode(ir_node *node) {
 
 ValueSize Value::valueSizeFromIRMode(ir_mode *mode) {
   if (mode_is_reference(mode)) return ValueSize64;
-  if (mode_is_int(mode)) return ValueSize32;
+  if (mode_is_int(mode))
+  {
+    if (get_mode_size_bits(mode) == 32)
+      return ValueSize32;
+    if (get_mode_size_bits(mode) == 64)
+      return ValueSize64;
+  }
   
-  return ValueSizeUndefined; // abort?
+  assert(false);
+  return ValueSizeUndefined;
 }
 
 shared_ptr<Value> Value::getLowered(shared_ptr<StackFrameAllocation> allocation) {

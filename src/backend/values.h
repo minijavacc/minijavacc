@@ -49,10 +49,7 @@ namespace cmpl
   
   // Base Value class
   // ------------------
-  class Value : public std::enable_shared_from_this<Value> {
-  protected:
-    ValueSize size;
-    
+  class Value : public std::enable_shared_from_this<Value> { 
   public:
     virtual string toString();
     virtual ValueSize getSize();
@@ -62,6 +59,8 @@ namespace cmpl
     virtual shared_ptr<Value> getLowered(shared_ptr<StackFrameAllocation> allocation);
     virtual shared_ptr<mov> movToPhysical(shared_ptr<Physical> p) { assert(false); };
     virtual shared_ptr<mov> movFromPhysical(shared_ptr<Physical> p) { assert(false); };
+    
+    ValueSize size;
   };
   
   // Immediate Value class

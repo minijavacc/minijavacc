@@ -213,8 +213,8 @@ void GraphAssembler::buildCond(ir_node *node) {
   ir_node *l = get_Cmp_left(s);
   ir_node *r = get_Cmp_right(s);
   
-  auto lreg = values[get_irn_node_nr(l)];
-  auto rreg = values[get_irn_node_nr(r)];
+  auto lreg = getValue(l);
+  auto rreg = getValue(r);
   
   auto comp = make_shared<cmp>(__func__, __LINE__);
   comp->src1 = rreg; // weird, but correct
@@ -286,7 +286,7 @@ void GraphAssembler::buildProj(ir_node *node) {
     // hacky, but should work
     if (values.count(get_irn_node_nr(pred)) > 0)
     {
-      auto v = values[get_irn_node_nr(pred)];
+      auto v = getValue(pred);
       setValue(node, v);
     }
   }
@@ -296,8 +296,8 @@ void GraphAssembler::buildAdd(ir_node *node) {
   ir_node *l = get_Add_left(node);
   ir_node *r = get_Add_right(node);
   
-  auto lreg = values[get_irn_node_nr(l)];
-  auto rreg = values[get_irn_node_nr(r)];
+  auto lreg = getValue(l);
+  auto rreg = getValue(r);
   auto oreg = getValue(node);
   
   auto inst = make_shared<add>(__func__, __LINE__);
@@ -311,7 +311,7 @@ void GraphAssembler::buildAdd(ir_node *node) {
 void GraphAssembler::buildReturn(ir_node *node) {
   if (get_Return_n_ress(node) > 0) {
     ir_node *pred = get_Return_res(node, 0);
-    auto r = values[get_irn_node_nr(pred)];
+    auto r = getValue(pred);
     auto inst = make_shared<mov>(__func__, __LINE__);
     inst->src1 = r;
     inst->dest = make_shared<Physical>(ID_AX, inst->src1->getSize());
@@ -350,7 +350,7 @@ void GraphAssembler::buildCall(ir_node *node) {
     ir_node *a = get_Call_param(node, i);
     
     assert(values.count(get_irn_node_nr(a)) > 0);
-    shared_ptr<Value> reg = values[get_irn_node_nr(a)];
+    shared_ptr<Value> reg = getValue(a);
     
     // move parameter to physical register
     auto inst = make_shared<mov>(__func__, __LINE__);
@@ -403,7 +403,7 @@ void GraphAssembler::buildCall(ir_node *node) {
       ir_node *a = get_Call_param(node, i);
       
       assert(values.count(get_irn_node_nr(a)) > 0);
-      shared_ptr<Value> reg = values[get_irn_node_nr(a)];
+      shared_ptr<Value> reg = getValue(a);
       
       // create mov instruction to move value to stack
       auto m = make_shared<mov>(reg, (i - 6) * 8, __func__, __LINE__);
@@ -454,8 +454,8 @@ void GraphAssembler::buildSub(ir_node *node) {
   ir_node *l = get_Sub_left(node);
   ir_node *r = get_Sub_right(node);
   
-  auto lreg = values[get_irn_node_nr(l)];
-  auto rreg = values[get_irn_node_nr(r)];
+  auto lreg = getValue(l);
+  auto rreg = getValue(r);
   auto oreg = getValue(node);
   
   auto inst = make_shared<sub>(__func__, __LINE__);
@@ -469,8 +469,8 @@ void GraphAssembler::buildMul(ir_node *node) {
   ir_node *l = get_Mul_left(node);
   ir_node *r = get_Mul_right(node);
   
-  auto lreg = values[get_irn_node_nr(l)];
-  auto rreg = values[get_irn_node_nr(r)];
+  auto lreg = getValue(l);
+  auto rreg = getValue(r);
   auto oreg = getValue(node);
   
   auto inst = make_shared<imul>(__func__, __LINE__);
@@ -484,8 +484,8 @@ void GraphAssembler::buildDiv(ir_node *node) {
   ir_node *l = get_Div_left(node);
   ir_node *r = get_Div_right(node);
   
-  auto lreg = values[get_irn_node_nr(l)];
-  auto rreg = values[get_irn_node_nr(r)];
+  auto lreg = getValue(l);
+  auto rreg = getValue(r);
   auto oreg = getValue(node);
   
   // Special case: ir_mode of mod is Tuple which results in wrong sized value from getValue()
@@ -507,8 +507,8 @@ void GraphAssembler::buildMod(ir_node *node) {
   ir_node *l = get_Mod_left(node);
   ir_node *r = get_Mod_right(node);
   
-  auto lreg = values[get_irn_node_nr(l)];
-  auto rreg = values[get_irn_node_nr(r)];
+  auto lreg = getValue(l);
+  auto rreg = getValue(r);
   auto oreg = getValue(node);
   
   // Special case: ir_mode of mod is Tuple which results in wrong sized value from getValue()
@@ -529,7 +529,7 @@ void GraphAssembler::buildMod(ir_node *node) {
 void GraphAssembler::buildMinus(ir_node *node) {
   ir_node *m = get_Minus_op(node);
 
-  auto mreg = values[get_irn_node_nr(m)];
+  auto mreg = getValue(m);
   auto oreg = getValue(node);
   
   auto inst = make_shared<neg>(__func__, __LINE__);
@@ -541,7 +541,7 @@ void GraphAssembler::buildMinus(ir_node *node) {
 void GraphAssembler::buildLoad(ir_node *node) {
   ir_node *memloc = get_Load_ptr(node);
   
-  auto src = values[get_irn_node_nr(memloc)];
+  auto src = getValue(memloc);
   auto src_lowered = src->getLowered(stackFrameAllocation);
   auto dest = getValue(node);
   
@@ -562,9 +562,9 @@ void GraphAssembler::buildStore(ir_node *node) {
   ir_node *memloc = get_Store_ptr(node);
   ir_node *value = get_Store_value(node);
   
-  auto src = values[get_irn_node_nr(value)];
+  auto src = getValue(value);
   auto size = src->getSize();
-  auto dest = values[get_irn_node_nr(memloc)];
+  auto dest = getValue(memloc);
   auto dest_lowered = dest->getLowered(stackFrameAllocation);
   
   // Set size explicitely
@@ -581,6 +581,16 @@ void GraphAssembler::buildStore(ir_node *node) {
   inst->dest = dest_;
   
   getLabeledBlockForIrNode(node)->instructions.push_back(dest_mov);
+  getLabeledBlockForIrNode(node)->instructions.push_back(inst);
+}
+
+void GraphAssembler::buildConv(ir_node *node) {
+  ir_node *op = get_Conv_op(node);
+  
+  auto inst = make_shared<conv>(__func__, __LINE__);
+  inst->src1 = getValue(op);
+  inst->dest = getValue(node);
+  
   getLabeledBlockForIrNode(node)->instructions.push_back(inst);
 }
 
@@ -639,6 +649,9 @@ void irgNodeWalker(ir_node *node, void *env)
   }
   else if (is_Store(node)) {
     _this->buildStore(node);
+  }
+  else if (is_Conv(node)) {
+    _this->buildConv(node);
   }
   else {
     // not every node type needs a buildNode function!

@@ -45,6 +45,7 @@ namespace cmpl
     void buildCall(ir_node *node);
     void buildLoad(ir_node *node);
     void buildStore(ir_node *node);
+    void buildConv(ir_node *node);
     
   private:
     shared_ptr<map<Label, shared_ptr<LabeledBlock>>> blocks;

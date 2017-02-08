@@ -213,6 +213,13 @@ namespace cmpl
     string mnemonic() override;
   };
   
+  class conv : public AtoB {
+    using AtoB::AtoB;
+    
+  public:
+    string generate() override;
+  };
+  
   
   // Special case, may be restructured later
   class ret : public Instruction {
