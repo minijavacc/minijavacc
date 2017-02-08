@@ -11,7 +11,17 @@ using namespace cmpl;
 
 inline shared_ptr<LabeledBlock> GraphAssembler::getLabeledBlockForIrNode(ir_node *node)
 {
-  return blocks->at(nodeNrToLabel.at(get_irn_node_nr(get_nodes_block(node))));
+  auto l = getLabel(get_nodes_block(node));
+  
+  if (blocks->count(l) > 0) {
+    return blocks->at(l);
+  }
+  
+  auto lb = make_shared<LabeledBlock>();
+  lb->label = l;
+  blocks->emplace(l, lb);
+  
+  return lb;
 }
 
 shared_ptr<Value> GraphAssembler::getValue(ir_node *node) {
@@ -146,9 +156,7 @@ void GraphAssembler::collectPhi(ir_node *node) {
   }
   
   // Step 1: Collect all phi nodes of every block
-  ir_node *bl = get_nodes_block(node);
-  Label l = nodeNrToLabel.at(get_irn_node_nr(bl));
-  shared_ptr<LabeledBlock> lb = blocks->at(l);
+  auto lb = getLabeledBlockForIrNode(node);
   lb->phis.push_back(node);
   
   // Important: destination register has to be known right after this point in time
@@ -162,10 +170,12 @@ void GraphAssembler::buildBlock(ir_node *node) {
     return;
   }
   
+  // getLabeledBlockForIrNode() cannot be used because node is the parent block already
   Label l = getLabel(node);
   auto lb = make_shared<LabeledBlock>();
   lb->label = l;
   blocks->emplace(l, lb);
+  
   labels->push_back(l);
 }
 
@@ -744,7 +754,7 @@ void GraphAssembler::phiInsertion()
         ir_node *j = get_Block_cfgpred(bl, i);
         ir_node *jbl = get_nodes_block(j);
         
-        Label l = nodeNrToLabel.at(get_irn_node_nr(jbl));
+        Label l = getLabel(jbl);
         shared_ptr<LabeledBlock> lb = blocks->at(l);
         
         auto m = make_shared<mov>(__func__, __LINE__); TODO:
@@ -754,31 +764,6 @@ void GraphAssembler::phiInsertion()
         lb->instructions.push_back(m);
       }
     }
-    
-    /* TODO: can this work without step 3?
-    // Step 3: Load all phis from temporary helper to out register
-    for (auto const& phi : lb->phis) {
-      auto bl = get_nodes_block(phi);
-      auto outReg = getValue(phi);
-      
-      for (int i = 0; i < get_Phi_n_preds(phi); i++) {
-        ir_node *phipred = get_Phi_pred(phi, i);
-        auto helper = getValue(phipred);
-        
-        ir_node *j = get_Block_cfgpred(bl, i);
-        ir_node *jbl = get_nodes_block(j);
-        
-        Label l = nodeNrToLabel.at(get_irn_node_nr(jbl));
-        shared_ptr<LabeledBlock> lb = blocks->at(l);
-        
-        auto m = make_shared<mov_old>(__func__, __LINE__);
-        m->src1 = helper;
-        m->dest = outReg;
-        
-        lb->instructions.push_back(m);
-      }
-    }
-    */
   }
 }
 
