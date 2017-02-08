@@ -8,6 +8,7 @@
 
 #include "optimizer.h"
 #include "constantpropagation.h"
+#include "arithmeticoptimization.h"
 #include <libfirm/firm.h>
 
 
@@ -24,9 +25,13 @@ void Optimizer::run()
     
     ConstantPropagation cp(irg);
     cp.run();
+	
+	ArithmeticOptimization ao(irg);
+	ao.run();
     
     irg_finalize_cons(irg);
     
     lower_highlevel_graph(irg);
   }
+  
 }
