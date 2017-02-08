@@ -469,8 +469,8 @@ void GraphAssembler::buildSub(ir_node *node) {
   auto oreg = getValue(node);
   
   auto inst = make_shared<sub>(__func__, __LINE__);
-  inst->src1 = lreg;
-  inst->src2 = rreg;
+  inst->src1 = rreg;
+  inst->src2 = lreg;
   inst->dest = oreg;
   getLabeledBlockForIrNode(node)->instructions.push_back(inst);
 }
