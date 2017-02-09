@@ -792,20 +792,10 @@ void CTrue::doExpr() {
 }
 
 void CTrue::doCond(ir_node *trueBlock, ir_node *falseBlock) {
-//  ir_node *jmp = new_Jmp();
-//  add_immBlock_pred(trueBlock, jmp);
-//  
-//  free(falseBlock);
-  
-  // Check this->value for trueness
-  ir_node *c = createFalseNode();
-  ir_node *cmp = new_Cmp(c, c, ir_relation_equal);
-  ir_node *cond = new_Cond(cmp);
-  ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
-  ir_node *fnode = new_Proj(cond, mode_X, pn_Cond_false);
-  
-  add_immBlock_pred(trueBlock, tnode);
-  add_immBlock_pred(falseBlock, fnode);
+  ir_node *jmp = new_Jmp();
+  ir_node *bad = new_Bad(mode_X);
+  add_immBlock_pred(trueBlock, jmp);
+  add_immBlock_pred(falseBlock, bad);
 }
 
 void CFalse::doExpr() {
@@ -813,20 +803,10 @@ void CFalse::doExpr() {
 }
 
 void CFalse::doCond(ir_node *trueBlock, ir_node *falseBlock) {
-//  ir_node *jmp = new_Jmp();
-//  add_immBlock_pred(falseBlock, jmp);
-//  
-//  free(trueBlock);
-  
-  // Check this->value for trueness
-  ir_node *c = createFalseNode();
-  ir_node *cmp = new_Cmp(c, c, ir_relation_less_greater);
-  ir_node *cond = new_Cond(cmp);
-  ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
-  ir_node *fnode = new_Proj(cond, mode_X, pn_Cond_false);
-  
-  add_immBlock_pred(trueBlock, tnode);
-  add_immBlock_pred(falseBlock, fnode);
+  ir_node *jmp = new_Jmp();
+  ir_node *bad = new_Bad(mode_X);
+  add_immBlock_pred(trueBlock, bad);
+  add_immBlock_pred(falseBlock, jmp);
 }
 
 
