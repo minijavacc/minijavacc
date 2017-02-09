@@ -33,28 +33,24 @@ void Value::setSize(ValueSize s) {
 }
 
 ValueSize Value::valueSizeFromIRNode(ir_node *node) {
-  ir_mode *mode = get_irn_mode(node);
+  ir_mode *mode;
   
   if (is_Load(node)) {
     mode = get_Load_mode(node);
-  }
-  
-  if (is_Call(node)) {
+    
+  } else if (is_Call(node)) {
     auto t = get_Call_type(node);
-    mode = get_type_mode(t);
-  }
-  
-  if (is_Mod(node)) {
+    auto ft = get_method_res_type(t, 0);
+    mode = get_type_mode(ft);
+    
+  } else if (is_Mod(node)) {
     mode = get_Mod_resmode(node);
-  }
-  
-  /**
-   * @brief 
-   * @param node
-   * @return 
-   */
-  if (is_Div(node)) {
+    
+  } else if (is_Div(node)) {
     mode = get_Div_resmode(node);
+    
+  } else {
+    mode = get_irn_mode(node);
   }
   
   return valueSizeFromIRMode(mode);
