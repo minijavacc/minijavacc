@@ -208,6 +208,10 @@ mov::mov(shared_ptr<Value> src1, int offset, const char *fnc, int line) : Instru
   dest = make_shared<Memory>(rbp, offset, src1->getSize());
 }
 
+string mov::mnemonic() {
+  return "mov";
+}
+
 string mov::generate() {
   string suffix;
   
@@ -224,22 +228,13 @@ string mov::generate() {
   return mnemonic() + suffix + " " + src1->toString() + ", " + dest->toString() + "\t\t\t# " + annotation();
 }
 
-string conv::generate() {
-  assert(src1->getSize() == ValueSize32 && dest->getSize() == ValueSize64);
-  
-  // make movl in 32-Bit, so the upper 32-Bit get zeroed automatically
-  // then it doesn't matter whether the value comes from/goes to the stack
-  
-  // hack to avoid copy of dest
-  dest->size = ValueSize32;
-  string gen = "movl " + src1->toString() + ", " + dest->toString() + "\t\t\t# " + annotation();
-  dest->size = ValueSize64;
-  
-  return gen;
-}
 
-string mov::mnemonic() {
-  return "mov";
+// movsxd_rax
+// -----------
+
+string movsxd_rax::generate() {
+  assert(src1->getSize() == ValueSize32);
+  return "movslq " + src1->toString() + ", %rax" + "\t\t\t# " + annotation();
 }
 
 

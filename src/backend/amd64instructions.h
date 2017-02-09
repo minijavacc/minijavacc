@@ -213,10 +213,11 @@ namespace cmpl
     string mnemonic() override;
   };
   
-  class conv : public AtoB {
-    using AtoB::AtoB;
+  class movsxd_rax : public Instruction {
+    using Instruction::Instruction;
     
   public:
+    shared_ptr<Value> src1;
     string generate() override;
   };
   

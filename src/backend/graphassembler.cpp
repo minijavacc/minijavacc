@@ -597,11 +597,25 @@ void GraphAssembler::buildStore(ir_node *node) {
 void GraphAssembler::buildConv(ir_node *node) {
   ir_node *op = get_Conv_op(node);
   
-  auto inst = make_shared<conv>(__func__, __LINE__);
-  inst->src1 = getValue(op);
-  inst->dest = getValue(node);
+  auto src1 = getValue(op);
+  auto dest = getValue(node);
   
-  getLabeledBlockForIrNode(node)->instructions.push_back(inst);
+  // assume conv is always from 32bit Is to 64bit Ls
+  assert(src1->getSize() == ValueSize32);
+  assert(dest->getSize() == ValueSize64);
+  
+  // move src1 to rax with sign extend
+  auto eax = make_shared<Physical>(ID_AX, ValueSize32);
+  auto m1 = make_shared<movsxd_rax>(__func__, __LINE__);
+  m1->src1 = src1;
+  getLabeledBlockForIrNode(node)->instructions.push_back(m1);
+  
+  // Move rax to dest
+  auto rax = make_shared<Physical>(ID_AX, ValueSize64);
+  auto m3 = make_shared<mov>(__func__, __LINE__);
+  m3->src1 = rax;
+  m3->dest = dest;
+  getLabeledBlockForIrNode(node)->instructions.push_back(m3);
 }
 
 

@@ -39,6 +39,7 @@ namespace cmpl
     void allocCall(shared_ptr<Instruction> instr, call *i, vector<shared_ptr<Instruction>> &instructions_);
     void allocDiv(shared_ptr<Instruction> instr, div *i, vector<shared_ptr<Instruction>> &instructions_);
     void allocMod(shared_ptr<Instruction> instr, mod *i, vector<shared_ptr<Instruction>> &instructions_);
+    void allocMovsx_rax(shared_ptr<Instruction> instr, movsxd_rax *i, vector<shared_ptr<Instruction>> &instructions_);
  
  };
   

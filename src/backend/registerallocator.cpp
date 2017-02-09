@@ -312,6 +312,13 @@ void RegisterAllocator::allocMove(shared_ptr<Instruction> instr, mov *i, vector<
   instructions_.push_back(instr);
 }
 
+void RegisterAllocator::allocMovsx_rax(shared_ptr<Instruction> instr, movsxd_rax *i, vector<shared_ptr<Instruction>> &instructions_)
+{
+  auto src1 = i->src1->getLowered(stackFrameAllocation);
+  i->src1 = src1;
+  instructions_.push_back(instr);
+}
+
 
 void RegisterAllocator::run()
 {
@@ -343,6 +350,8 @@ void RegisterAllocator::run()
         allocCall(instruction, i, instructions_);
       } else if (auto i = dynamic_cast<mov*>(instruction.get())) {
         allocMove(instruction, i, instructions_);
+      } else if (auto i = dynamic_cast<movsxd_rax*>(instruction.get())) {
+        allocMovsx_rax(instruction, i, instructions_);
       } else {
         instructions_.push_back(instruction);
       }
