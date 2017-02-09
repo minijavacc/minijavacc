@@ -78,8 +78,10 @@ void flush() {
 
 int32_t read()
 {
-  int32_t x;
-  scanf("%d", &x);
+  int32_t x = 0;
+  char c = getchar();
+  x +=c;
+  
   return x;
 }
 
@@ -103,7 +105,7 @@ void exit(const int32_t status) {
   // delete temporary runtime file
   if (system("rm _runtime.c") != 0)
   {
-    throw BackendError("assembler file could not be deleted");
+    throw BackendError("library assembler file could not be deleted");
   }
   
   std::cout << "Created binary: a.out\n";

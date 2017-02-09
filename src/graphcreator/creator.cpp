@@ -166,8 +166,10 @@ void flush() {
 
 int32_t read()
 {
-  int32_t x;
-  scanf("%d", &x);
+  int32_t x = 0;
+  char c = getchar();
+  x +=c;
+  
   return x;
 }
 
