@@ -217,6 +217,9 @@ void TypeChecker::dispatch(std::shared_ptr<ArrayAccess> n) {
     return;
   }
   
+  // create new type before tmpExpression may gets overwritten!
+  n->type = std::make_shared<Type>(tmpExpression->type->basicType, tmpExpression->type->arrayDepth - 1);
+  
   n->expression->accept(shared_from_this());
   
   if (!n->expression->type->equals(Types::getIntNode()))
@@ -224,9 +227,6 @@ void TypeChecker::dispatch(std::shared_ptr<ArrayAccess> n) {
     error("array index in ArrayAccess must be integer", n);
   }
   
-  n->type = std::make_shared<Type>(tmpExpression->type->basicType, tmpExpression->type->arrayDepth - 1);
-  
-  // REVIEW: is every array access an LValue?
   n->isLValue = true;
 };
 
@@ -280,7 +280,7 @@ void TypeChecker::dispatch(std::shared_ptr<AssignmentExpression> n) {
   // check if left and right expression have same type
   else if (!n->expression1->type->equals(n->expression2->type))
   {
-    error("assignment type mismatch in " + Checker::printNode(n->expression2) + " in ", n);
+    error("assignment type mismatch in", n);
   }
   
   n->type = n->expression2->type;
