@@ -31,6 +31,11 @@ void Optimizer::run()
     
     irg_finalize_cons(irg);
     
+    // remove_* with libfirm
+    remove_bads(irg);
+    remove_unreachable_code(irg);
+    remove_tuples(irg);
+    
     lower_highlevel_graph(irg);
   }
   
