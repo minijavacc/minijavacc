@@ -1,27 +1,24 @@
-class Simple {
+class ParseInt {
   public static void main(String[] args) {
-    Simple s = new Simple();
-    s.attr = new Attr();
-    s.attr.anInt = 5;
-    
-    s.foo(1);
-    
-    System.out.println(s.attr.anInt);
-  }
-  
-  public Attr attr;
-  
-  public void foo(int x) {
-    if (x < 50) {
-      this.attr.anInt = 23;
-    } else {
-      this.attr.anInt = 42;
+    int[] places = new int[9];
+    int i = 0;
+    /* Generate input data:
+       [2, 4, 6, 1, 3, 5, 0, 2, 4] */
+    while (i < 9) {
+      places[i] = (9 * (i + 1)) % 7;
+      i = i + 1;
     }
+    /* Do the actual parsing */
+    i = 0;
+    int res = 0;
+    int pow = 1;
+    while (i < 9) {
+      res = res + places[8 - i] * pow;
+      pow = pow * 10;
+      i = i + 1;
+    }
+    /* 246135024 */
+    System.out.println(res);
   }
-
 }
 
-
-class Attr {
-  public int anInt;
-}

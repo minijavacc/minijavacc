@@ -359,7 +359,6 @@ void GraphAssembler::buildCall(ir_node *node) {
   {
     ir_node *a = get_Call_param(node, i);
     
-    assert(values.count(get_irn_node_nr(a)) > 0);
     shared_ptr<Value> reg = getValue(a);
     
     // move parameter to physical register
@@ -599,6 +598,13 @@ void GraphAssembler::buildConv(ir_node *node) {
   
   auto src1 = getValue(op);
   auto dest = getValue(node);
+  
+  // go home if src1 is immediate
+  if (dynamic_cast<Immediate*>(src1.get())) {
+    setValue(node, src1);
+    src1->setSize(ValueSize64);
+    return;
+  }
   
   // assume conv is always from 32bit Is to 64bit Ls
   assert(src1->getSize() == ValueSize32);
