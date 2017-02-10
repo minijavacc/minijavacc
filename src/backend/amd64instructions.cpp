@@ -270,7 +270,21 @@ string div::mnemonic() {
 }
 
 string div::generate() {
-  return mnemonic() + " " + src2->toString();
+  string suffix;
+  
+  if (dest->getSize() == ValueSize64
+      && src1->getSize() == ValueSize64
+      && src2->getSize() == ValueSize64) {
+    suffix = size64suffix;
+  } else if (dest->getSize() == ValueSize32
+             && src1->getSize() == ValueSize32
+             && src2->getSize() == ValueSize32) {
+    suffix = size32suffix;
+  } else {
+    assert(false);
+  }
+  
+  return mnemonic() + suffix + " " + src2->toString() + "\t\t\t# " + annotation();
 }
 
 
@@ -282,7 +296,21 @@ string mod::mnemonic() {
 }
 
 string mod::generate() {
-  return mnemonic() + " " + src2->toString();
+  string suffix;
+  
+  if (dest->getSize() == ValueSize64
+      && src1->getSize() == ValueSize64
+      && src2->getSize() == ValueSize64) {
+    suffix = size64suffix;
+  } else if (dest->getSize() == ValueSize32
+             && src1->getSize() == ValueSize32
+             && src2->getSize() == ValueSize32) {
+    suffix = size32suffix;
+  } else {
+    assert(false);
+  }
+  
+  return mnemonic() + suffix + " " + src2->toString() + "\t\t\t# " + annotation();
 }
 
 
