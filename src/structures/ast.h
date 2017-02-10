@@ -292,7 +292,7 @@ namespace cmpl
     bool isValidSemanticType(); // Semantic types type expressions, expressions cannot be void
     virtual void doCond(ir_node *trueBlock, ir_node *falseBlock) { assert(false); }; // if not implemented by subclass, the method must not be called
     virtual void doExpr() { assert(false); }; // if not implemented by subclass, the method must not be called
-    virtual void assign(ir_node *value) { assert(false); }; // if not implemented by subclass, the method must not be called
+    virtual void assign(std::shared_ptr<Expression> e) { assert(false); }; // if not implemented by subclass, the method must not be called
   };
 
   class NotEquals : public EqualityOp, public std::enable_shared_from_this<NotEquals>
@@ -548,7 +548,7 @@ namespace cmpl
     void accept(std::shared_ptr<Dispatcher> d) override;
     void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
     void doExpr() override;
-    void assign(ir_node *value) override;
+    void assign(std::shared_ptr<Expression> e) override;
   };
   
   class CNull : public Expression, public std::enable_shared_from_this<CNull>
@@ -608,7 +608,7 @@ namespace cmpl
     void accept(std::shared_ptr<Dispatcher> d) override;
     void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
     void doExpr() override;
-    void assign(ir_node *value) override;
+    void assign(std::shared_ptr<Expression> e) override;
   };
   
   class NewObject : public Expression, public std::enable_shared_from_this<NewObject>

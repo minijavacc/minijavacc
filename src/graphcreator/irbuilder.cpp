@@ -24,7 +24,7 @@ ir_node *createFalseNode() {
 
 #pragma mark Expression::assign
 
-void CRef::assign(ir_node *value) {
+void CRef::assign(std::shared_ptr<Expression> e) {
   auto d = shared_from_this()->declaration.lock();
   
   if (auto f = dynamic_cast<Field*>(d.get())) {
@@ -33,16 +33,26 @@ void CRef::assign(ir_node *value) {
     ir_node *args = get_irg_args(g);
     ir_node *th   = new_Proj(args, mode_P, 0);
     ir_node *irn  = new_Member(th, f->firm_entity);
+    
+    // evaluate after other nodes have been constructed to get correct memory dependencies
+    e->doExpr();
+    assert(e->firm_node);
+    ir_node* value = e->firm_node;
+    
     ir_node *st   = new_Store(get_store(), irn, value, f->type->getFirmType(), cons_none);
     ir_node *m    = new_Proj(st, mode_M, pn_Store_M);
     set_store(m);
   } else {
     // Local Variable
+    e->doExpr();
+    assert(e->firm_node);
+    ir_node* value = e->firm_node;
+    
     set_value(d->parameterIndex, value);
   }
 }
 
-void UnaryRightExpression::assign(ir_node *value) {
+void UnaryRightExpression::assign(std::shared_ptr<Expression> e) {
   auto n = shared_from_this();
   n->expression->doExpr();
   
@@ -55,20 +65,30 @@ void UnaryRightExpression::assign(ir_node *value) {
     assert(decl->type->getFirmType());
     
     ir_node *irn = new_Member(n->expression->firm_node, decl->firm_entity);
+    
+    // evaluate after other nodes have been constructed to get correct memory dependencies
+    e->doExpr();
+    assert(e->firm_node);
+    ir_node* value = e->firm_node;
+    
     ir_node *st = new_Store(get_store(), irn, value, decl->type->getFirmType(), cons_none);
     ir_node *m   = new_Proj(st, mode_M, pn_Store_M);
     set_store(m);
     
     return;
-  }
-  
-  if (auto aa = dynamic_cast<ArrayAccess*>(n->op.get())) {
+  } else if (auto aa = dynamic_cast<ArrayAccess*>(n->op.get())) {
     assert(n->expression->type->getFirmType());
     aa->expression->doExpr();
     
     ir_type *array_type = get_pointer_points_to_type(n->expression->type->getFirmType());
     ir_type *elem_type  = get_array_element_type(array_type);
     ir_node *sel        = new_Sel(n->expression->firm_node, aa->expression->firm_node, array_type);
+    
+    // evaluate after other nodes have been constructed to get correct memory dependencies
+    e->doExpr();
+    assert(e->firm_node);
+    ir_node* value = e->firm_node;
+    
     ir_node *st         = new_Store(get_store(), sel, value, elem_type, cons_none);
     ir_node *m          = new_Proj(st, mode_M, pn_Load_M);
     set_store(m);
@@ -91,8 +111,7 @@ void AssignmentExpression::doExpr() {
   //          this: ---------
   
   auto n = shared_from_this();
-  n->expression2->doExpr();
-  n->expression1->assign(n->expression2->firm_node);
+  n->expression1->assign(n->expression2);
   n->firm_node = n->expression2->firm_node;
 }
 
@@ -105,13 +124,13 @@ void AssignmentExpression::doCond(ir_node *trueBlock, ir_node *falseBlock) {
   // Example 2: x = (a = ...) || ();
   //          this: ---------
   
-  shared_from_this()->expression2->doExpr();
-  assert(shared_from_this()->expression2->firm_node);
+  auto n = shared_from_this();
+  assert(n->expression2->firm_node);
   
-  shared_from_this()->expression1->assign(shared_from_this()->expression2->firm_node);
+  n->expression1->assign(n->expression2);
   
   ir_node *const1 = createTrueNode();
-  ir_node *cmp = new_Cmp(shared_from_this()->expression2->firm_node, const1, ir_relation_greater_equal);
+  ir_node *cmp = new_Cmp(n->expression2->firm_node, const1, ir_relation_greater_equal);
   ir_node *cond = new_Cond(cmp);
   ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
   ir_node *fnode = new_Proj(cond, mode_X, pn_Cond_false);
@@ -673,8 +692,7 @@ void UnaryRightExpression::doExpr()
     n->firm_node = res;
     return;
   }
-  
-  if (MethodInvocation* mi = dynamic_cast<MethodInvocation*>(n->op.get()))
+  else if (MethodInvocation* mi = dynamic_cast<MethodInvocation*>(n->op.get()))
   {
     ir_graph *g = get_current_ir_graph();
     // n->expression->firm_node is a Proj P64 to a class entity
@@ -707,8 +725,7 @@ void UnaryRightExpression::doExpr()
       n->firm_node = res;
     }
   }
-  
-  if (ArrayAccess* aa = dynamic_cast<ArrayAccess*>(n->op.get()))
+  else if (ArrayAccess* aa = dynamic_cast<ArrayAccess*>(n->op.get()))
   {
     // n->expression->firm_node is a Proj P64 to an array_type
     aa->expression->doExpr();
