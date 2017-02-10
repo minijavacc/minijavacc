@@ -40,8 +40,10 @@ namespace cmpl
   public:
     int line;
     const char *fnc;
+    int node_nr = -1;
     
     Instruction(const char *fnc, int line) : fnc(fnc), line(line) {}
+    Instruction(const char *fnc, int line, ir_node *node) : fnc(fnc), line(line), node_nr(get_irn_node_nr(node)) {}
     virtual string mnemonic();
     virtual string annotation();
     virtual string generate();
@@ -142,9 +144,11 @@ namespace cmpl
     mov(const char *fnc, int line) : Instruction(fnc, line) {};
     
     // value from stack
+    mov(int offset, shared_ptr<Value> dest, const char *fnc, int line, ir_node *node);
     mov(int offset, shared_ptr<Value> dest, const char *fnc, int line);
     // value to stack
     mov(shared_ptr<Value> src1, int offset, const char *fnc, int line);
+    mov(shared_ptr<Value> src1, int offset, const char *fnc, int line, ir_node *node);
     string generate() override;
     string mnemonic() override;
   };
