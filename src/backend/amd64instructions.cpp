@@ -160,19 +160,19 @@ string Branch::mnemonic() {
       break;
       
     case ir_relation_greater:
-      return "ja";
+      return "jg";
       break;
       
     case ir_relation_greater_equal:
-      return "jae";
+      return "jge";
       break;
       
     case ir_relation_less:
-      return "jb";
+      return "jl";
       break;
       
     case ir_relation_less_equal:
-      return "jbe";
+      return "jle";
       break;
       
     case ir_relation_less_greater:
