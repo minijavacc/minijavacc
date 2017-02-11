@@ -51,6 +51,8 @@ namespace cmpl
   // ------------------
   class Value : public std::enable_shared_from_this<Value> { 
   public:
+    Value(ValueSize size) : size(size) {};
+  
     virtual string toString();
     virtual ValueSize getSize();
     virtual void setSize(ValueSize s);
@@ -71,7 +73,9 @@ namespace cmpl
     
   public:
     Immediate(long i, ir_mode *mode);
+    Immediate(long i, ValueSize size);
     string toString() override;
+    long getImmediate();
     virtual shared_ptr<mov> movToPhysical(shared_ptr<Physical> p) override;
   };
   

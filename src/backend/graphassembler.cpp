@@ -599,9 +599,9 @@ void GraphAssembler::buildConv(ir_node *node) {
   auto src1 = getValue(op);
   
   // go home if src1 is immediate
-  if (dynamic_cast<Immediate*>(src1.get())) {
-    setValue(node, src1);
-    src1->setSize(ValueSize64);
+  if (Immediate* imm = dynamic_cast<Immediate*>(src1.get())) {
+    auto src1_64 = make_shared<Immediate>(imm->getImmediate(), ValueSize64);
+    setValue(node, src1_64);
     return;
   }
   
