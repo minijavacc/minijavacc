@@ -861,7 +861,6 @@ ir_node *IRBuilder::callCallocNode(ir_node *num, ir_type *result_type) {
   }
   
   int s = get_type_size(elem_type);
-  assert(s > 0);
   
   ir_node *size_node = new_Const(new_tarval_from_long(s, mode_Is));
   ir_node *results1[2] = { num, size_node };
