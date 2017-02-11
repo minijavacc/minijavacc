@@ -209,11 +209,11 @@ bool transfer(ir_node *n, map<ir_node *, ir_tarval *> *m) {
   }
   
   if (is_Mod(n)) {
-    return transferMod(n, m);
+//    return transferMod(n, m);
   }
   
   if (is_Phi(n)) {
-    return transferPhi(n, m);
+//    return transferPhi(n, m);
   }
   
   // constant tarval not possible for this node
