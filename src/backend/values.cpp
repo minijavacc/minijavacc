@@ -89,7 +89,7 @@ string Immediate::toString() {
 
 shared_ptr<cmpl::mov> Immediate::movToPhysical(shared_ptr<Physical> p) {
   auto m = make_shared<mov>(__func__, __LINE__);
-  m->src1 = shared_from_this();
+  m->src1 = static_pointer_cast<Immediate>(shared_from_this());
   m->dest = p;
   
   return m;
@@ -186,7 +186,7 @@ string Physical::toString() {
 
 shared_ptr<cmpl::mov> Physical::movToPhysical(shared_ptr<Physical> p) {
   auto m = make_shared<cmpl::mov>(__func__, __LINE__);
-  m->src1 = shared_from_this();
+  m->src1 = static_pointer_cast<Physical>(shared_from_this());
   m->dest = p;
   
   return m;
@@ -195,7 +195,7 @@ shared_ptr<cmpl::mov> Physical::movToPhysical(shared_ptr<Physical> p) {
 shared_ptr<cmpl::mov> Physical::movFromPhysical(shared_ptr<Physical> p) {
   auto m = make_shared<cmpl::mov>(__func__, __LINE__);
   m->src1 = p;
-  m->dest = shared_from_this();
+  m->dest = static_pointer_cast<Physical>(shared_from_this());
   
   return m;
 }
@@ -215,7 +215,7 @@ string Memory::toString() {
 
 shared_ptr<mov> Memory::movToPhysical(shared_ptr<Physical> p) {
   auto m = make_shared<mov>(__func__, __LINE__);
-  m->src1 = shared_from_this();
+  m->src1 = static_pointer_cast<Memory>(shared_from_this());
   m->dest = p;
   
   return m;
@@ -224,7 +224,7 @@ shared_ptr<mov> Memory::movToPhysical(shared_ptr<Physical> p) {
 shared_ptr<mov> Memory::movFromPhysical(shared_ptr<Physical> p) {
   auto m = make_shared<mov>(__func__, __LINE__);
   m->src1 = p;
-  m->dest = shared_from_this();
+  m->dest = static_pointer_cast<Memory>(shared_from_this());
   
   return m;
 }

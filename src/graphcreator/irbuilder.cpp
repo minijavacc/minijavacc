@@ -854,7 +854,15 @@ ir_node *IRBuilder::callCallocNode(ir_node *num, ir_type *result_type) {
   
   ir_node *addr = new_Address(calloc_ent);
   ir_type *elem_type = get_pointer_points_to_type(result_type);
+  
+  if (is_Array_type(elem_type))
+  {
+    elem_type = get_array_element_type(elem_type);
+  }
+  
   int s = get_type_size(elem_type);
+  assert(s > 0);
+  
   ir_node *size_node = new_Const(new_tarval_from_long(s, mode_Is));
   ir_node *results1[2] = { num, size_node };
   ir_node *call = new_Call(get_store(), addr, 2, results1, calloc_type);

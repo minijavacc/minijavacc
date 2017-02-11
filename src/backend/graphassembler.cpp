@@ -597,7 +597,6 @@ void GraphAssembler::buildConv(ir_node *node) {
   ir_node *op = get_Conv_op(node);
   
   auto src1 = getValue(op);
-  auto dest = getValue(node);
   
   // go home if src1 is immediate
   if (dynamic_cast<Immediate*>(src1.get())) {
@@ -605,6 +604,8 @@ void GraphAssembler::buildConv(ir_node *node) {
     src1->setSize(ValueSize64);
     return;
   }
+  
+  auto dest = getValue(node);
   
   // assume conv is always from 32bit Is to 64bit Ls
   assert(src1->getSize() == ValueSize32);
