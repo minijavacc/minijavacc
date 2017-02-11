@@ -79,7 +79,7 @@ shared_ptr<Value> Value::getLowered(shared_ptr<StackFrameAllocation> allocation)
 // Immediate Value class
 // ------------------
 
-Immediate::Immediate(long i, ValueSize size) : immediate(i), Value(size) {}
+Immediate::Immediate(long i, ValueSize s) : immediate(i), Value(s) {}
 Immediate::Immediate(long i, ir_mode *mode) : immediate(i), Value(valueSizeFromIRMode(mode)) {}
 
 long Immediate::getImmediate() {
@@ -103,7 +103,7 @@ shared_ptr<cmpl::mov> Immediate::movToPhysical(shared_ptr<Physical> p) {
 // Physical register Value class
 // ------------------
 
-Physical::Physical(long identifier, ValueSize s) : identifier(identifier), Value(size) {}
+Physical::Physical(long identifier, ValueSize s) : identifier(identifier), Value(s) {}
 
 string Physical::toString() {
   if (size == ValueSize32) {
@@ -206,7 +206,7 @@ shared_ptr<cmpl::mov> Physical::movFromPhysical(shared_ptr<Physical> p) {
 // Memory location Value class
 // ------------------
 
-Memory::Memory(shared_ptr<Physical> pointer, int offset, ValueSize size) : pointer(pointer), offset(offset), Value(size) {}
+Memory::Memory(shared_ptr<Physical> pointer, int offset, ValueSize s) : pointer(pointer), offset(offset), Value(s) {}
   
 string Memory::toString() {
   return to_string(offset) + "(" + pointer->toString() + ")";
