@@ -125,7 +125,6 @@ void AssignmentExpression::doCond(ir_node *trueBlock, ir_node *falseBlock) {
   //          this: ---------
   
   auto n = shared_from_this();
-  assert(n->expression2->firm_node);
   
   n->expression1->assign(n->expression2);
   
