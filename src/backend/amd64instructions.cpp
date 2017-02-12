@@ -200,24 +200,6 @@ string jmp::generate() {
 // mov
 // -----------
 
-// value from stack
-mov::mov(int offset, shared_ptr<Value> dest, const char *fnc, int line) : Instruction(fnc, line), dest(dest) {
-  auto rbp = make_shared<Physical>(ID_BP, ValueSize64);
-  src1 = make_shared<Memory>(rbp, offset, dest->getSize());
-}
-mov::mov(int offset, shared_ptr<Value> dest, const char *fnc, int line, ir_node *node) : Instruction(fnc, line, node), dest(dest) {
-  auto rbp = make_shared<Physical>(ID_BP, ValueSize64);
-  src1 = make_shared<Memory>(rbp, offset, dest->getSize());
-}
-// value to stack
-mov::mov(shared_ptr<Value> src1, int offset, const char *fnc, int line) : Instruction(fnc, line), src1(src1) {
-  auto rbp = make_shared<Physical>(ID_BP, ValueSize64);
-  dest = make_shared<Memory>(rbp, offset, src1->getSize());
-}
-mov::mov(shared_ptr<Value> src1, int offset, const char *fnc, int line, ir_node *node) : Instruction(fnc, line, node), src1(src1) {
-  auto rbp = make_shared<Physical>(ID_BP, ValueSize64);
-  dest = make_shared<Memory>(rbp, offset, src1->getSize());
-}
 
 string mov::mnemonic() {
   return "mov";
@@ -391,8 +373,6 @@ string call::generate() {
 
 // StaticInstruction
 // -----------
-
-StaticInstruction::StaticInstruction(string str, const char *fnc, int line) : str(str), Instruction(fnc, line) {};
 
 string StaticInstruction::generate() {
   return str + "\t\t\t# " + annotation();

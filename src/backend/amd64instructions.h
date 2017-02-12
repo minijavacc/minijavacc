@@ -143,12 +143,6 @@ namespace cmpl
     
     mov(const char *fnc, int line) : Instruction(fnc, line) {};
     
-    // value from stack
-    mov(int offset, shared_ptr<Value> dest, const char *fnc, int line, ir_node *node);
-    mov(int offset, shared_ptr<Value> dest, const char *fnc, int line);
-    // value to stack
-    mov(shared_ptr<Value> src1, int offset, const char *fnc, int line);
-    mov(shared_ptr<Value> src1, int offset, const char *fnc, int line, ir_node *node);
     string generate() override;
     string mnemonic() override;
   };
@@ -276,7 +270,8 @@ namespace cmpl
   public:
     string str;
     
-    StaticInstruction(string str, const char *fnc, int line);
+    StaticInstruction(string str, const char *fnc, int line) : str(str), Instruction(fnc, line) {};
+    StaticInstruction(string str, const char *fnc, int line, ir_node *node) : str(str), Instruction(fnc, line, node) {};
     virtual string generate();
   };
 

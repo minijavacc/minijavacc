@@ -133,13 +133,20 @@ void GraphAssembler::insertProlog() {
   it = bl->instructions.begin();
   bl->instructions.insert(it + 1, m);
   
-  if (stackFrameAllocation->getTopOfStack() < 0)
+  // at the beginning of the function call, the stack was 16-byte aligned
+  // now move stackpointer to make space for the local variables
+  // and if needed add an offset slot to keep the alingment
+  int offset = -stackFrameAllocation->getTopOfStack();
+  
+  if (offset % 8 == 0) // assume stack is already misaligned because of `push %rbp`
   {
-    auto s = make_shared<subq_rsp>(__func__, __LINE__);
-    s->bytes = -stackFrameAllocation->getTopOfStack();
-    it = bl->instructions.begin();
-    bl->instructions.insert(it + 2, s);
+    offset += 8; // add another offset stack slot, stack should now be aligned
   }
+  
+  auto s = make_shared<subq_rsp>(__func__, __LINE__);
+  s->bytes = offset;
+  it = bl->instructions.begin();
+  bl->instructions.insert(it + 2, s);
 }
 
 
@@ -273,7 +280,7 @@ void GraphAssembler::buildProj(ir_node *node) {
     auto size = Value::valueSizeFromIRNode(node);
     
     // if one of the first 6 arguments, add shared_ptr to regArgsToValue 
-    // and generate mov instructions in insertProlog
+    // and later generate mov instructions in insertParameterMovs()
     if (i < 6)
     {
       if (!regArgsToValue[i]) {
@@ -282,11 +289,11 @@ void GraphAssembler::buildProj(ir_node *node) {
         setValue(node, regArgsToValue[i]);
       }
     }
-    // if argument > 5
+    // if argument > 5 fetch directly from stack
     else
     {
       auto rbp = make_shared<Physical>(ID_BP, ValueSize64);
-      auto r = make_shared<Memory>(rbp, i * 8, size);
+      auto r = make_shared<Memory>(rbp, (i - 6 + 2) * 8, size);
       setValue(node, r);
     }
   }
@@ -353,6 +360,7 @@ void GraphAssembler::buildCall(ir_node *node) {
   // "According to the ABI, the first 6 integer or pointer arguments to a function are passed in registers."
   
   int paramsNum = get_Call_n_params(node);
+  int aligningStackOffset = 0; // additional offset for parameters to ensure 16-byte alignment
   
   // iterate over first 6 parameters for the registers
   for (int i = 0; i < 6 && i < paramsNum; i++)
@@ -401,62 +409,58 @@ void GraphAssembler::buildCall(ir_node *node) {
   // do exist more than 6 parameters?
   if (paramsNum > 5)
   {
+    // until now the stackpointer is 16-byte aligned (made by insertProlog)
+    // if number of params is in odd, add another offset stack slot
+    // before the parameters in order to keep the alignment
+    if (paramsNum % 2 > 0)
+    {
+      aligningStackOffset = 1;
+    }
+    
     // change stack pointer
     auto s = make_shared<subq_rsp>(__func__, __LINE__, node);
-    s->bytes = (unsigned) 8 * (paramsNum - 6);
+    s->bytes = (unsigned) 8 * (paramsNum - 6 + aligningStackOffset);
     getLabeledBlockForIrNode(node)->instructions.push_back(s);
 
-    // iterate over the remaining parameters for the stack (reversed order)
-    for (int i = paramsNum - 1; i > 5 && i < paramsNum; i--)
+    // iterate over the remaining parameters for the stack
+    for (int i = 6; i < paramsNum; i++)
     {
       ir_node *a = get_Call_param(node, i);
       
       assert(values.count(get_irn_node_nr(a)) > 0);
-      shared_ptr<Value> reg = getValue(a);
+      shared_ptr<Value> src = getValue(a);
       
       // create mov instruction to move value to stack
-      auto m = make_shared<mov>(reg, (i - 6) * 8, __func__, __LINE__, node);
+      auto m = make_shared<mov>(__func__, __LINE__, node);
+      auto rsp = make_shared<Physical>(ID_SP, ValueSize64);
+      m->src1 = src;
+      m-> dest = make_shared<Memory>(rsp, (i - 6) * 8, src->getSize());
+      
       getLabeledBlockForIrNode(node)->instructions.push_back(m);
     }
   }
-  
-  // save old stack pointer
-  getLabeledBlockForIrNode(node)->instructions.push_back(make_shared<StaticInstruction>("pushq %rsp", __func__, __LINE__));
-  getLabeledBlockForIrNode(node)->instructions.push_back(make_shared<StaticInstruction>("pushq (%rsp)", __func__, __LINE__));
-  
-  // align base pointer to 2^8
-  getLabeledBlockForIrNode(node)->instructions.push_back(make_shared<StaticInstruction>("andq $-0x10, %rsp", __func__, __LINE__));
   
   // call the function
   const char* ldname = get_entity_ld_name(e);
   auto c = make_shared<call>(__func__, __LINE__, node);
   c->label = ldname;
+  getLabeledBlockForIrNode(node)->instructions.push_back(c);
   
   // do exist more than 6 parameters?
   if (paramsNum > 5)
   {
-    // change stack pointer
+    // change stack pointer back (was moved due to parameters above)
     auto s = make_shared<addq_rsp>(__func__, __LINE__, node);
-    s->bytes = (unsigned) 8 * (paramsNum - 6);
+    s->bytes = (unsigned) 8 * (paramsNum - 6 + aligningStackOffset);
     getLabeledBlockForIrNode(node)->instructions.push_back(s);
   }
+  
   
   // if non-void function: allocate virtual register
   if (get_method_n_ress(t) > 0)
   {
     c->dest = getValue(node);
   }
-  
-  getLabeledBlockForIrNode(node)->instructions.push_back(c);
-  
-  // restore old stack pointer
-  getLabeledBlockForIrNode(node)->instructions.push_back(make_shared<StaticInstruction>("movq 8(%rsp), %rsp", __func__, __LINE__));
-  
-  // if non-void function: move return value to virtual register
-//  if (get_method_n_ress(t) > 0)
-//  {
-//    setValue(node, c->dest);
-//  }
 }
 
 void GraphAssembler::buildSub(ir_node *node) {
@@ -718,9 +722,8 @@ string GraphAssembler::run()
   irgSerialize();
   
   // Register allocation
-  registerAllocator = new RegisterAllocator(blocks, labels, stackFrameAllocation);
-  registerAllocator->run();
-  delete registerAllocator;
+  RegisterAllocator registerAllocator(blocks, labels, stackFrameAllocation);
+  registerAllocator.run();
   
   // Insert parameter movs
   insertParameterMovs();
