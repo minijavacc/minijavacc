@@ -54,7 +54,6 @@ namespace cmpl
     map<long, shared_ptr<Value>> values;
     map<long, Label> nodeNrToLabel;
     shared_ptr<StackFrameAllocation> stackFrameAllocation = make_shared<StackFrameAllocation>();
-    long nextFreeLabel = 0;
     string labelPrefix;
     shared_ptr<Value> regArgsToValue[6];
     size_t nargs;

@@ -53,9 +53,8 @@ Label GraphAssembler::getLabel(ir_node *node) {
   else
   {
     string p = labelPrefix;
-    Label l = p + to_string(nextFreeLabel);
+    Label l = p + to_string(get_irn_node_nr(node));
     nodeNrToLabel.emplace(get_irn_node_nr(node), l);
-    nextFreeLabel = nextFreeLabel + 1;
     return l;
   }
 }
@@ -781,7 +780,7 @@ void GraphAssembler::phiInsertion()
         Label l = getLabel(jbl);
         shared_ptr<LabeledBlock> lb = blocks->at(l);
         
-        auto m = make_shared<mov>(__func__, __LINE__);
+        auto m = make_shared<mov>(__func__, __LINE__, phi);
         m->src1 = inReg;
         m->dest = helper;
         
