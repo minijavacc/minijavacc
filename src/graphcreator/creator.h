@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ast.h"
-#include "checker.h"
+#include "../structures/ast.h"
+#include "../semantics/checker.h"
 #include <libfirm/firm.h>
 #include <stdexcept>
 #include <iostream>

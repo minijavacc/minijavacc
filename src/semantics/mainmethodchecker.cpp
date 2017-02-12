@@ -161,10 +161,16 @@ void MainMethodChecker::dispatch(std::shared_ptr<NewArray> n) {
   n->expression->accept(shared_from_this());
 };
 
-void MainMethodChecker::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) {
+void MainMethodChecker::dispatch(std::shared_ptr<SLCPrintlnExpression> n) {
   n->expression->accept(shared_from_this());
 };
 
+void MainMethodChecker::dispatch(std::shared_ptr<SLCWriteExpression> n) {
+  n->expression->accept(shared_from_this());
+};
+
+void MainMethodChecker::dispatch(std::shared_ptr<SLCFlushExpression> n) { };
+void MainMethodChecker::dispatch(std::shared_ptr<SLCReadExpression> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<LocalVariableDeclaration> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<EmptyStatement> n) { };
 void MainMethodChecker::dispatch(std::shared_ptr<ReturnStatement> n) { };

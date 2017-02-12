@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "creator.h"
+#include "../graphcreator/creator.h"
 
 namespace cmpl
 {

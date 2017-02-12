@@ -134,11 +134,47 @@ void Creator::createBinary(std::string filepath, bool generateDebugInformation)
   
   // --- create runtime library file in working directory ---
   const char * runtimeSource = R"(
+#include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-void println(int a)
+void println(int32_t a) {
+/* The ISO C standard requires a long int to have at least 32 bits. */
+  if (fprintf(stdout , "%ld\n", (long) a) < 0) {
+    fprintf(stderr , "error:␣println:␣%s\n", strerror(errno));
+    abort();
+  }
+}
+
+void write(const int32_t b) {
+  /* Cast the argument back and forth because an int may only provide 16 bits
+     of precision and signed overflow is undefined behavior in ISO C. */
+  const int octet = (int) (((unsigned) b) & 0xffU);
+  if (fputc(octet , stdout) < 0) {
+    fprintf(stderr , "error:␣write:␣%s\n", strerror(errno));
+    abort();
+  }
+}
+
+void flush() {
+  if (fflush(stdout) < 0) {
+    fprintf(stderr , "error:␣flush:␣%s\n", strerror(errno));
+    abort();
+  }
+}
+
+int32_t read()
 {
-  printf("%d\n", a);
+  int32_t x = 0;
+  char c = getchar();
+  x +=c;
+  
+  return x;
+}
+
+void exit(const int32_t status) {
+  exit((int) status);
 }
   )";
   
@@ -156,10 +192,10 @@ void println(int a)
   
   // delete temporary runtime file
   if (system("rm _runtime.c") != 0)
-	{
-		throw CreatorBackendError("assembler file could not be deleted");
-	}
-	
+  {
+    throw CreatorBackendError("assembler file could not be deleted");
+  }
+  
   std::cout << "Created binary: a.out\n";
   return;
 }

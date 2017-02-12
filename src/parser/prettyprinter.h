@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ast.h"
+#include "../structures/ast.h"
 
 namespace cmpl {
   
@@ -64,7 +64,10 @@ namespace cmpl {
     void dispatch(std::shared_ptr<CIntegerLiteral> n);
     void dispatch(std::shared_ptr<NewObject> n);
     void dispatch(std::shared_ptr<NewArray> n);
-    void dispatch(std::shared_ptr<StaticLibraryCallExpression> n);
+    void dispatch(std::shared_ptr<SLCPrintlnExpression> n);
+    void dispatch(std::shared_ptr<SLCWriteExpression> n);
+    void dispatch(std::shared_ptr<SLCFlushExpression> n);
+    void dispatch(std::shared_ptr<SLCReadExpression> n);
     void dispatch(std::shared_ptr<Equals> n);
     void dispatch(std::shared_ptr<NotEquals> n);
     void dispatch(std::shared_ptr<LessThan> n);

@@ -283,11 +283,10 @@ void Lexer::run()
         goto s_pipe;
       
       // accepted white spaces
-      
-      case '\t': // 9
-      case '\n': // 10
-      case 13:   // CR (carriage return)
-      case ' ':  // 32
+      case 9:  // \t (tab)
+      case 10: // \n (line feed)
+      case 13: // CR (carriage return)
+      case 32: // ' '(space)
         // skip this character
         if (!getNextChar(inputFile, currentChar, line, column)) {
           goto s_eof;
@@ -299,10 +298,7 @@ void Lexer::run()
       case 12:
       case 14 ... 31:
         error(currentChar, line, column);
-//      case '\0':
-//      case '\f':
-//      case '\r':
-//      case '\v':
+        
       // string or keyword
       case 'a'...'z':
       case 'A'...'Z':

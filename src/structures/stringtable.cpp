@@ -10,7 +10,7 @@ std::map<std::string, StringTableContainer> StringTable::map = std::map<std::str
 
 std::unique_ptr<Token> StringTable::insertString(std::string string, unsigned int line, unsigned int column)
 {
-  // will keep counting upwards, as it's static (zero is invalid)
+  // will keep counting upwards, as it's static (zero is reserved for invalid string)
   static StringIdentifier nextStringIdentifier = 1;
   
   // check if element exists already

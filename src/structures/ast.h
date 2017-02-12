@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../stringtable/stringtable.h"
+#include "stringtable.h"
 
 #include <memory>
 #include <string>
@@ -62,6 +62,10 @@ namespace cmpl
   class NewObject;
   class NewArray;
   class StaticLibraryCallExpression;
+  class SLCPrintlnExpression;
+  class SLCWriteExpression;
+  class SLCFlushExpression;
+  class SLCReadExpression;
   class Equals;
   class NotEquals;
   class LessThan;
@@ -123,7 +127,10 @@ namespace cmpl
     virtual void dispatch(std::shared_ptr<CIntegerLiteral> n) {};
     virtual void dispatch(std::shared_ptr<NewObject> n) {};
     virtual void dispatch(std::shared_ptr<NewArray> n) {};
-    virtual void dispatch(std::shared_ptr<StaticLibraryCallExpression> n) {};
+    virtual void dispatch(std::shared_ptr<SLCPrintlnExpression> n) {};
+    virtual void dispatch(std::shared_ptr<SLCWriteExpression> n) {};
+    virtual void dispatch(std::shared_ptr<SLCFlushExpression> n) {};
+    virtual void dispatch(std::shared_ptr<SLCReadExpression> n) {};
     virtual void dispatch(std::shared_ptr<Equals> n) {};
     virtual void dispatch(std::shared_ptr<NotEquals> n) {};
     virtual void dispatch(std::shared_ptr<LessThan> n) {};
@@ -285,7 +292,7 @@ namespace cmpl
     bool isValidSemanticType(); // Semantic types type expressions, expressions cannot be void
     virtual void doCond(ir_node *trueBlock, ir_node *falseBlock) { assert(false); }; // if not implemented by subclass, the method must not be called
     virtual void doExpr() { assert(false); }; // if not implemented by subclass, the method must not be called
-    virtual void assign(ir_node *value) { assert(false); }; // if not implemented by subclass, the method must not be called
+    virtual void assign(std::shared_ptr<Expression> e) { assert(false); }; // if not implemented by subclass, the method must not be called
   };
 
   class NotEquals : public EqualityOp, public std::enable_shared_from_this<NotEquals>
@@ -541,7 +548,7 @@ namespace cmpl
     void accept(std::shared_ptr<Dispatcher> d) override;
     void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
     void doExpr() override;
-    void assign(ir_node *value) override;
+    void assign(std::shared_ptr<Expression> e) override;
   };
   
   class CNull : public Expression, public std::enable_shared_from_this<CNull>
@@ -601,7 +608,7 @@ namespace cmpl
     void accept(std::shared_ptr<Dispatcher> d) override;
     void doCond(ir_node *trueBlock, ir_node *falseBlock) override;
     void doExpr() override;
-    void assign(ir_node *value) override;
+    void assign(std::shared_ptr<Expression> e) override;
   };
   
   class NewObject : public Expression, public std::enable_shared_from_this<NewObject>
@@ -625,20 +632,67 @@ namespace cmpl
     void accept(std::shared_ptr<Dispatcher> d) override;
     void doExpr() override;
   };
-
-  class StaticLibraryCallExpression : public Expression, public std::enable_shared_from_this<StaticLibraryCallExpression>
-  {    
+  
+  class StaticLibraryCallExpression : public Expression
+  {
   public:
-    ir_type *getFirmType();
-    ir_entity *getFirmEntity();
+    virtual ir_type *getFirmType() = 0;
+    virtual ir_entity *getFirmEntity() = 0;
+    
+    virtual void accept (std::shared_ptr<Dispatcher> d) = 0;
+    virtual void doExpr() = 0;
+  };
+  
+  class SLCPrintlnExpression : public StaticLibraryCallExpression, public std::enable_shared_from_this<SLCPrintlnExpression>
+  {
+  public:
+    ir_type *getFirmType() override;
+    ir_entity *getFirmEntity() override;
     
     std::shared_ptr<Expression> expression;
     
-    StaticLibraryCallExpression(std::shared_ptr<Expression> &expression)
-      : Expression(), expression(std::move(expression)) { }; 
+    SLCPrintlnExpression(std::shared_ptr<Expression> &expression)
+      : expression(std::move(expression)) { };
     void accept (std::shared_ptr<Dispatcher> d) override;
     void doExpr() override;
   };
+  
+  class SLCWriteExpression : public StaticLibraryCallExpression, public std::enable_shared_from_this<SLCWriteExpression>
+  {
+  public:
+    ir_type *getFirmType() override;
+    ir_entity *getFirmEntity() override;
+    
+    std::shared_ptr<Expression> expression;
+    
+    SLCWriteExpression(std::shared_ptr<Expression> &expression)
+      : expression(std::move(expression)) { };
+    void accept (std::shared_ptr<Dispatcher> d) override;
+    void doExpr() override;
+  };
+  
+  class SLCFlushExpression : public StaticLibraryCallExpression, public std::enable_shared_from_this<SLCFlushExpression>
+  {
+  public:
+    ir_type *getFirmType() override;
+    ir_entity *getFirmEntity() override;
+    
+    SLCFlushExpression() { };
+    void accept (std::shared_ptr<Dispatcher> d) override;
+    void doExpr() override;
+  };
+  
+  class SLCReadExpression : public StaticLibraryCallExpression, public std::enable_shared_from_this<SLCReadExpression>
+  {
+  public:
+    ir_type *getFirmType() override;
+    ir_entity *getFirmEntity() override;
+    
+    SLCReadExpression() { };
+    void accept (std::shared_ptr<Dispatcher> d) override;
+    void doExpr() override;
+  };
+  
   
   class Parameter : public Node, public TypedNode, public std::enable_shared_from_this<Parameter>
   {

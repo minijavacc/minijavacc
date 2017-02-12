@@ -2,7 +2,7 @@
 
 #include "amd64instructions.h"
 #include "graphassembler.h"
-#include "creator.h"
+#include "../graphcreator/creator.h"
 
 #include <libfirm/firm.h>
 #include <vector>

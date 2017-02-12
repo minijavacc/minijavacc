@@ -1,5 +1,5 @@
 #include "irinitializer.h"
-#include "stringtable.h"
+#include "../structures/stringtable.h"
 
 
 using namespace cmpl;

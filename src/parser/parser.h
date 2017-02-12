@@ -1,9 +1,9 @@
 #pragma once
 
-#include "types.h"
-#include "lexer.h"
-#include "ast.h"
-#include "stringtable.h"
+#include "../structures/types.h"
+#include "../lexer/lexer.h"
+#include "../structures/ast.h"
+#include "../structures/stringtable.h"
 
 #include <memory>
 #include <stdexcept>

@@ -67,10 +67,10 @@ bool transferAdd(ir_node *n, map<ir_node *, ir_tarval *> *m) {
   
   if (tvl == tarval_unknown || tvr == tarval_unknown) {
     tvo_ = tarval_unknown;
-  } else if (tvl == tarval_bad || tvr == tarval_bad) {
-    tvo_ = tarval_bad;
-  } else {
+  } else if (tarval_is_constant(tvl) && tarval_is_constant(tvr)) {
     tvo_ = tarval_add(tvl, tvr);
+  } else {
+    tvo_ = tarval_bad;
   }
   
   (*m)[n] = tvo_;
@@ -113,10 +113,10 @@ bool transferMul(ir_node *n, map<ir_node *, ir_tarval *> *m) {
   
   if (tvl == tarval_unknown || tvr == tarval_unknown) {
     tvo_ = tarval_unknown;
-  } else if (tvl == tarval_bad || tvr == tarval_bad) {
-    tvo_ = tarval_bad;
-  } else {
+  } else if (tarval_is_constant(tvl) && tarval_is_constant(tvr)) {
     tvo_ = tarval_mul(tvl, tvr);
+  } else {
+    tvo_ = tarval_bad;
   }
   
   (*m)[n] = tvo_;
@@ -186,6 +186,8 @@ bool transferPhi(ir_node *n, map<ir_node *, ir_tarval *> *m) {
 
 
 bool transfer(ir_node *n, map<ir_node *, ir_tarval *> *m) {
+  ir_tarval *tvo  = m->at(n);
+  
   if (is_Const(n)) {
     return transferConst(n, m);
   }
@@ -207,14 +209,18 @@ bool transfer(ir_node *n, map<ir_node *, ir_tarval *> *m) {
   }
   
   if (is_Mod(n)) {
-    return transferMod(n, m);
+//    return transferMod(n, m);
   }
   
   if (is_Phi(n)) {
-    return transferPhi(n, m);
+//    return transferPhi(n, m);
   }
   
-  return false;
+  // constant tarval not possible for this node
+  ir_tarval *tvo_ = tarval_bad;
+  
+  (*m)[n] = tvo_;
+  return tvo != tvo_;
 }
 
 
@@ -250,6 +256,11 @@ void ConstantPropagation::run() {
   while (!env->q->empty()) {
     ir_node *node = env->q->front();
     env->q->pop();
+    
+    // libfirm bug causes End Block to have weird out edges
+    if (is_Block(node) || is_End(node)) {
+      continue;
+    }
     
     bool changed = transfer(node, env->m);
     if (changed) {

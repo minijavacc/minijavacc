@@ -1,18 +1,30 @@
 #include "irbuilder.h"
+#include "../structures/stringtable.h"
 #include <assert.h>
-#include "../stringtable/stringtable.h"
 #include <libfirm/firm.h>
 #include <iostream>
-#include "types.h"
+#include "../structures/types.h"
 
 
 using namespace cmpl;
 
 
+#pragma mark Helper Functions
+
+ir_node *createTrueNode() {
+  return new_Const(new_tarval_from_long(1, mode_Is));
+}
+
+ir_node *createFalseNode() {
+  return new_Const(new_tarval_from_long(0, mode_Is));
+}
+
+
+
 
 #pragma mark Expression::assign
 
-void CRef::assign(ir_node *value) {
+void CRef::assign(std::shared_ptr<Expression> e) {
   auto d = shared_from_this()->declaration.lock();
   
   if (auto f = dynamic_cast<Field*>(d.get())) {
@@ -21,16 +33,26 @@ void CRef::assign(ir_node *value) {
     ir_node *args = get_irg_args(g);
     ir_node *th   = new_Proj(args, mode_P, 0);
     ir_node *irn  = new_Member(th, f->firm_entity);
+    
+    // evaluate after other nodes have been constructed to get correct memory dependencies
+    e->doExpr();
+    assert(e->firm_node);
+    ir_node* value = e->firm_node;
+    
     ir_node *st   = new_Store(get_store(), irn, value, f->type->getFirmType(), cons_none);
     ir_node *m    = new_Proj(st, mode_M, pn_Store_M);
     set_store(m);
   } else {
     // Local Variable
+    e->doExpr();
+    assert(e->firm_node);
+    ir_node* value = e->firm_node;
+    
     set_value(d->parameterIndex, value);
   }
 }
 
-void UnaryRightExpression::assign(ir_node *value) {
+void UnaryRightExpression::assign(std::shared_ptr<Expression> e) {
   auto n = shared_from_this();
   n->expression->doExpr();
   
@@ -43,20 +65,30 @@ void UnaryRightExpression::assign(ir_node *value) {
     assert(decl->type->getFirmType());
     
     ir_node *irn = new_Member(n->expression->firm_node, decl->firm_entity);
+    
+    // evaluate after other nodes have been constructed to get correct memory dependencies
+    e->doExpr();
+    assert(e->firm_node);
+    ir_node* value = e->firm_node;
+    
     ir_node *st = new_Store(get_store(), irn, value, decl->type->getFirmType(), cons_none);
     ir_node *m   = new_Proj(st, mode_M, pn_Store_M);
     set_store(m);
     
     return;
-  }
-  
-  if (auto aa = dynamic_cast<ArrayAccess*>(n->op.get())) {
+  } else if (auto aa = dynamic_cast<ArrayAccess*>(n->op.get())) {
     assert(n->expression->type->getFirmType());
     aa->expression->doExpr();
     
     ir_type *array_type = get_pointer_points_to_type(n->expression->type->getFirmType());
     ir_type *elem_type  = get_array_element_type(array_type);
     ir_node *sel        = new_Sel(n->expression->firm_node, aa->expression->firm_node, array_type);
+    
+    // evaluate after other nodes have been constructed to get correct memory dependencies
+    e->doExpr();
+    assert(e->firm_node);
+    ir_node* value = e->firm_node;
+    
     ir_node *st         = new_Store(get_store(), sel, value, elem_type, cons_none);
     ir_node *m          = new_Proj(st, mode_M, pn_Load_M);
     set_store(m);
@@ -79,8 +111,7 @@ void AssignmentExpression::doExpr() {
   //          this: ---------
   
   auto n = shared_from_this();
-  n->expression2->doExpr();
-  n->expression1->assign(n->expression2->firm_node);
+  n->expression1->assign(n->expression2);
   n->firm_node = n->expression2->firm_node;
 }
 
@@ -93,13 +124,12 @@ void AssignmentExpression::doCond(ir_node *trueBlock, ir_node *falseBlock) {
   // Example 2: x = (a = ...) || ();
   //          this: ---------
   
-  shared_from_this()->expression2->doExpr();
-  assert(shared_from_this()->expression2->firm_node);
+  auto n = shared_from_this();
   
-  shared_from_this()->expression1->assign(shared_from_this()->expression2->firm_node);
+  n->expression1->assign(n->expression2);
   
-  ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
-  ir_node *cmp = new_Cmp(shared_from_this()->expression2->firm_node, const1, ir_relation_greater_equal);
+  ir_node *const1 = createTrueNode();
+  ir_node *cmp = new_Cmp(n->expression2->firm_node, const1, ir_relation_greater_equal);
   ir_node *cond = new_Cond(cmp);
   ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
   ir_node *fnode = new_Proj(cond, mode_X, pn_Cond_false);
@@ -120,14 +150,14 @@ void LogicalOrExpression::doExpr() {
   mature_immBlock(currentBlock);
   
   set_cur_block(trueBlock);
-  ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *const1 = createTrueNode();
   ir_node *jmpTrue = new_Jmp();
   
   add_immBlock_pred(nextBlock, jmpTrue);
   mature_immBlock(get_cur_block());
   
   set_cur_block(falseBlock);
-  ir_node *const0 = new_Const(new_tarval_from_long(0, mode_Bu));
+  ir_node *const0 = createFalseNode();
   ir_node *jmpFalse = new_Jmp();
   
   add_immBlock_pred(nextBlock, jmpFalse);
@@ -136,7 +166,7 @@ void LogicalOrExpression::doExpr() {
   set_cur_block(nextBlock);
   
   ir_node *results[2] = { const1, const0 };
-  ir_node *phi = new_Phi(2, results, mode_Bu);
+  ir_node *phi = new_Phi(2, results, mode_Is);
   shared_from_this()->firm_node = phi;
   
   mature_immBlock(nextBlock);
@@ -165,14 +195,14 @@ void LogicalAndExpression::doExpr() {
   mature_immBlock(currentBlock);
   
   set_cur_block(trueBlock);
-  ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *const1 = createTrueNode();
   ir_node *jmpTrue = new_Jmp();
   
   add_immBlock_pred(nextBlock, jmpTrue);
   mature_immBlock(get_cur_block());
   
   set_cur_block(falseBlock);
-  ir_node *const0 = new_Const(new_tarval_from_long(0, mode_Bu));
+  ir_node *const0 = createFalseNode();
   ir_node *jmpFalse = new_Jmp();
   
   add_immBlock_pred(nextBlock, jmpFalse);
@@ -181,7 +211,7 @@ void LogicalAndExpression::doExpr() {
   set_cur_block(nextBlock);
   
   ir_node *results[2] = { const1, const0 };
-  ir_node *phi = new_Phi(2, results, mode_Bu);
+  ir_node *phi = new_Phi(2, results, mode_Is);
   shared_from_this()->firm_node = phi;
   
   mature_immBlock(nextBlock);
@@ -210,14 +240,14 @@ void EqualityExpression::doExpr() {
   mature_immBlock(currentBlock);
   
   set_cur_block(trueBlock);
-  ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *const1 = createTrueNode();
   ir_node *jmpTrue = new_Jmp();
   
   add_immBlock_pred(nextBlock, jmpTrue);
   mature_immBlock(get_cur_block());
   
   set_cur_block(falseBlock);
-  ir_node *const0 = new_Const(new_tarval_from_long(0, mode_Bu));
+  ir_node *const0 = createFalseNode();
   ir_node *jmpFalse = new_Jmp();
   
   add_immBlock_pred(nextBlock, jmpFalse);
@@ -226,7 +256,7 @@ void EqualityExpression::doExpr() {
   set_cur_block(nextBlock);
   
   ir_node *results[2] = { const1, const0 };
-  ir_node *phi = new_Phi(2, results, mode_Bu);
+  ir_node *phi = new_Phi(2, results, mode_Is);
   shared_from_this()->firm_node = phi;
   
   mature_immBlock(nextBlock);
@@ -267,14 +297,14 @@ void RelationalExpression::doExpr() {
   mature_immBlock(currentBlock);
   
   set_cur_block(trueBlock);
-  ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *const1 = createTrueNode();
   ir_node *jmpTrue = new_Jmp();
   
   add_immBlock_pred(nextBlock, jmpTrue);
   mature_immBlock(get_cur_block());
   
   set_cur_block(falseBlock);
-  ir_node *const0 = new_Const(new_tarval_from_long(0, mode_Bu));
+  ir_node *const0 = createFalseNode();
   ir_node *jmpFalse = new_Jmp();
   
   add_immBlock_pred(nextBlock, jmpFalse);
@@ -283,7 +313,7 @@ void RelationalExpression::doExpr() {
   set_cur_block(nextBlock);
   
   ir_node *results[2] = { const1, const0 };
-  ir_node *phi = new_Phi(2, results, mode_Bu);
+  ir_node *phi = new_Phi(2, results, mode_Is);
   shared_from_this()->firm_node = phi;
 }
 
@@ -387,14 +417,14 @@ void UnaryLeftExpression::doExpr() {
     mature_immBlock(currentBlock);
     
     set_cur_block(trueBlock);
-    ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+    ir_node *const1 = createTrueNode();
     ir_node *jmpTrue = new_Jmp();
     
     add_immBlock_pred(nextBlock, jmpTrue);
     mature_immBlock(get_cur_block());
     
     set_cur_block(falseBlock);
-    ir_node *const0 = new_Const(new_tarval_from_long(0, mode_Bu));
+    ir_node *const0 = createFalseNode();
     ir_node *jmpFalse = new_Jmp();
     
     add_immBlock_pred(nextBlock, jmpFalse);
@@ -404,7 +434,7 @@ void UnaryLeftExpression::doExpr() {
     mature_immBlock(nextBlock);
     
     ir_node *results[2] = { const1, const0 };
-    ir_node *phi = new_Phi(2, results, mode_Bu);
+    ir_node *phi = new_Phi(2, results, mode_Is);
     shared_from_this()->firm_node = phi;
     return;
   }
@@ -449,7 +479,7 @@ void CRef::doExpr() {
   shared_from_this()->firm_node = res;
 }
 
-void StaticLibraryCallExpression::doExpr()
+void SLCPrintlnExpression::doExpr()
 {
   auto n = shared_from_this();
   
@@ -467,12 +497,73 @@ void StaticLibraryCallExpression::doExpr()
   ir_node *call = new_Call(get_store(), addr, 1, args, n->getFirmType());
   ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
   ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
-  //ir_node *res = new_Proj(tres, Types::getVoidNode()->type->getFirmMode(), 0);
   
   set_store(mem);
   
-  // TODO: returntype is void... what do do?
   n->firm_node = call;
+}
+
+void SLCWriteExpression::doExpr()
+{
+  auto n = shared_from_this();
+  
+  ir_entity *meth = n->getFirmEntity();
+  
+  // write() only has one argument (no this-pointer!)
+  ir_node *addr = new_Address(meth);
+  ir_node *args[1];
+  
+  n->expression->doExpr();
+  assert(n->expression->firm_node);
+  
+  args[0] = n->expression->firm_node;
+  
+  ir_node *call = new_Call(get_store(), addr, 1, args, n->getFirmType());
+  ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
+  ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
+  
+  set_store(mem);
+  
+  n->firm_node = call;
+}
+
+void SLCFlushExpression::doExpr()
+{
+  auto n = shared_from_this();
+  
+  ir_entity *meth = n->getFirmEntity();
+  
+  // flush() has no arguments (no this-pointer!)
+  ir_node *addr = new_Address(meth);
+  
+  ir_node *call = new_Call(get_store(), addr, 0, NULL, n->getFirmType());
+  ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
+  ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
+  
+  set_store(mem);
+  
+  n->firm_node = call;
+}
+
+void SLCReadExpression::doExpr()
+{
+  //TODO
+  auto n = shared_from_this();
+  
+  ir_entity *meth = n->getFirmEntity();
+  
+  // read() only has one argument (no this-pointer!)
+  ir_node *addr = new_Address(meth);
+  
+  ir_node *call = new_Call(get_store(), addr, 0, NULL, n->getFirmType());
+  ir_node *mem = new_Proj(call, mode_M, pn_Call_M);
+  ir_node *tres = new_Proj(call, mode_T, pn_Call_T_result);
+  ir_node *res = new_Proj(tres, mode_Is, 0);
+  
+  set_store(mem);
+  
+  // TODO: returntype is int... what do do?
+  n->firm_node = res;
 }
 
 void NewArray::doExpr()
@@ -514,7 +605,7 @@ void CallExpression::doCond(ir_node *trueBlock, ir_node *falseBlock)
   ir_node *res = n->firm_node;
   
   // Check res for trueness
-  ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *const1 = createTrueNode();
   ir_node *cmp = new_Cmp(res, const1, ir_relation_greater_equal);
   ir_node *cond = new_Cond(cmp);
   ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
@@ -567,7 +658,7 @@ void UnaryRightExpression::doCond(ir_node *trueBlock, ir_node *falseBlock)
   assert(n->firm_node);
   
   // Check res for trueness
-  ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *const1 = createTrueNode();
   ir_node *cmp = new_Cmp(n->firm_node, const1, ir_relation_greater_equal);
   ir_node *cond = new_Cond(cmp);
   ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
@@ -600,8 +691,7 @@ void UnaryRightExpression::doExpr()
     n->firm_node = res;
     return;
   }
-  
-  if (MethodInvocation* mi = dynamic_cast<MethodInvocation*>(n->op.get()))
+  else if (MethodInvocation* mi = dynamic_cast<MethodInvocation*>(n->op.get()))
   {
     ir_graph *g = get_current_ir_graph();
     // n->expression->firm_node is a Proj P64 to a class entity
@@ -634,8 +724,7 @@ void UnaryRightExpression::doExpr()
       n->firm_node = res;
     }
   }
-  
-  if (ArrayAccess* aa = dynamic_cast<ArrayAccess*>(n->op.get()))
+  else if (ArrayAccess* aa = dynamic_cast<ArrayAccess*>(n->op.get()))
   {
     // n->expression->firm_node is a Proj P64 to an array_type
     aa->expression->doExpr();
@@ -699,7 +788,7 @@ void CRef::doCond(ir_node *trueBlock, ir_node *falseBlock) {
   }
   
   // Check res for trueness
-  ir_node *const1 = new_Const(new_tarval_from_long(1, mode_Bu));
+  ir_node *const1 = createTrueNode();
   ir_node *cmp = new_Cmp(res, const1, ir_relation_greater_equal);
   ir_node *cond = new_Cond(cmp);
   ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
@@ -715,47 +804,25 @@ void CIntegerLiteral::doExpr() {
 }
 
 void CTrue::doExpr() {
-  ir_tarval *tv = new_tarval_from_long(1, mode_Bu);
-  shared_from_this()->firm_node = new_Const(tv);
+  shared_from_this()->firm_node = createTrueNode();
 }
 
 void CTrue::doCond(ir_node *trueBlock, ir_node *falseBlock) {
-//  ir_node *jmp = new_Jmp();
-//  add_immBlock_pred(trueBlock, jmp);
-//  
-//  free(falseBlock);
-  
-  // Check this->value for trueness
-  ir_node *c = new_Const(new_tarval_from_long(0, mode_Bu));
-  ir_node *cmp = new_Cmp(c, c, ir_relation_equal);
-  ir_node *cond = new_Cond(cmp);
-  ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
-  ir_node *fnode = new_Proj(cond, mode_X, pn_Cond_false);
-  
-  add_immBlock_pred(trueBlock, tnode);
-  add_immBlock_pred(falseBlock, fnode);
+  ir_node *jmp = new_Jmp();
+  ir_node *bad = new_Bad(mode_X);
+  add_immBlock_pred(trueBlock, jmp);
+  add_immBlock_pred(falseBlock, bad);
 }
 
 void CFalse::doExpr() {
-  ir_tarval *tv = new_tarval_from_long(0, mode_Bu);
-  shared_from_this()->firm_node = new_Const(tv);
+  shared_from_this()->firm_node = createFalseNode();
 }
 
 void CFalse::doCond(ir_node *trueBlock, ir_node *falseBlock) {
-//  ir_node *jmp = new_Jmp();
-//  add_immBlock_pred(falseBlock, jmp);
-//  
-//  free(trueBlock);
-  
-  // Check this->value for trueness
-  ir_node *c = new_Const(new_tarval_from_long(0, mode_Bu));
-  ir_node *cmp = new_Cmp(c, c, ir_relation_less_greater);
-  ir_node *cond = new_Cond(cmp);
-  ir_node *tnode = new_Proj(cond, mode_X, pn_Cond_true);
-  ir_node *fnode = new_Proj(cond, mode_X, pn_Cond_false);
-  
-  add_immBlock_pred(trueBlock, tnode);
-  add_immBlock_pred(falseBlock, fnode);
+  ir_node *jmp = new_Jmp();
+  ir_node *bad = new_Bad(mode_X);
+  add_immBlock_pred(trueBlock, bad);
+  add_immBlock_pred(falseBlock, jmp);
 }
 
 
@@ -786,16 +853,20 @@ ir_node *IRBuilder::callCallocNode(ir_node *num, ir_type *result_type) {
   
   ir_node *addr = new_Address(calloc_ent);
   ir_type *elem_type = get_pointer_points_to_type(result_type);
+  
+  if (is_Array_type(elem_type))
+  {
+    elem_type = get_array_element_type(elem_type);
+  }
+  
   int s = get_type_size(elem_type);
+  
   ir_node *size_node = new_Const(new_tarval_from_long(s, mode_Is));
   ir_node *results1[2] = { num, size_node };
   ir_node *call = new_Call(get_store(), addr, 2, results1, calloc_type);
   
   return call;
 }
-
-
-
 
 
 #pragma mark - IRBuilder
@@ -1079,7 +1150,10 @@ void IRBuilder::dispatch(std::shared_ptr<ArrayAccess> n) { assert(false); };
 void IRBuilder::dispatch(std::shared_ptr<CRef> n) { assert(false); };
 void IRBuilder::dispatch(std::shared_ptr<NewArray> n) { assert(false); };
 void IRBuilder::dispatch(std::shared_ptr<CIntegerLiteral> n) { assert(false); };
-void IRBuilder::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<SLCPrintlnExpression> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<SLCWriteExpression> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<SLCFlushExpression> n) { assert(false); };
+void IRBuilder::dispatch(std::shared_ptr<SLCReadExpression> n) { assert(false); };
 
 
 

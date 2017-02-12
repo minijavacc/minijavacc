@@ -1,9 +1,9 @@
 #include "staticdeclarationscollector.h"
 
-#include "../stringtable/stringtable.h"
+#include "../structures/stringtable.h"
 
 #include <iostream>
-#include "types.h"
+#include "../structures/types.h"
 
 using namespace cmpl;
 
@@ -155,7 +155,10 @@ void StaticDeclarationsCollector::dispatch(std::shared_ptr<CRef> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<CIntegerLiteral> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<NewObject> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<NewArray> n) { };
-void StaticDeclarationsCollector::dispatch(std::shared_ptr<StaticLibraryCallExpression> n) { };
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<SLCPrintlnExpression> n) { };
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<SLCWriteExpression> n) { };
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<SLCFlushExpression> n) { };
+void StaticDeclarationsCollector::dispatch(std::shared_ptr<SLCReadExpression> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<Equals> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<NotEquals> n) { };
 void StaticDeclarationsCollector::dispatch(std::shared_ptr<LessThan> n) { };

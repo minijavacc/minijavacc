@@ -15,14 +15,14 @@ namespace cmpl
 {
   
   typedef struct
-  { 
+  {
     bool isKeyword;
     
     // entry is either string or keyword, so the IDs can share their memory
     union
     {
       StringIdentifier stringIdentifier; // if entry is a string
-      TokenType tokenType;                 // if entry is a keyword
+      TokenType tokenType;               // if entry is a keyword
     };
   }
   StringTableContainer;
@@ -35,9 +35,26 @@ namespace cmpl
       static std::string lookupIdentifier(StringIdentifier id);
       
       static const StringIdentifier invalidIdentifier = 0;
+      static const StringIdentifier strString;
+      static const StringIdentifier strout;
+      static const StringIdentifier strin;
+      static const StringIdentifier strprintln;
+      static const StringIdentifier strwrite;
+      static const StringIdentifier strflush;
+      static const StringIdentifier strread;
       
     private:
-      StringTable() { };
+      StringTable() {
+/*
+        strflush   = insertString("flush");
+        strin      = insertString("in");
+        strmain    = insertString("main");
+        strout     = insertString("out");
+        strprintln = insertString("println");
+        strString  = insertString("String");
+        strread    = insertString("read");
+        strwrite   = insertString("write");
+      */};
       static std::map<std::string, StringTableContainer> map;
 ;
   };

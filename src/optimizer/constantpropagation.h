@@ -9,7 +9,7 @@
 #pragma once
 
 #include <libfirm/firm.h>
-#include "ast.h"
+#include "../structures/ast.h"
 
 namespace cmpl {
   

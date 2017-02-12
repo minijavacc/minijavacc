@@ -1,13 +1,14 @@
 #include "compiler.h"
-#include "lexer.h"
-#include "parser.h"
-#include "stringtable.h"
-#include "token.h"
-#include "checker.h"
-#include "prettyprinter.h"
-#include "creator.h"
-#include "backend.h"
-#include "optimizer.h"
+#include "../lexer/lexer.h"
+#include "../parser/parser.h"
+#include "../structures/stringtable.h"
+#include "../structures/token.h"
+#include "../semantics/checker.h"
+#include "../parser/prettyprinter.h"
+#include "../graphcreator/creator.h"
+#include "../backend/backend.h"
+#include "../optimizer/optimizer.h"
+#include "../tests/delivervalue-tests.h"
 
 #include <iostream>
 #include <istream>
@@ -315,4 +316,11 @@ std::string Compiler::sourcePreview(std::ifstream &file, unsigned int line, unsi
   }
   */
   return std::to_string(line) + ":" + std::to_string(column) + ": " + src;
+}
+
+int Compiler::unittest(std::ifstream &file, std::string filename) {
+  auto dvt = new DeliverValueTests();
+  dvt->run();
+  
+  return 0;
 }

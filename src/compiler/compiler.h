@@ -17,6 +17,7 @@ namespace cmpl {
     static int creategraph(std::ifstream &file, std::string filename);
     static int compilefirm(std::ifstream &file, std::string filename);
     static int compile(std::ifstream &file, std::string filename);
+    static int unittest(std::ifstream &file, std::string filename);
   
     static std::string sourcePreview(std::ifstream &file, unsigned int line, unsigned int column);
   };

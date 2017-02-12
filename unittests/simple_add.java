@@ -1,11 +1,12 @@
-class array_access {
+class A {
 
   public static void main(String[] args) {
-
-    int a=3;
-    int b=6;
-    int c=a+b;
-
+    A a = new A();
+    System.out.println(a.add(3, 4));
   }
-
+  
+  public int add(int a, int b) {
+    return a + b;
+  }
+  
 }

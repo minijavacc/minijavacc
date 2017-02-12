@@ -1,8 +1,8 @@
 #pragma once
 
-#include "token.h"
-#include "stringtable.h"
-#include "compiler.h"
+#include "../structures/token.h"
+#include "../structures/stringtable.h"
+//#include "compiler.h"
 
 #include <deque>
 #include <iostream>
