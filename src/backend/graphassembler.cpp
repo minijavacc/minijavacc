@@ -763,29 +763,55 @@ void GraphAssembler::irgSerialize()
 void GraphAssembler::phiInsertion()
 {
   for (auto const& l : *labels) {
-    auto lb = blocks->at(l);
+    auto block = blocks->at(l);
     
-    // Step 2: Load all phis into temporary helper registers
-    for (auto const& phi : lb->phis) {
-      auto bl = get_nodes_block(phi);
+    std::vector<shared_ptr<Instruction>> instructions_last;
+    
+    // Step 2: Load all phis into destination register
+    for (auto const& phi : block->phis) {
+      ir_node *phi_block = get_nodes_block(phi);
       
+      // iterate predecessors
       for (int i = 0; i < get_Phi_n_preds(phi); i++) {
         ir_node *phipred = get_Phi_pred(phi, i);
         auto inReg = getValue(phipred);
-        auto helper = getValue(phi);
+        auto outReg = getValue(phi);
         
-        ir_node *j = get_Block_cfgpred(bl, i);
-        ir_node *jbl = get_nodes_block(j);
+        ir_node *pred_block = get_nodes_block(phipred);
         
-        Label l = getLabel(jbl);
-        shared_ptr<LabeledBlock> lb = blocks->at(l);
+        ir_node *jump = get_Block_cfgpred(phi_block, i);
+        ir_node *jump_block = get_nodes_block(jump);
+        
+        Label jump_label = getLabel(jump_block);
+        shared_ptr<LabeledBlock> jump_lb = blocks->at(jump_label);
+        
+        if (is_Phi(phipred) && pred_block == phi_block)
+        {
+          // create additional temporary value for cyclic Phis
+          // add mov-instruction to list to be added at the end
+          auto tmpReg = make_shared<Virtual>(phi);
+          
+          auto m = make_shared<mov>(__func__, __LINE__, phi);
+          m->src1 = tmpReg;
+          m->dest = outReg;
+          
+          instructions_last.push_back(m);
+          
+          outReg = tmpReg;
+        }
         
         auto m = make_shared<mov>(__func__, __LINE__, phi);
         m->src1 = inReg;
-        m->dest = helper;
+        m->dest = outReg;
         
-        lb->instructions.push_back(m);
+        jump_lb->instructions.push_back(m);
       }
+    }
+    
+    // insert the mov-instructions that have to be last in this block
+    for (const auto &instr : instructions_last)
+    {
+      block->instructions.push_back(instr);
     }
   }
 }
