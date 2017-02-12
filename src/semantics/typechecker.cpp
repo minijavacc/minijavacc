@@ -152,7 +152,8 @@ void TypeChecker::dispatch(std::shared_ptr<ReturnExpressionStatement> n) {
   {
     error("void methods can't return an expression", n);
   }
-  else if (!currentMethod->type->equals(n->expression->type))
+  else if (!(currentMethod->type->equals(n->expression->type) || 
+             dynamic_cast<NullType*>(n->expression->type->basicType.get())))
   {
     error("expression type in return statement doesn't match method return type", n);
   }

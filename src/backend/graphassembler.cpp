@@ -762,10 +762,10 @@ void GraphAssembler::irgSerialize()
 
 void GraphAssembler::phiInsertion()
 {
+  vector< pair< shared_ptr<LabeledBlock>, shared_ptr<Instruction> > > instructions_last;
+  
   for (auto const& l : *labels) {
     auto block = blocks->at(l);
-    
-    std::vector<shared_ptr<Instruction>> instructions_last;
     
     // Step 2: Load all phis into destination register
     for (auto const& phi : block->phis) {
@@ -787,7 +787,7 @@ void GraphAssembler::phiInsertion()
         
         if (is_Phi(phipred) && pred_block == phi_block)
         {
-          // create additional temporary value for cyclic Phis
+          // create additional temporary value
           // add mov-instruction to list to be added at the end
           auto tmpReg = make_shared<Virtual>(phi);
           
@@ -795,7 +795,7 @@ void GraphAssembler::phiInsertion()
           m->src1 = tmpReg;
           m->dest = outReg;
           
-          instructions_last.push_back(m);
+          instructions_last.push_back(pair< shared_ptr<LabeledBlock>, shared_ptr<Instruction> >(jump_lb, m));
           
           outReg = tmpReg;
         }
@@ -807,12 +807,12 @@ void GraphAssembler::phiInsertion()
         jump_lb->instructions.push_back(m);
       }
     }
-    
-    // insert the mov-instructions that have to be last in this block
-    for (const auto &instr : instructions_last)
-    {
-      block->instructions.push_back(instr);
-    }
+  }
+  
+  // insert the mov-instructions that have to be last in this block
+  for (const auto &instr : instructions_last)
+  {
+    instr.first->instructions.push_back(instr.second);
   }
 }
 
