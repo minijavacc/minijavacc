@@ -6,7 +6,7 @@ using namespace cmpl;
 
 // created using following table: http://introcs.cs.princeton.edu/java/11precedence/
 // the order of the initialization entries has to be the same as the enum in token.h!
-const OperatorSeperatorKeywordContainer Token::tokenAttribues[99] = {
+const OperatorSeperatorKeywordContainer Token::tokenAttributes[99] = {
   [T_O_EQUAL]                = {binaryOperator, "=", 0, right}, 
   
   [T_O_PIPE_PIPE]            = {binaryOperator, "||", 1, left}, 
@@ -123,14 +123,14 @@ const OperatorSeperatorKeywordContainer Token::tokenAttribues[99] = {
 std::string OperatorSeperatorKeywordToken::getStringValue()
 {
   int tt = this->type;
-	return tokenAttribues[tt].stringRepresentation;
+  return tokenAttributes[tt].stringRepresentation;
 }
 
 std::string IdentifierToken::getStringValue()
 {
   // lookup in stringtable
   std::string identifierString = StringTable::lookupIdentifier(id);
-	return "identifier " + identifierString;
+  return "identifier " + identifierString;
 }
 
 std::string IntegerLiteralToken::getStringValue()

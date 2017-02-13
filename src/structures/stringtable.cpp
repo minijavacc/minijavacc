@@ -1,76 +1,48 @@
 #include "stringtable.h"
 
-#include <map>
-#include <string>
-#include <memory>
+
+#include <assert.h>
+#include <iostream>
 
 using namespace cmpl;
 
-std::map<std::string, StringTableContainer> StringTable::map = std::map<std::string, StringTableContainer>();
+std::map<std::string, StringTableValue> StringTable::strings;
+std::vector<std::string> StringTable::lookupTable;
 
-std::unique_ptr<Token> StringTable::insertString(std::string string, unsigned int line, unsigned int column)
+void StringTable::insertKeyword(std::string string, TokenType tt) {
+  strings.insert(std::make_pair(string, StringTableValue(tt)));
+}
+
+std::unique_ptr<Token> StringTable::insertString(std::string string, const unsigned int line, const unsigned int column)
 {
-  // will keep counting upwards, as it's static (zero is reserved for invalid string)
-  static StringIdentifier nextStringIdentifier = 1;
+  static StringIdentifier nextStringIdentifier = beginIDIndices;
   
-  // check if element exists already
-  if (map.count(string) > 0)
-  {
-    // check if string is keyword
-    if (map[string].isKeyword)
-    {
-      // create token for keyword
-      std::unique_ptr<Token> token = std::make_unique<OperatorSeperatorKeywordToken>(map[string].tokenType, line, column);
-      return token;
-    }
-    else
-    {
-      // create token for existing string
-      std::unique_ptr<Token> token = std::make_unique<IdentifierToken>(map[string].stringIdentifier, line, column);
-      return token;
-    }
-  }
-  else
-  {
-    // insert string into map and get a new StringIdentifier
-    StringIdentifier newStringIdentifier = nextStringIdentifier++; // post-increment!
-    
-    StringTableContainer container;
-    container.isKeyword = false;
-    container.stringIdentifier = newStringIdentifier;
-    
-    map.insert(std::make_pair(string, container));
-    
+  auto pair = strings.insert(std::make_pair(string, nextStringIdentifier));
+  if(pair.second) { //new element inserted
+    lookupTable.push_back(string);
     // create token for new string
-    std::unique_ptr<Token> token = std::make_unique<IdentifierToken>(newStringIdentifier, line, column);
+    std::unique_ptr<Token> token = std::make_unique<IdentifierToken>(nextStringIdentifier++, line, column);
     return token;
-  }
-}
-
-void StringTable::insertKeyword(std::string string, TokenType type)
-{
-  StringTableContainer container;
-    container.isKeyword = true;
-    container.tokenType = type;
-  
-  map.insert(std::make_pair(string, container));
-}
-
-std::string StringTable::lookupIdentifier(StringIdentifier id)
-{
-  for (auto &pair : map)
-  {
-    if (pair.second.isKeyword == false && pair.second.stringIdentifier == id)
-    {
-      return pair.first;
+  } else {
+    // string already known
+    StringTableValue value(strings[string]);
+    if(value.stringIdentifier < beginIDIndices) {
+      // keyword
+      std::unique_ptr<Token> token = std::make_unique<OperatorSeperatorKeywordToken>(value.tokenType, line, column);
+      return token;
+    } else {
+      // identifier
+      std::unique_ptr<Token> token = std::make_unique<IdentifierToken>(value.stringIdentifier, line, column);
+      return token;
     }
   }
-  
-  if (id == invalidIdentifier)
-  {
-    // TODO: should not happen! quick fix to output System.out.printlf(param)
-    return "";
+}
+
+std::string StringTable::lookupIdentifier(StringIdentifier id) {
+  int index = id-beginIDIndices;
+  if(0<=index && index<lookupTable.size()) {
+    return lookupTable[index];
+  } else {
+    throw StringTableNotFound("lookupIdentifier: identifier not found");
   }
-  
-  throw StringTableNotFound("lookupIdentifier: identifier not found");
 }

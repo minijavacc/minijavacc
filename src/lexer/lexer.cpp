@@ -844,7 +844,7 @@ Lexer::Lexer(std::ifstream &inputFile) : inputFile(inputFile)
 {
   for (int i = T_K_ABSTRACT; i <= T_K_WHILE; i++)
   {
-    StringTable::insertKeyword(Token::tokenAttribues[i].stringRepresentation, (TokenType)i);
+    StringTable::insertKeyword(Token::tokenAttributes[i].stringRepresentation, (TokenType)i);
   }
 }
 
