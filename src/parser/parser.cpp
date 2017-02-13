@@ -57,10 +57,10 @@ inline void Parser::assureNextTokenTypeIs()
 inline void Parser::assureCurrentIsOSKTokenWithType(const TokenType& tokenType)
 {
   if(!isCurrentTokenOfType<OperatorSeperatorKeywordToken>()) {
-    error("expected " + Token::tokenAttribues[tokenType].stringRepresentation);
+    error("expected " + Token::tokenAttributes[tokenType].stringRepresentation);
   } else if(!isCurrentTokenOSKTokenOfType(tokenType)) {
     OperatorSeperatorKeywordToken* osk_t = dynamic_cast<OperatorSeperatorKeywordToken*>(currentToken.get());
-    error("expected " + Token::tokenAttribues[tokenType].stringRepresentation + " got " + Token::tokenAttribues[osk_t->type].stringRepresentation);
+    error("expected " + Token::tokenAttributes[tokenType].stringRepresentation + " got " + Token::tokenAttributes[osk_t->type].stringRepresentation);
   }
 }
 
@@ -102,7 +102,7 @@ inline bool Parser::isCurrentTokenOSKTokenOfCategory(const TokenCategory& tokenC
   
   tokenTypeOut = osk_t->type;
   
-  return (Token::tokenAttribues[osk_t->type].category == binaryOperator);
+  return (Token::tokenAttributes[osk_t->type].category == binaryOperator);
 }
 
 // combines isNextTokenOfType with checking for specialized sub-type of operator/seperator tokens
@@ -442,11 +442,11 @@ std::shared_ptr<Expression> Parser::parseExpression(unsigned int minPrecedence)
   
   // precedence climbing
   while (isCurrentTokenOSKTokenOfCategory(binaryOperator, tokenType) && 
-    (Token::tokenAttribues[tokenType].precedence >= minPrecedence))
+    (Token::tokenAttributes[tokenType].precedence >= minPrecedence))
   {
-    currentPrecedence = Token::tokenAttribues[tokenType].precedence;
+    currentPrecedence = Token::tokenAttributes[tokenType].precedence;
     
-    if (Token::tokenAttribues[tokenType].associativity == left)
+    if (Token::tokenAttributes[tokenType].associativity == left)
     {
       currentPrecedence++;
     }

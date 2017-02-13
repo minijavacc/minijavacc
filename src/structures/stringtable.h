@@ -10,53 +10,37 @@ namespace cmpl
 
 #include <map>
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace cmpl
 {
-  
-  typedef struct
-  {
-    bool isKeyword;
-    
+  struct StringTableValue {
     // entry is either string or keyword, so the IDs can share their memory
     union
     {
       StringIdentifier stringIdentifier; // if entry is a string
       TokenType tokenType;               // if entry is a keyword
     };
-  }
-  StringTableContainer;
+    
+    StringTableValue(StringIdentifier id) : stringIdentifier(id) { };
+    StringTableValue(TokenType tt) : tokenType(tt) { };
+    StringTableValue() { };
+  };
   
   class StringTable
   {
     public:
-      static std::unique_ptr<Token> insertString(std::string string, unsigned int line, unsigned int column);
-      static void insertKeyword(std::string string, TokenType type);
+      static std::unique_ptr<Token> insertString(std::string string, const unsigned int line, const unsigned int column);
       static std::string lookupIdentifier(StringIdentifier id);
+      static void insertKeyword(std::string string, TokenType tt);
       
-      static const StringIdentifier invalidIdentifier = 0;
-      static const StringIdentifier strString;
-      static const StringIdentifier strout;
-      static const StringIdentifier strin;
-      static const StringIdentifier strprintln;
-      static const StringIdentifier strwrite;
-      static const StringIdentifier strflush;
-      static const StringIdentifier strread;
+      static std::map<std::string, StringTableValue> strings;
+      static std::vector<std::string> lookupTable;
       
     private:
-      StringTable() {
-/*
-        strflush   = insertString("flush");
-        strin      = insertString("in");
-        strmain    = insertString("main");
-        strout     = insertString("out");
-        strprintln = insertString("println");
-        strString  = insertString("String");
-        strread    = insertString("read");
-        strwrite   = insertString("write");
-      */};
-      static std::map<std::string, StringTableContainer> map;
-;
+      StringTable() { };
+      static const int beginIDIndices = T_K_WHILE + 1;
   };
   
   class StringTableNotFound : public std::runtime_error
@@ -64,5 +48,4 @@ namespace cmpl
     public:
       StringTableNotFound(const char* err) : std::runtime_error(err) { };
   };
-
 }

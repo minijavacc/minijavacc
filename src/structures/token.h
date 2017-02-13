@@ -144,25 +144,23 @@ namespace cmpl
   
   typedef int StringIdentifier;
   
-  class Token;
+  class Token
+  {
+    public:
+      Token(const unsigned int line, const unsigned int column) 
+        : line(line), column(column) { };
+      virtual std::string getStringValue() = 0;
+      const static OperatorSeperatorKeywordContainer tokenAttributes[99];
+      
+      unsigned int line;
+      unsigned int column;
+  };
 }
 
 #include "stringtable.h"
 
 namespace cmpl
 {
-  class Token
-  {
-    public:
-      Token(unsigned int line, unsigned int column) 
-        : line(line), column(column) {};
-      virtual std::string getStringValue() = 0;
-      const static OperatorSeperatorKeywordContainer tokenAttribues[99];
-      
-      unsigned int line;
-      unsigned int column;
-  };
-  
   class OperatorSeperatorKeywordToken : public Token
   {
     public:
